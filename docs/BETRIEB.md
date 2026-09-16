@@ -116,6 +116,31 @@ dort jeden Befehl.
 Das Passwort erscheint einmal. Alle Sitzungen des Kontos enden. Lokal: `bun run
 admin:reset-password -- --email <adresse>`.
 
+## Images erneuern, monatlich
+
+Der Server hält sich mit `unattended-upgrades` selbst aktuell. **Container tun das nicht.** Was in
+einem Container läuft, ist eingefroren auf den Tag, an dem sein Image gezogen wurde — inklusive
+der Systembibliotheken darin. Ein gepflegter Server mit ungepflegten Containern sieht von aussen
+aus wie ein gepflegtes System und ist keines.
+
+Dazu kommt eine Eigenheit, die man leicht übersieht: `postgres:18.1-alpine` ist **kein fester
+Stand**. Wird im Alpine darunter eine Lücke geschlossen, baut der Hersteller dasselbe Image neu,
+unter derselben Nummer. Wer nur auf neue Nummern wartet, bekommt das nie mit.
+
+Einmal im Monat, von Hand:
+
+```bash
+sudo /opt/tallyroom/infra/images-erneuern.sh
+```
+
+Das Skript zieht die fremden Images neu (`postgres`, `garage`), baut die eigenen mit frischen
+Basis-Images neu (`build --pull` — ohne `--pull` nähme Docker die Basis-Images von der Platte und
+der Neubau wäre wirkungslos), sichert die Datenbank, tauscht die Container aus und räumt alte
+Images weg. Läuft ein paar Minuten, die Seite ist dabei kurz weg.
+
+Was das Skript **nicht** abdeckt, sind neue Versionsnummern von `oven/bun` und `caddy` — die
+meldet Dependabot als Pull Request, weil sie im `Dockerfile` stehen.
+
 ## Offen
 
 - **Kopie ausser Haus.** Die Sicherungen liegen auf demselben Server wie die Anwendung. Fällt
