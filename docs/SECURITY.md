@@ -139,8 +139,46 @@ sonst stünde es in der Shell-Historie —, und jede Sitzung des Kontos endet.
 
 ## Automatische Prüfungen in der CI
 
-Beide laufen bei jedem Push im Job `sicherheit`. Ein Fehler des Scanners oder ein fehlendes Netz
-endet rot und zählt nicht als bestanden.
+Beide laufen bei jedem Push im Job `sicherheit` und zusätzlich jeden Tag ohne Commit im Workflow
+`sicherheit-taeglich.yml`. Ein Fehler des Scanners oder ein fehlendes Netz endet rot und zählt
+nicht als bestanden.
+
+### Täglicher Lauf
+
+Ein Push prüft den Stand von heute. Eine Meldung zu einem Paket entsteht aber auch dann, wenn
+niemand etwas ändert. Darum läuft dieselbe Prüfung jeden Morgen um 06:17 UTC von selbst, schmal
+gehalten auf Secret-Scan und Abhängigkeiten — ein täglicher Lauf über zwanzig Minuten wird
+abgeschaltet, einer über zwei Minuten bleibt.
+
+| Punkt       | Stand                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------- |
+| Datei       | `.github/workflows/sicherheit-taeglich.yml`, dazu `workflow_dispatch` für den Lauf von Hand |
+| Blockierend | gitleaks wie im Push-Lauf; `bun audit` hier schon ab „moderat" statt ab „hoch"              |
+| Ausnahme    | genau die Nummer GHSA-67mh-4wv8-2f99, unten einzeln bewertet — keine ganze Stufe            |
+| Meldung     | ein roter Lauf meldet sich bei der Person, die die `cron`-Zeile zuletzt geändert hat        |
+| Rechte      | `permissions: contents: read`, der Lauf schreibt nichts                                     |
+
+Zwei Stolperfallen, die hier bewusst behandelt sind:
+
+- **Ein täglich rotes Auge sieht nichts mehr.** Darum ist der bekannte, nicht anwendbare Befund
+  namentlich ausgenommen statt über die Stufe weggeschaltet. Jede _neue_ moderate Meldung färbt
+  den Lauf rot. Fällt der alte Befund weg, fällt auch das `--ignore` weg.
+- **GitHub schaltet geplante Läufe in öffentlichen Repositories nach 60 Tagen ohne Aktivität ab.**
+  Die wöchentlich gemergten Update-PRs halten den Zeitplan am Leben.
+
+### Updates von Abhängigkeiten
+
+`.github/dependabot.yml` hält drei Ökosysteme aktuell: Bun wöchentlich (Minor und Patch als ein
+Sammel-PR), GitHub Actions und die Basis-Images des Dockerfiles monatlich. Überall sieben Tage
+Wartezeit nach der Veröffentlichung (`cooldown`), damit eine kaputte oder gekaperte Fassung nicht
+am Tag ihrer Veröffentlichung hier landet; dieselbe Frist gilt lokal über `minimumReleaseAge` in
+`bunfig.toml`. Vorabversionen schlägt Dependabot nicht vor, solange keine eingesetzt wird.
+
+Jeder dieser Pull Requests löst den vollen CI-Lauf aus; gemergt wird nur, was grün ist. Die
+Wartezeit gilt ausdrücklich **nicht** für Security-Updates — die kommen ohne Frist.
+
+Nicht erfasst: die Images in `infra/compose.prod.yml` (postgres, garage). Sie gehören in die
+monatliche Routine von Hand auf dem Server.
 
 ### Secret-Scan
 
@@ -168,12 +206,12 @@ Nächste Prüfung dieser Ausnahmen: mit dem nächsten Meilenstein, spätestens a
 
 ### Abhängigkeitsscan
 
-| Punkt       | Stand                                                                                                                           |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Werkzeug    | `bun audit` aus Bun 1.3.14, gegen die Advisory-Datenbank der npm-Registry                                                       |
-| Umfang      | alle Pakete aus `bun.lock`, auch reine Entwicklungswerkzeuge                                                                    |
-| Blockierend | ab „hoch" (`--audit-level=high`); ein zweiter Schritt schreibt alle Befunde in die Laufzusammenfassung, ohne den Lauf zu färben |
-| Ergebnis    | 12.09.2026 erneut geprüft: kein hoher und kein kritischer Befund, ein moderater                                                 |
+| Punkt       | Stand                                                                                                                                                                        |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Werkzeug    | `bun audit` aus Bun 1.3.14, gegen die Advisory-Datenbank der npm-Registry                                                                                                    |
+| Umfang      | alle Pakete aus `bun.lock`, auch reine Entwicklungswerkzeuge                                                                                                                 |
+| Blockierend | im Push-Lauf ab „hoch" (`--audit-level=high`), im täglichen Lauf ab „moderat"; ein zweiter Schritt schreibt alle Befunde in die Laufzusammenfassung, ohne den Lauf zu färben |
+| Ergebnis    | 12.09.2026 erneut geprüft: kein hoher und kein kritischer Befund, ein moderater                                                                                              |
 
 Der moderate Befund, einzeln bewertet:
 
@@ -192,6 +230,10 @@ Der moderate Befund, einzeln bewertet:
   ein sieben Hauptversionen neueres esbuild zwingen, ohne dass hier je ein `serve` startet. Der
   Befund fällt von selbst weg, sobald `drizzle-kit` das Paket loswird; bis dahin Neubewertung mit
   jedem `drizzle-kit`-Update, spätestens am 11.12.2026.
+
+  Im täglichen Lauf steht diese Nummer in `--ignore`, damit der Lauf nicht jeden Morgen rot ist
+  und die Meldung dadurch ihre Wirkung verliert. Sichtbar bleibt der Befund trotzdem: Der Schritt
+  „Alle Befunde zur Ansicht" zeigt ihn ungefiltert in der Laufzusammenfassung.
 
 ## Offene Grenzen
 

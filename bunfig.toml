@@ -1,2 +1,16 @@
 [install]
+# Feste Fassungen ohne ^ oder ~: Was hier steht, ist auch installiert.
 exact = true
+
+# Wartezeit von sieben Tagen (in Sekunden). Bun installiert nichts, was jünger
+# ist, und weicht auf die letzte Fassung davor aus. Damit greift dieselbe
+# Regel wie bei Dependabot (cooldown in .github/dependabot.yml) auch bei einem
+# `bun add` von Hand — eine frisch veröffentlichte, kaputte oder gekaperte
+# Fassung landet nicht sofort im Lockfile.
+#
+# Grenzen: Wirkt nur aus dieser projekteigenen Datei, nicht aus ~/.bunfig.toml,
+# und nicht für Fassungen, die schon in bun.lock stehen.
+#
+# Dringender Sicherheitsfix, der nicht warten kann: das betroffene Paket
+# vorübergehend in minimumReleaseAgeExcludes eintragen.
+minimumReleaseAge = 604800

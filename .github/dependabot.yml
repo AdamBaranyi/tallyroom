@@ -1,0 +1,96 @@
+# Updates laufen von selbst und melden sich, statt darauf zu warten, dass
+# jemand nachschaut. Drei Regeln gelten überall in dieser Datei:
+#
+# 1. Keine Vorabversionen. Dependabot schlägt Beta, RC und Canary nur vor,
+#    wenn die eingesetzte Fassung schon eine ist — hier ist das nirgends so.
+# 2. Wartezeit (cooldown): sieben Tage nach der Veröffentlichung. Schützt vor
+#    kaputten und vor gekaperten Neuversionen, bis andere sie bemerkt haben.
+#    Gilt nur für diese geplanten Updates, nie für Security-Updates — die
+#    kommen sofort.
+# 3. "Funktioniert" heisst grün. Jeder dieser Pull Requests löst den vollen
+#    CI-Lauf aus (Format, Dateilänge, Lint, Typen, Tests, Build, Secret-Scan,
+#    Playwright, Produktionsaufbau). Gemergt wird nur, was grün ist.
+#
+# Meldung: `assignees` macht den Pull Request zu einer zugewiesenen Aufgabe —
+# das ergibt eine E-Mail und einen Push in GitHub Mobile. `reviewers` gibt es
+# seit dem 08.08.2025 nicht mehr.
+
+version: 2
+
+updates:
+  # ---------------------------------------------------------------- Bun ----
+  # Ein Lockfile im Wurzelverzeichnis deckt das ganze Monorepo ab
+  # (workspaces: apps/*, packages/*). Voraussetzung ist das Textformat
+  # bun.lock aus Bun ab 1.1.39, nicht das alte binäre bun.lockb.
+  #
+  # Achtung, Grenze: Der Dependency Graph von GitHub liest bun.lock nicht.
+  # Für Bun gibt es hier also nur diese Versions-Updates und keine
+  # Security-Updates. Den Alarm bei Schwachstellen liefert allein
+  # .github/workflows/sicherheit-taeglich.yml mit `bun audit`.
+  - package-ecosystem: bun
+    directory: '/'
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Zurich
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    assignees:
+      - AdamBaranyi
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      # Minor und Patch als ein einziger Sammel-PR: ein Lauf, eine Prüfung,
+      # eine Entscheidung. Major-Sprünge kommen bewusst einzeln.
+      alltag:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # Die Typen von Node folgen der Laufzeit, nicht dem Neusten. Ein Sprung
+      # auf eine Hauptversion, die hier gar nicht läuft, bringt nur Fehler.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+
+  # ------------------------------------------------------ GitHub Actions ----
+  # Hält actions/checkout, oven-sh/setup-bun und actions/upload-artifact
+  # aktuell. Eine veraltete Action ist eine fremde Codeausführung in der CI.
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: monthly
+      time: '06:00'
+      timezone: Europe/Zurich
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 3
+    assignees:
+      - AdamBaranyi
+    commit-message:
+      prefix: ci
+
+  # -------------------------------------------------------------- Docker ----
+  # Die Basis-Images aus dem Dockerfile im Wurzelverzeichnis: oven/bun und
+  # caddy. Beide stehen als ARG mit Vorgabewert darin.
+  #
+  # Nicht erfasst sind die Images in infra/compose.prod.yml (postgres, garage).
+  # Die kommen in der monatlichen Routine von Hand dran (`docker compose pull`
+  # auf dem Server), siehe docs/SERVER.md.
+  - package-ecosystem: docker
+    directory: '/'
+    schedule:
+      interval: monthly
+      time: '06:00'
+      timezone: Europe/Zurich
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 3
+    assignees:
+      - AdamBaranyi
+    commit-message:
+      prefix: build
