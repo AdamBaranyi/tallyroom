@@ -1,0 +1,68 @@
+name: Erinnerung monatlich
+
+# Für die Handgriffe, die niemand meldet, weil sie auf dem Server passieren
+# und nicht im Repository: Container-Images erneuern, Sicherung ansehen,
+# Ausnahmen nachprüfen.
+#
+# Ohne diesen Lauf hängt die monatliche Wartung allein am Gedächtnis, und
+# genau das ist die Stelle, an der ein Sicherheitssystem im Alltag stirbt.
+
+on:
+  schedule:
+    # Am Ersten jedes Monats, 07:05 UTC.
+    - cron: '5 7 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  erinnern:
+    name: Wartungsliste öffnen
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Issue anlegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          monat=$(date +'%m.%Y')
+
+          gh label create wartung --repo "$REPO" --color 0E8A16 \
+            --description "Wiederkehrende Wartung" 2>/dev/null || true
+
+          gh issue create --repo "$REPO" \
+            --title "Monatliche Wartung $monat" \
+            --label wartung \
+            --assignee AdamBaranyi \
+            --body "$(cat <<'EOF'
+          Rund 15 Minuten. Der Reihe nach:
+
+          - [ ] **Container-Images erneuern** — `ssh vps1` (Tunnel vorher einschalten!), dann
+                `sudo /opt/tallyroom/infra/images-erneuern.sh`.
+                Warum das sein muss: Der Server pflegt sich selbst, Container nicht. Und
+                `postgres:18.1-alpine` wird unter derselben Nummer neu gebaut — auf neue
+                Versionsnummern zu warten bringt hier nichts.
+          - [ ] **Sicherung ansehen** — die Anmeldezeile beim `ssh vps1` sagt, wie der letzte
+                nächtliche Lauf ausging.
+          - [ ] **Offene Pull Requests** hier und in
+                [Signature-Style](https://github.com/AdamBaranyi/Signature-Style/pulls):
+                grüne mergen. Das hält nebenbei die geplanten Läufe am Leben — GitHub schaltet
+                sie in öffentlichen Repositories nach 60 Tagen ohne Aktivität ab.
+          - [ ] **Serverupdates** — `ssh vps1 'apt list --upgradable'`. Liegt etwas länger als
+                ein paar Tage, nachfassen statt auf unattended-upgrades warten.
+          - [ ] **Ausnahmen nachprüfen** — steht in `docs/SECURITY.md` noch ein `--ignore`, das
+                inzwischen wegfallen könnte?
+
+          Alle drei Monate zusätzlich:
+
+          - [ ] **Probe-Wiederherstellung** — `sudo /opt/tallyroom/infra/restore-test.sh`.
+                Eine Sicherung, aus der nie etwas zurückgespielt wurde, ist eine Vermutung.
+          - [ ] **Header von aussen prüfen** — securityheaders.com oder ein eigener Durchgang.
+
+          Erledigt? Issue schliessen. Am Ersten des nächsten Monats kommt das nächste.
+          EOF
+          )"
