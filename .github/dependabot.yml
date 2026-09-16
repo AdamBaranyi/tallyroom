@@ -56,6 +56,15 @@ updates:
       # auf eine Hauptversion, die hier gar nicht läuft, bringt nur Fehler.
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
+      # TypeScript 7 ist kein gewöhnliches Update, sondern der in Go neu
+      # gebaute Compiler. Er bringt Tempo, keine Funktion und keine Sicherheit;
+      # der Typecheck scheitert damit heute (Pull Request #4, geschlossen am
+      # 16.09.2026). Ohne diese Sperre böte Dependabot jede Woche denselben
+      # roten Pull Request an, und wer wöchentlich Rot wegklickt, klickt
+      # irgendwann das echte Rot weg. Patches innerhalb von 6.x kommen weiter.
+      # Diese beiden Zeilen entfernen, sobald der Sprung bewusst ansteht.
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
 
   # ------------------------------------------------------ GitHub Actions ----
   # Hält actions/checkout, oven-sh/setup-bun und actions/upload-artifact
