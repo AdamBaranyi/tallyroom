@@ -9,6 +9,7 @@ import { Dialog } from '../../components/base/Dialog.tsx';
 import { ErrorState, LoadingState } from '../../components/base/EmptyState.tsx';
 import { ArchivedBadge } from '../../components/base/StatusBadge.tsx';
 import { RecordActivity } from '../activity/RecordActivity.tsx';
+import { HandoverCard } from '../export/HandoverCard.tsx';
 import { useMessages } from '../../i18n/messages.ts';
 import { ProjectRows } from '../projects/ProjectRows.tsx';
 import { useProjects } from '../projects/api.ts';
@@ -102,6 +103,8 @@ export function CustomerDetailPage({ workspace }: { workspace: WorkspaceSummary 
       </Card>
 
       <ArchiveSection workspace={workspace} customer={customer} />
+
+      <HandoverCard workspaceId={workspace.id} customerId={customer.id} />
 
       <RecordActivity workspaceId={workspace.id} entityType="customer" entityId={customer.id} />
 

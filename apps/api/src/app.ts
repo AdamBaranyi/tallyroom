@@ -29,6 +29,10 @@ import { createDemoLimits } from './modules/demo/limits.ts';
 import { createDemoRepository } from './modules/demo/repository.ts';
 import { createDemoRouter } from './modules/demo/routes.ts';
 import { createDemoService } from './modules/demo/service.ts';
+import { createExportRepository } from './modules/export/repository.ts';
+import { createExportRouter } from './modules/export/routes.ts';
+import { createExportService } from './modules/export/service.ts';
+import { createHandoverService } from './modules/export/handover.ts';
 import { createDocumentRepository } from './modules/documents/repository.ts';
 import { createDocumentRouter } from './modules/documents/routes.ts';
 import { createDocumentService } from './modules/documents/service.ts';
@@ -123,6 +127,9 @@ export function createApp({ env, db, pool, logger, storage }: AppDependencies): 
   const portalRepository = createPortalRepository(db);
   const portalService = createPortalService(db, portalRepository, documentStorage, demoLimits);
 
+  const exportService = createExportService(createExportRepository(db), documentStorage);
+  const handoverService = createHandoverService(portalRepository, documentStorage);
+
   const projectRepository = createProjectRepository(db);
   const projectService = createProjectService(db, projectRepository, demoLimits);
   const milestoneService = createMilestoneService(db, projectRepository);
@@ -175,6 +182,10 @@ export function createApp({ env, db, pool, logger, storage }: AppDependencies): 
     createInvitationAdminRouter(invitationService, authRepository),
   );
   app.use('/api/v1/invitations', createInvitationPublicRouter(invitationService));
+  app.use(
+    '/api/v1/workspaces/:workspaceId/export',
+    createExportRouter(exportService, handoverService, authRepository),
+  );
   app.use('/api/v1/demo', createDemoRouter(demoService, env));
   app.use('/api/v1/portal/:workspaceId', createPortalRouter(portalService, authRepository));
 

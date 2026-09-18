@@ -15,6 +15,7 @@ import { useMessages } from '../../i18n/messages.ts';
 import { ApiRequestError } from '../../lib/api.ts';
 import { formatDate } from '../../lib/format.ts';
 import { ChangePasswordCard } from '../auth/ChangePasswordCard.tsx';
+import { DataExportCard } from '../export/DataExportCard.tsx';
 import { useCustomers } from '../customers/api.ts';
 import { useCreateInvitation, useInvitations, useRevokeInvitation } from './api.ts';
 import { settingsMessages } from './messages.ts';
@@ -209,6 +210,8 @@ export function SettingsPage({ workspace }: { workspace: WorkspaceSummary }) {
           ))}
         </ul>
       </Card>
+
+      <DataExportCard workspace={workspace} />
 
       <ChangePasswordCard isDemo={workspace.isDemo} />
     </div>

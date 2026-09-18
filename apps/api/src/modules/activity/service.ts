@@ -8,7 +8,7 @@ import {
   type PaginationQuery,
 } from '@tallyroom/contracts';
 import { verifyChain, type ChainRow } from '../../lib/activity-chain.ts';
-import { toCsv } from './csv.ts';
+import { toCsv } from '../../lib/csv.ts';
 import type { ActivityRepository, ActivityScope } from './repository.ts';
 
 interface Row {
