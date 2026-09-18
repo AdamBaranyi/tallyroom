@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { useMessages } from '../../i18n/messages.ts';
 import { REPOSITORY_URL } from '../../lib/site.ts';
 import { legalMessages } from './legal-messages.ts';
@@ -27,6 +28,12 @@ export function SiteFooter() {
         sucht es niemand.
       */}
       <nav aria-label={m.projectNavigation} className="flex flex-wrap justify-center gap-x-4">
+        <Link to="/vertrauen" className={LINK_CLASS}>
+          {m.trust}
+        </Link>
+        <Link to="/status" className={LINK_CLASS}>
+          {m.status}
+        </Link>
         <a href={REPOSITORY_URL} target="_blank" rel="noreferrer" className={LINK_CLASS}>
           {m.sourceCode}
         </a>

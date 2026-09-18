@@ -32,7 +32,16 @@ test.describe('ohne Anmeldung', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   // Ein Einladungslink, den es nicht gibt, zeigt die Fehlerseite der Einladung.
-  for (const pfad of ['/', '/login', '/impressum', '/datenschutz', '/join/gibt-es-nicht']) {
+  for (const pfad of [
+    '/',
+    '/login',
+    '/impressum',
+    '/datenschutz',
+    '/barrierefreiheit',
+    '/vertrauen',
+    '/status',
+    '/join/gibt-es-nicht',
+  ]) {
     test(pfad, async ({ page }) => {
       await page.goto(pfad);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();

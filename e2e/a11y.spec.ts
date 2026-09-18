@@ -76,6 +76,11 @@ const SEITEN = [
   // Die Rechtsseiten stehen auch mit Sitzung, es gibt keine Weiterleitung.
   { name: 'Impressum', pfad: () => '/impressum' },
   { name: 'Datenschutz', pfad: () => '/datenschutz' },
+  { name: 'Barrierefreiheit', pfad: () => '/barrierefreiheit' },
+  { name: 'Vertrauen', pfad: () => '/vertrauen' },
+  { name: 'Status', pfad: () => '/status' },
+  // Das Protokoll trägt eine eigene Liste und eine eigene Ergebnismeldung.
+  { name: 'Protokoll', pfad: (id: string) => `/app/${id}/activity` },
 ];
 
 test.describe('Barrierefreiheit', () => {

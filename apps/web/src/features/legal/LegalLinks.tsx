@@ -25,6 +25,9 @@ export function LegalLinks({ className = '' }: { className?: string }) {
       <Link to="/datenschutz" className={LINK_CLASS}>
         {m.privacy}
       </Link>
+      <Link to="/barrierefreiheit" className={LINK_CLASS}>
+        {m.accessibility}
+      </Link>
     </nav>
   );
 }
