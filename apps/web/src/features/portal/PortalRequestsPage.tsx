@@ -11,6 +11,7 @@ import { useMessages } from '../../i18n/messages.ts';
 import { ApiRequestError } from '../../lib/api.ts';
 import { portalPath } from '../../lib/portal-paths.ts';
 import { RequestStatusBadge } from '../requests/labels.tsx';
+import { WaitingLine } from '../requests/WaitingLine.tsx';
 import { useAssignableProjects, useCreatePortalRequest, usePortalRequests } from './api.ts';
 import { portalRequestMessages } from './request-messages.ts';
 
@@ -85,6 +86,11 @@ export function PortalRequestsPage({ workspace }: { workspace: WorkspaceSummary 
                 <span className="font-medium text-ink">{request.subject}</span>
                 <span className="flex flex-wrap items-center gap-3">
                   <RequestStatusBadge status={request.status} />
+                  <WaitingLine
+                    waitingOn={request.waitingOn}
+                    waitingSince={request.waitingSince}
+                    perspective="client"
+                  />
                   {request.projectName && (
                     <span className="text-body text-muted">{request.projectName}</span>
                   )}

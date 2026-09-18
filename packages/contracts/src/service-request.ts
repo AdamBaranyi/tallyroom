@@ -30,6 +30,26 @@ export function isAllowedTransition(from: RequestStatus, to: RequestStatus): boo
   return from === to || (ALLOWED_TRANSITIONS[from] ?? []).includes(to);
 }
 
+/**
+ * Wer am Zug ist. Die Frage «warum liegt das seit drei Wochen» beantwortet
+ * sich fast immer mit «es lag beim anderen» — und genau das steht nirgends,
+ * wenn eine Anfrage nur einen Status trägt.
+ */
+export const WAITING_SIDES = ['team', 'client'] as const;
+export type WaitingSide = (typeof WAITING_SIDES)[number];
+
+export function waitingSideOf(status: RequestStatus): WaitingSide | null {
+  if (status === 'resolved') return null;
+  return status === 'waiting_customer' ? 'client' : 'team';
+}
+
+/** Ganze Tage seit dem Zeitpunkt, an dem der Ball die Seite wechselte. */
+export function waitingDays(since: string, now: Date = new Date()): number {
+  const start = new Date(since).getTime();
+  if (Number.isNaN(start)) return 0;
+  return Math.max(0, Math.floor((now.getTime() - start) / 86_400_000));
+}
+
 export const requestInputSchema = z.object({
   customerId: z.uuid(),
   projectId: z.uuid().nullish(),
@@ -123,6 +143,10 @@ export const serviceRequestSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   commentCount: z.number().int(),
+  /** Null, sobald die Anfrage erledigt ist: dann wartet niemand mehr. */
+  waitingOn: z.enum(WAITING_SIDES).nullable(),
+  /** Seit wann sie dort liegt: der letzte Statuswechsel, sonst das Anlegen. */
+  waitingSince: z.string(),
 });
 
 export type ServiceRequest = z.infer<typeof serviceRequestSchema>;
@@ -137,6 +161,8 @@ export const clientRequestSchema = z.object({
   status: z.enum(REQUEST_STATUS),
   createdAt: z.string(),
   updatedAt: z.string(),
+  waitingOn: z.enum(WAITING_SIDES).nullable(),
+  waitingSince: z.string(),
 });
 
 export type ClientRequest = z.infer<typeof clientRequestSchema>;
@@ -148,6 +174,7 @@ export const requestListQuerySchema = z.object({
   customerId: z.uuid().optional(),
   status: z.enum(REQUEST_STATUS).optional(),
   priority: z.enum(REQUEST_PRIORITY).optional(),
+  waitingOn: z.enum(WAITING_SIDES).optional(),
   sort: z.enum(REQUEST_SORT_FIELDS).default('updatedAt'),
   direction: z.enum(['asc', 'desc']).default('desc'),
 });

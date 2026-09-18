@@ -3,6 +3,7 @@ import { customers, projects, type Database } from '@tallyroom/db';
 import type { Dashboard, MonthlyValuePoint } from '@tallyroom/contracts';
 import { monthEndPoints, todayInTimezone } from '../../lib/workspace-date.ts';
 import { monthlyContractValueMinor } from '../contracts/metrics.ts';
+import { waitingBalance } from './waiting.ts';
 
 const HISTORY_MONTHS = 6;
 
@@ -17,7 +18,7 @@ export function createDashboardService(db: Database) {
       const today = todayInTimezone(timezone);
       const onDate = contractDate ?? today;
 
-      const [customerRows, activeRows, pausedRows, contractValue] = await Promise.all([
+      const [customerRows, activeRows, pausedRows, contractValue, waiting] = await Promise.all([
         db
           .select({ value: count() })
           .from(customers)
@@ -31,6 +32,7 @@ export function createDashboardService(db: Database) {
           .from(projects)
           .where(and(eq(projects.workspaceId, workspaceId), eq(projects.status, 'paused'))),
         monthlyContractValueMinor(db, workspaceId, onDate),
+        waitingBalance(db, workspaceId),
       ]);
 
       const points = monthEndPoints(today, HISTORY_MONTHS);
@@ -51,6 +53,9 @@ export function createDashboardService(db: Database) {
         monthlyContractValueMinor: contractValue.amountMinor,
         confirmedContracts: contractValue.contractCount,
         history,
+        requestsWaitingOnTeam: waiting.team,
+        requestsWaitingOnClient: waiting.client,
+        longestWaitDays: waiting.longestDays,
       };
     },
   };

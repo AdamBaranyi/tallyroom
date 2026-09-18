@@ -12,10 +12,11 @@ import { useMessages } from '../../i18n/messages.ts';
 import { workspacePath } from '../../lib/paths.ts';
 import { useCustomers } from '../customers/api.ts';
 import { useCreateRequest, useRequests } from './api.ts';
+import { waitingMessages } from './waiting-messages.ts';
 import { requestMessages } from './messages.ts';
 import { RequestForm } from './RequestForm.tsx';
 import { RequestRows } from './RequestRows.tsx';
-import { SearchField, SelectField } from '../../components/base/Controls.tsx';
+import { FilterGroup, SearchField, SelectField } from '../../components/base/Controls.tsx';
 
 export function RequestListPage({ workspace }: { workspace: WorkspaceSummary }) {
   const [params, setParams] = useSearchParams();
@@ -23,12 +24,19 @@ export function RequestListPage({ workspace }: { workspace: WorkspaceSummary }) 
   const texts = useMessages(requestMessages);
   const m = texts.list;
   const statusLabels = useMessages(domainMessages).requestStatus;
+  const waiting = useMessages(waitingMessages);
 
   const search = params.get('search') ?? '';
   const status = (params.get('status') as RequestStatus | null) ?? undefined;
+  const waitingOn = (params.get('waitingOn') as 'team' | 'client' | null) ?? undefined;
   const page = Number(params.get('page') ?? '1');
 
-  const query = useRequests(workspace.id, { search, ...(status ? { status } : {}), page });
+  const query = useRequests(workspace.id, {
+    search,
+    ...(status ? { status } : {}),
+    ...(waitingOn ? { waitingOn } : {}),
+    page,
+  });
   const customers = useCustomers(workspace.id, { status: 'active', pageSize: 100 });
   const create = useCreateRequest(workspace.id);
 
@@ -87,6 +95,17 @@ export function RequestListPage({ workspace }: { workspace: WorkspaceSummary }) 
             </option>
           ))}
         </SelectField>
+
+        <FilterGroup
+          label={waiting.label}
+          active={waitingOn ?? 'all'}
+          options={[
+            { value: 'all', label: waiting.filter.all },
+            { value: 'team', label: waiting.filter.team },
+            { value: 'client', label: waiting.filter.client },
+          ]}
+          onSelect={(option) => patchParams({ waitingOn: option === 'all' ? null : option })}
+        />
       </div>
 
       <Card>

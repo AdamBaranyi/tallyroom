@@ -17,6 +17,7 @@ const ContractValueChart = lazy(() =>
   import('./ContractValueChart.tsx').then((modul) => ({ default: modul.ContractValueChart })),
 );
 import { MetricBand } from './MetricBand.tsx';
+import { WaitingSplit } from './WaitingSplit.tsx';
 import { dashboardMessages } from './messages.ts';
 
 export function DashboardPage({ workspace }: { workspace: WorkspaceSummary }) {
@@ -67,6 +68,8 @@ export function DashboardPage({ workspace }: { workspace: WorkspaceSummary }) {
       </div>
 
       <MetricBand data={data} base={base} />
+
+      <WaitingSplit data={data} base={base} />
 
       <Card>
         <CardHeader

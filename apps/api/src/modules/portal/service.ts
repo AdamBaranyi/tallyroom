@@ -1,5 +1,6 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { requestComments, serviceRequests, type Database } from '@tallyroom/db';
+import { waitingSideOf } from '@tallyroom/contracts';
 import type {
   ClientComment,
   ClientContract,
@@ -71,6 +72,7 @@ export function createPortalService(
     status: ClientRequest['status'];
     createdAt: Date;
     updatedAt: Date;
+    statusChangedAt: string | null;
   }): ClientRequest {
     return {
       id: row.id,
@@ -81,6 +83,11 @@ export function createPortalService(
       status: row.status,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
+      waitingOn: waitingSideOf(row.status),
+      waitingSince: (row.statusChangedAt
+        ? new Date(row.statusChangedAt)
+        : row.createdAt
+      ).toISOString(),
     };
   }
 

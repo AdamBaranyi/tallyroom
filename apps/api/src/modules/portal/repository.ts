@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import type { Database } from '@tallyroom/db';
+import { statusChangedAt } from '../../lib/request-waiting.ts';
 import {
   customers,
   documents,
@@ -116,6 +117,7 @@ export function createPortalRepository(db: Database) {
           status: serviceRequests.status,
           createdAt: serviceRequests.createdAt,
           updatedAt: serviceRequests.updatedAt,
+          statusChangedAt,
         })
         .from(serviceRequests)
         .leftJoin(projects, eq(projects.id, serviceRequests.projectId))
@@ -140,6 +142,7 @@ export function createPortalRepository(db: Database) {
           version: serviceRequests.version,
           createdAt: serviceRequests.createdAt,
           updatedAt: serviceRequests.updatedAt,
+          statusChangedAt,
         })
         .from(serviceRequests)
         .leftJoin(projects, eq(projects.id, serviceRequests.projectId))

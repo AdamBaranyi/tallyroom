@@ -10,6 +10,7 @@ import { useLocale } from '../../i18n/locale-context.ts';
 import { useMessages } from '../../i18n/messages.ts';
 import { portalPath } from '../../lib/portal-paths.ts';
 import { RequestStatusBadge } from '../requests/labels.tsx';
+import { WaitingLine } from '../requests/WaitingLine.tsx';
 import { useAddPortalComment, usePortalRequest } from './api.ts';
 import { portalRequestMessages } from './request-messages.ts';
 
@@ -58,6 +59,11 @@ export function PortalRequestDetailPage({ workspace }: { workspace: WorkspaceSum
         <h1 className="text-section font-semibold tracking-[-0.02em]">{request.subject}</h1>
         <div className="mt-1.5 flex flex-wrap items-center gap-3">
           <RequestStatusBadge status={request.status} />
+          <WaitingLine
+            waitingOn={request.waitingOn}
+            waitingSince={request.waitingSince}
+            perspective="client"
+          />
           {request.projectName && (
             <span className="text-body text-muted">{request.projectName}</span>
           )}

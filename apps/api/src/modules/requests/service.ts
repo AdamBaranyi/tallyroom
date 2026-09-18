@@ -2,6 +2,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import { requestComments, serviceRequests, type Database } from '@tallyroom/db';
 import {
   isAllowedTransition,
+  waitingSideOf,
   type CommentInput,
   type ListResponse,
   type RequestComment,
@@ -34,13 +35,17 @@ interface Row {
   createdAt: Date;
   updatedAt: Date;
   commentCount: number;
+  statusChangedAt: string | null;
 }
 
 function toDto(row: Row): ServiceRequest {
+  const { statusChangedAt, ...rest } = row;
   return {
-    ...row,
+    ...rest,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    waitingOn: waitingSideOf(row.status),
+    waitingSince: (statusChangedAt ? new Date(statusChangedAt) : row.createdAt).toISOString(),
   };
 }
 

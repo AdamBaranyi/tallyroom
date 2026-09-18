@@ -14,6 +14,7 @@ import { ApiRequestError } from '../../lib/api.ts';
 import { workspacePath } from '../../lib/paths.ts';
 import { CommentThread } from './CommentThread.tsx';
 import { PriorityBadge, RequestStatusBadge } from './labels.tsx';
+import { WaitingLine } from './WaitingLine.tsx';
 import { requestMessages } from './messages.ts';
 import { useChangeRequestStatus, useRequest, useRequestComments } from './api.ts';
 import { PendingRecord, RecordHeading } from '../../components/base/RecordLink.tsx';
@@ -57,6 +58,7 @@ export function RequestDetailPage({ workspace }: { workspace: WorkspaceSummary }
             <span>{request.customerName}</span>
             {request.projectName && <span>· {request.projectName}</span>}
             <RequestStatusBadge status={request.status} />
+            <WaitingLine waitingOn={request.waitingOn} waitingSince={request.waitingSince} />
           </div>
         </div>
 

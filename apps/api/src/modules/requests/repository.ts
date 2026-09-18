@@ -1,8 +1,9 @@
 import { alias } from 'drizzle-orm/pg-core';
-import { and, asc, count, desc, eq, ilike, or } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, inArray, or } from 'drizzle-orm';
 import type { Database } from '@tallyroom/db';
 import { customers, projects, requestComments, serviceRequests, users } from '@tallyroom/db';
 import type { RequestListQuery } from '@tallyroom/contracts';
+import { statusChangedAt, WAITING_ON_TEAM_STATUS } from '../../lib/request-waiting.ts';
 
 const assignee = alias(users, 'assignee');
 const author = alias(users, 'author');
@@ -25,6 +26,7 @@ export function createRequestRepository(db: Database) {
     createdAt: serviceRequests.createdAt,
     updatedAt: serviceRequests.updatedAt,
     commentCount: db.$count(requestComments, eq(requestComments.requestId, serviceRequests.id)),
+    statusChangedAt,
   };
 
   function base() {
@@ -42,6 +44,14 @@ export function createRequestRepository(db: Database) {
     if (query.customerId) filters.push(eq(serviceRequests.customerId, query.customerId));
     if (query.status) filters.push(eq(serviceRequests.status, query.status));
     if (query.priority) filters.push(eq(serviceRequests.priority, query.priority));
+    // Der Ball liegt beim Kunden, sobald der Status das sagt; bei uns in
+    // jedem anderen offenen Status. Erledigte warten auf niemanden.
+    if (query.waitingOn === 'client') {
+      filters.push(eq(serviceRequests.status, 'waiting_customer'));
+    }
+    if (query.waitingOn === 'team') {
+      filters.push(inArray(serviceRequests.status, [...WAITING_ON_TEAM_STATUS]));
+    }
     if (query.search) {
       const pattern = `%${query.search}%`;
       const match = or(ilike(serviceRequests.subject, pattern), ilike(customers.name, pattern));
