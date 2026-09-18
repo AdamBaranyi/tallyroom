@@ -1,4 +1,6 @@
+import { desc, eq, sql } from 'drizzle-orm';
 import { activityEvents, type Executor } from '@tallyroom/db';
+import { advisoryLockKey, chainHash } from './activity-chain.ts';
 
 /**
  * Erlaubte Metadaten je Aktionstyp. Alles, was hier nicht steht, wird
@@ -35,6 +37,9 @@ const ALLOWED_KEYS: Record<string, readonly string[]> = {
 
 export type ActivityAction = keyof typeof ALLOWED_KEYS;
 
+/** Für den Abgleich mit ACTIVITY_ACTIONS aus den Verträgen. */
+export const KNOWN_ACTIONS: readonly string[] = Object.keys(ALLOWED_KEYS);
+
 export function isKnownAction(action: string): boolean {
   return Object.hasOwn(ALLOWED_KEYS, action);
 }
@@ -69,14 +74,44 @@ export interface ActivityInput {
 /**
  * Wird innerhalb derselben Transaktion wie die Änderung geschrieben, damit
  * Protokoll und Datenstand nicht auseinanderlaufen.
+ *
+ * Der Eintrag hängt sich an den Hash seines Vorgängers. Die Sperre gilt je
+ * Workspace und nur bis zum Ende der Transaktion: ohne sie könnten zwei
+ * gleichzeitige Schreiber denselben Vorgänger lesen und die Kette gabeln.
  */
 export async function recordActivity(tx: Executor, input: ActivityInput): Promise<void> {
+  const metadata = filterMetadata(input.action, input.metadata ?? {});
+  const createdAt = new Date();
+
+  await tx.execute(sql`select pg_advisory_xact_lock(${advisoryLockKey(input.workspaceId)})`);
+
+  const [previous] = await tx
+    .select({ hash: activityEvents.hash })
+    .from(activityEvents)
+    .where(eq(activityEvents.workspaceId, input.workspaceId))
+    .orderBy(desc(activityEvents.sequence))
+    .limit(1);
+
+  const previousHash = previous?.hash ?? null;
+
   await tx.insert(activityEvents).values({
     workspaceId: input.workspaceId,
     actorId: input.actorId,
     action: input.action,
     entityType: input.entityType,
     entityId: input.entityId,
-    metadata: filterMetadata(input.action, input.metadata ?? {}),
+    metadata,
+    createdAt,
+    previousHash,
+    hash: chainHash({
+      workspaceId: input.workspaceId,
+      actorId: input.actorId,
+      action: input.action,
+      entityType: input.entityType,
+      entityId: input.entityId,
+      metadata,
+      createdAt,
+      previousHash,
+    }),
   });
 }

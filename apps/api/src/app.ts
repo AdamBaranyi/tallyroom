@@ -11,6 +11,9 @@ import { errorHandler, notFoundHandler } from './middleware/error-handler.ts';
 import { requestContext } from './middleware/request-context.ts';
 import { requestLocale } from './middleware/request-locale.ts';
 import { createSessionMiddleware } from './middleware/session.ts';
+import { createActivityRepository } from './modules/activity/repository.ts';
+import { createActivityRouter } from './modules/activity/routes.ts';
+import { createActivityService } from './modules/activity/service.ts';
 import { createAuthRepository } from './modules/auth/repository.ts';
 import { createAuthRouter } from './modules/auth/routes.ts';
 import { createAuthService } from './modules/auth/service.ts';
@@ -80,6 +83,8 @@ export function createApp({ env, db, pool, logger, storage }: AppDependencies): 
   const authRepository = createAuthRepository(db);
   const authService = createAuthService(authRepository);
 
+  const activityService = createActivityService(createActivityRepository(db));
+
   const demoLimits = createDemoLimits(db);
 
   const customerRepository = createCustomerRepository(db);
@@ -133,6 +138,10 @@ export function createApp({ env, db, pool, logger, storage }: AppDependencies): 
     }),
   );
   app.use('/api/v1/workspaces', createWorkspaceRouter(authRepository));
+  app.use(
+    '/api/v1/workspaces/:workspaceId/activity',
+    createActivityRouter(activityService, authRepository),
+  );
   app.use(
     '/api/v1/workspaces/:workspaceId/customers',
     createCustomerRouter(customerService, authRepository),

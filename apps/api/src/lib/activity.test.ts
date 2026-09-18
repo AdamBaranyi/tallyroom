@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { filterMetadata, isKnownAction } from './activity.ts';
+import { ACTIVITY_ACTIONS } from '@tallyroom/contracts';
+import { filterMetadata, isKnownAction, KNOWN_ACTIONS } from './activity.ts';
 
 describe('Metadaten-Whitelist des Aktivitätsprotokolls', () => {
   it('behält die erlaubten Schlüssel', () => {
@@ -34,5 +35,13 @@ describe('Metadaten-Whitelist des Aktivitätsprotokolls', () => {
 
   it('lässt fehlende erlaubte Schlüssel einfach weg', () => {
     expect(filterMetadata('customer.updated', {})).toEqual({});
+  });
+});
+
+describe('Abgleich mit den Verträgen', () => {
+  it('kennt genau die Handlungen, die die Oberfläche anzeigen kann', () => {
+    // Eine Handlung ohne Whitelist verlöre ihre Metadaten, eine Whitelist ohne
+    // Eintrag in den Verträgen hätte in der Oberfläche keinen Text.
+    expect([...KNOWN_ACTIONS].sort()).toEqual([...ACTIVITY_ACTIONS].sort());
   });
 });
