@@ -3,7 +3,7 @@
 Stand: 19.09.2026 · Meilensteine 1–6 abgeschlossen · live unter
 <https://tallyroom.adambaranyi.xyz> · Meilenstein 7 (Standardlücken) in Arbeit
 
-269 Unit- und Integrationstests · End-to-End-Prüfungen über sechs Breiten · Lint ohne Fehler
+276 Unit- und Integrationstests · End-to-End-Prüfungen über sechs Breiten · Lint ohne Fehler
 und ohne Warnungen · Typecheck in allen vier Paketen sauber · keine Anfrage an Dritte.
 
 ## Erledigt — Meilenstein 1: Fundament und Pipeline
