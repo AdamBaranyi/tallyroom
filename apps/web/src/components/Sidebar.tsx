@@ -1,6 +1,7 @@
 import {
   FileText,
   FolderKanban,
+  History,
   LayoutGrid,
   MessageSquare,
   Paperclip,
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { to: 'contracts', icon: FileText },
   { to: 'requests', icon: MessageSquare },
   { to: 'documents', icon: Paperclip },
+  { to: 'activity', icon: History },
   { to: 'settings', icon: Settings },
 ] as const;
 

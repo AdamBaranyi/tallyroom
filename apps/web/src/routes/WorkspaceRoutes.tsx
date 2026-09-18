@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes, useParams } from 'react-router';
 import type { SessionUser } from '@tallyroom/contracts';
+import { ActivityPage } from '../features/activity/ActivityPage.tsx';
 import { AppShell } from '../components/AppShell.tsx';
 import { ContractDetailPage } from '../features/contracts/ContractDetailPage.tsx';
 import { ContractListPage } from '../features/contracts/ContractListPage.tsx';
@@ -44,6 +45,7 @@ export function WorkspaceRoutes({ user }: { user: SessionUser }) {
         <Route path="requests" element={<RequestListPage workspace={workspace} />} />
         <Route path="requests/:requestId" element={<RequestDetailPage workspace={workspace} />} />
         <Route path="documents" element={<DocumentListPage workspace={workspace} />} />
+        <Route path="activity" element={<ActivityPage workspace={workspace} />} />
         <Route path="settings" element={<SettingsPage workspace={workspace} />} />
         <Route
           path="*"

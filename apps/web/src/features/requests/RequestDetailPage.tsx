@@ -8,6 +8,7 @@ import {
 import { Card, CardHeader } from '../../components/base/Card.tsx';
 import { ErrorState, LoadingState } from '../../components/base/EmptyState.tsx';
 import { domainMessages } from '../../i18n/domain-messages.ts';
+import { RecordActivity } from '../activity/RecordActivity.tsx';
 import { useMessages } from '../../i18n/messages.ts';
 import { ApiRequestError } from '../../lib/api.ts';
 import { workspacePath } from '../../lib/paths.ts';
@@ -112,6 +113,10 @@ export function RequestDetailPage({ workspace }: { workspace: WorkspaceSummary }
           />
         )}
       </Card>
+
+      {requestId && (
+        <RecordActivity workspaceId={workspace.id} entityType="request" entityId={requestId} />
+      )}
     </div>
   );
 }

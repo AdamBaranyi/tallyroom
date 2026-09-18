@@ -14,6 +14,7 @@ import { useMilestones, useProject, useUpdateProject } from './api.ts';
 import { PendingRecord, RecordHeading } from '../../components/base/RecordLink.tsx';
 import { useRecordTitlePreview } from '../../lib/use-record-title.ts';
 import { domainMessages } from '../../i18n/domain-messages.ts';
+import { RecordActivity } from '../activity/RecordActivity.tsx';
 import { useMessages } from '../../i18n/messages.ts';
 import { projectMessages } from './messages.ts';
 
@@ -179,6 +180,9 @@ export function ProjectDetailPage({ workspace }: { workspace: WorkspaceSummary }
           )
         }
       />
+      {projectId && (
+        <RecordActivity workspaceId={workspace.id} entityType="project" entityId={projectId} />
+      )}
     </div>
   );
 }
