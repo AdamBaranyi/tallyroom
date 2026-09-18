@@ -6,6 +6,7 @@ import {
   formatAmountMinor,
   type ContractVisibleStatus,
   type WorkspaceSummary,
+  CONTRACT_SORT_FIELDS,
 } from '@tallyroom/contracts';
 import { Button } from '../../components/base/Button.tsx';
 import { Card } from '../../components/base/Card.tsx';
@@ -21,6 +22,7 @@ import { ContractRows } from './ContractRows.tsx';
 import { SearchField, SelectField } from '../../components/base/Controls.tsx';
 import { domainMessages } from '../../i18n/domain-messages.ts';
 import { useMessages } from '../../i18n/messages.ts';
+import { readSort, toggleSort } from '../../lib/sorting.ts';
 import { contractMessages } from './messages.ts';
 
 export function ContractListPage({ workspace }: { workspace: WorkspaceSummary }) {
@@ -33,12 +35,18 @@ export function ContractListPage({ workspace }: { workspace: WorkspaceSummary })
   const status = (params.get('status') as ContractVisibleStatus | null) ?? undefined;
   const onDate = params.get('onDate') ?? undefined;
   const page = Number(params.get('page') ?? '1');
+  const { field: sort, direction } = readSort(params, CONTRACT_SORT_FIELDS, {
+    field: 'name',
+    direction: 'asc',
+  });
 
   const query = useContracts(workspace.id, {
     search,
     ...(status ? { status } : {}),
     ...(onDate ? { onDate } : {}),
     page,
+    sort,
+    direction,
   });
   const board = useDashboard(workspace.id, onDate);
   const customers = useCustomers(workspace.id, { status: 'active', pageSize: 100 });
@@ -146,6 +154,11 @@ export function ContractListPage({ workspace }: { workspace: WorkspaceSummary })
               <ContractRows
                 contracts={query.data.data}
                 basePath={workspacePath(workspace.id, 'contracts')}
+                sort={{
+                  active: sort,
+                  direction,
+                  onSort: (field) => patchParams(toggleSort(sort, direction, field)),
+                }}
               />
             </div>
             <Pagination

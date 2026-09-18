@@ -14,9 +14,16 @@ import { ArchivedBadge } from '../../components/base/StatusBadge.tsx';
 import { useMessages } from '../../i18n/messages.ts';
 import { customerMessages } from './messages.ts';
 
+interface SortProps {
+  active: string;
+  direction: 'asc' | 'desc';
+  onSort: (field: string) => void;
+}
+
 interface Props {
   customers: Customer[];
   basePath: string;
+  sort?: SortProps;
 }
 
 /**
@@ -24,7 +31,7 @@ interface Props {
  * Karten. Damit bleibt auf 320 Pixeln alles lesbar, ohne die Tabelle seitlich
  * zu schieben oder Spalten ersatzlos wegzulassen.
  */
-export function CustomerRows({ customers, basePath }: Props) {
+export function CustomerRows({ customers, basePath, sort }: Props) {
   const m = useMessages(customerMessages);
   return (
     <>
@@ -50,10 +57,12 @@ export function CustomerRows({ customers, basePath }: Props) {
 
       <DataTable>
         <TableHead>
-          <Th>{m.fields.name}</Th>
+          <Th sort={sort && { ...sort, field: 'name' }}>{m.fields.name}</Th>
           <Th>{m.fields.mainContact}</Th>
           <Th>{m.fields.status}</Th>
-          <Th right>{m.fields.runningProjects}</Th>
+          <Th right sort={sort && { ...sort, field: 'activeProjectCount' }}>
+            {m.fields.runningProjects}
+          </Th>
         </TableHead>
         <tbody>
           {customers.map((customer) => (

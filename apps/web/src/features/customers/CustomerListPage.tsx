@@ -5,6 +5,7 @@ import {
   CUSTOMER_STATUS_FILTERS,
   type CustomerStatusFilter,
   type WorkspaceSummary,
+  CUSTOMER_SORT_FIELDS,
 } from '@tallyroom/contracts';
 import { Button } from '../../components/base/Button.tsx';
 import { workspacePath } from '../../lib/paths.ts';
@@ -13,6 +14,7 @@ import { Dialog } from '../../components/base/Dialog.tsx';
 import { EmptyState, ErrorState, LoadingState } from '../../components/base/EmptyState.tsx';
 import { Pagination } from '../../components/base/Pagination.tsx';
 import { useMessages } from '../../i18n/messages.ts';
+import { readSort, toggleSort } from '../../lib/sorting.ts';
 import { useCreateCustomer, useCustomers } from './api.ts';
 import { CustomerForm } from './CustomerForm.tsx';
 import { CustomerRows } from './CustomerRows.tsx';
@@ -28,8 +30,12 @@ export function CustomerListPage({ workspace }: { workspace: WorkspaceSummary })
   const search = params.get('search') ?? '';
   const status = (params.get('status') as CustomerStatusFilter | null) ?? 'active';
   const page = Number(params.get('page') ?? '1');
+  const { field: sort, direction } = readSort(params, CUSTOMER_SORT_FIELDS, {
+    field: 'name',
+    direction: 'asc',
+  });
 
-  const query = useCustomers(workspace.id, { search, status, page });
+  const query = useCustomers(workspace.id, { search, status, page, sort, direction });
   const create = useCreateCustomer(workspace.id);
 
   function patchParams(changes: Record<string, string | null>) {
@@ -101,6 +107,11 @@ export function CustomerListPage({ workspace }: { workspace: WorkspaceSummary })
               <CustomerRows
                 customers={query.data.data}
                 basePath={workspacePath(workspace.id, 'customers')}
+                sort={{
+                  active: sort,
+                  direction,
+                  onSort: (field) => patchParams(toggleSort(sort, direction, field)),
+                }}
               />
             </div>
             <Pagination

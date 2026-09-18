@@ -15,10 +15,17 @@ import { PriorityBadge, RequestStatusBadge } from './labels.tsx';
 import { WaitingLine } from './WaitingLine.tsx';
 import { requestMessages } from './messages.ts';
 
+interface SortProps {
+  active: string;
+  direction: 'asc' | 'desc';
+  onSort: (field: string) => void;
+}
+
 interface Props {
   requests: ServiceRequest[];
   basePath: string;
   showCustomer?: boolean;
+  sort?: SortProps;
 }
 
 type RowMessages = (typeof requestMessages)['de']['rows'];
@@ -32,7 +39,7 @@ function relativeTime(iso: string, m: RowMessages): string {
   return m.daysAgo(Math.round(hours / 24));
 }
 
-export function RequestRows({ requests, basePath, showCustomer = true }: Props) {
+export function RequestRows({ requests, basePath, showCustomer = true, sort }: Props) {
   const m = useMessages(requestMessages).rows;
   return (
     <>
@@ -60,11 +67,13 @@ export function RequestRows({ requests, basePath, showCustomer = true }: Props) 
 
       <DataTable>
         <TableHead>
-          <Th>{m.subject}</Th>
+          <Th sort={sort && { ...sort, field: 'subject' }}>{m.subject}</Th>
           {showCustomer && <Th>{m.customer}</Th>}
           <Th>{m.status}</Th>
           <Th>{m.assignee}</Th>
-          <Th right>{m.updated}</Th>
+          <Th right sort={sort && { ...sort, field: 'updatedAt' }}>
+            {m.updated}
+          </Th>
         </TableHead>
         <tbody>
           {requests.map((request) => (

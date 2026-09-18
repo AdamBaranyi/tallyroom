@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useSearchParams } from 'react-router';
-import { REQUEST_STATUS, type RequestStatus, type WorkspaceSummary } from '@tallyroom/contracts';
+import {
+  REQUEST_SORT_FIELDS,
+  REQUEST_STATUS,
+  type RequestStatus,
+  type WorkspaceSummary,
+} from '@tallyroom/contracts';
 import { Button } from '../../components/base/Button.tsx';
 import { Card } from '../../components/base/Card.tsx';
 import { Dialog } from '../../components/base/Dialog.tsx';
@@ -9,6 +14,7 @@ import { EmptyState, ErrorState, LoadingState } from '../../components/base/Empt
 import { Pagination } from '../../components/base/Pagination.tsx';
 import { domainMessages } from '../../i18n/domain-messages.ts';
 import { useMessages } from '../../i18n/messages.ts';
+import { readSort, toggleSort } from '../../lib/sorting.ts';
 import { workspacePath } from '../../lib/paths.ts';
 import { useCustomers } from '../customers/api.ts';
 import { useCreateRequest, useRequests } from './api.ts';
@@ -30,12 +36,18 @@ export function RequestListPage({ workspace }: { workspace: WorkspaceSummary }) 
   const status = (params.get('status') as RequestStatus | null) ?? undefined;
   const waitingOn = (params.get('waitingOn') as 'team' | 'client' | null) ?? undefined;
   const page = Number(params.get('page') ?? '1');
+  const { field: sort, direction } = readSort(params, REQUEST_SORT_FIELDS, {
+    field: 'updatedAt',
+    direction: 'desc',
+  });
 
   const query = useRequests(workspace.id, {
     search,
     ...(status ? { status } : {}),
     ...(waitingOn ? { waitingOn } : {}),
     page,
+    sort,
+    direction,
   });
   const customers = useCustomers(workspace.id, { status: 'active', pageSize: 100 });
   const create = useCreateRequest(workspace.id);
@@ -131,6 +143,11 @@ export function RequestListPage({ workspace }: { workspace: WorkspaceSummary }) 
               <RequestRows
                 requests={query.data.data}
                 basePath={workspacePath(workspace.id, 'requests')}
+                sort={{
+                  active: sort,
+                  direction,
+                  onSort: (field) => patchParams(toggleSort(sort, direction, field)),
+                }}
               />
             </div>
             <Pagination

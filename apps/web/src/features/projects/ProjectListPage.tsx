@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useSearchParams } from 'react-router';
-import { PROJECT_STATUS, type ProjectStatus, type WorkspaceSummary } from '@tallyroom/contracts';
+import {
+  PROJECT_SORT_FIELDS,
+  PROJECT_STATUS,
+  type ProjectStatus,
+  type WorkspaceSummary,
+} from '@tallyroom/contracts';
 import { Button } from '../../components/base/Button.tsx';
 import { workspacePath } from '../../lib/paths.ts';
 import { Card } from '../../components/base/Card.tsx';
@@ -15,6 +20,7 @@ import { ProjectRows } from './ProjectRows.tsx';
 import { SearchField, SelectField } from '../../components/base/Controls.tsx';
 import { domainMessages } from '../../i18n/domain-messages.ts';
 import { useMessages } from '../../i18n/messages.ts';
+import { readSort, toggleSort } from '../../lib/sorting.ts';
 import { projectMessages } from './messages.ts';
 
 export function ProjectListPage({ workspace }: { workspace: WorkspaceSummary }) {
@@ -26,8 +32,18 @@ export function ProjectListPage({ workspace }: { workspace: WorkspaceSummary }) 
   const search = params.get('search') ?? '';
   const status = (params.get('status') as ProjectStatus | null) ?? undefined;
   const page = Number(params.get('page') ?? '1');
+  const { field: sort, direction } = readSort(params, PROJECT_SORT_FIELDS, {
+    field: 'name',
+    direction: 'asc',
+  });
 
-  const query = useProjects(workspace.id, { search, ...(status ? { status } : {}), page });
+  const query = useProjects(workspace.id, {
+    search,
+    ...(status ? { status } : {}),
+    page,
+    sort,
+    direction,
+  });
   // Nur aktive Kunden können ein neues Projekt bekommen.
   const customers = useCustomers(workspace.id, { status: 'active', pageSize: 100 });
   const create = useCreateProject(workspace.id);
@@ -108,6 +124,11 @@ export function ProjectListPage({ workspace }: { workspace: WorkspaceSummary }) 
               <ProjectRows
                 projects={query.data.data}
                 basePath={workspacePath(workspace.id, 'projects')}
+                sort={{
+                  active: sort,
+                  direction,
+                  onSort: (field) => patchParams(toggleSort(sort, direction, field)),
+                }}
               />
             </div>
             <Pagination
