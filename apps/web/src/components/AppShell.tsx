@@ -61,7 +61,7 @@ export function AppShell({ user, workspace }: AppShellProps) {
           <TourDialog step={tour.step} onNext={tour.next} onBack={tour.back} onClose={tour.close} />
         )}
 
-        <aside className="hidden w-[var(--sidebar-width)] shrink-0 border-r border-line lg:block">
+        <aside className="hidden w-[var(--sidebar-width)] shrink-0 border-r border-line lg:block print:hidden">
           <Sidebar workspace={workspace} />
         </aside>
 

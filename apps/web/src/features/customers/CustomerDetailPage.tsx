@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Pencil } from 'lucide-react';
+import { ArrowLeft, FileBarChart, Pencil } from 'lucide-react';
 import { Link, useParams } from 'react-router';
 import { isWritingRole, type WorkspaceSummary } from '@tallyroom/contracts';
 import { Button } from '../../components/base/Button.tsx';
@@ -56,12 +56,21 @@ export function CustomerDetailPage({ workspace }: { workspace: WorkspaceSummary 
             {customer.archivedAt && <ArchivedBadge />}
           </div>
         </div>
-        {darfSchreiben && (
-          <Button onClick={() => setEditing(true)}>
-            <Pencil size={15} strokeWidth={1.8} aria-hidden="true" />
-            {m.detail.edit}
-          </Button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          <Link
+            to={workspacePath(workspace.id, 'customers', customer.id, 'report')}
+            className="text-body inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-line bg-surface px-4 font-medium text-ink no-underline hover:border-ink"
+          >
+            <FileBarChart size={15} strokeWidth={1.8} aria-hidden="true" />
+            {m.detail.report}
+          </Link>
+          {darfSchreiben && (
+            <Button onClick={() => setEditing(true)}>
+              <Pencil size={15} strokeWidth={1.8} aria-hidden="true" />
+              {m.detail.edit}
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>

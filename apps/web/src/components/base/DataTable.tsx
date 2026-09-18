@@ -59,7 +59,7 @@ export function Th({ children, right = false, sort }: ThProps) {
     <th
       scope="col"
       aria-sort={sort ? (ariaSort ?? 'none') : undefined}
-      className={[KOPF_KLASSEN, 'px-3 pb-2', right ? 'text-right' : 'text-left'].join(' ')}
+      className={[KOPF_KLASSEN, 'relative px-3 pb-2', right ? 'text-right' : 'text-left'].join(' ')}
     >
       {sort ? (
         <button
@@ -69,17 +69,28 @@ export function Th({ children, right = false, sort }: ThProps) {
             // 24 Pixel hoch: das Mindestmass aus WCAG 2.2 für Zeigeziele.
             // Die 44 der übrigen Bedienelemente würden den Tabellenkopf
             // aufblähen, und er ist Teil des Rasters, nicht der Bedienung.
-            'inline-flex min-h-6 items-center gap-1.5 transition-colors ease-state duration-[var(--dur-snap)]',
+            'inline-flex min-h-6 items-center transition-colors ease-state duration-[var(--dur-snap)]',
             aktiv ? 'text-ink' : 'hover:text-ink',
           ].join(' ')}
         >
           {children}
-          <span aria-hidden="true" className={aktiv ? 'opacity-100' : 'opacity-0'}>
-            {sort.direction === 'asc' ? '▲' : '▼'}
-          </span>
         </button>
       ) : (
         children
+      )}
+
+      {/*
+        Das Zeichen liegt im Polster der Zelle statt im Textfluss: im Fluss
+        verbreiterte es den Kopf, und die schmalste Tabelle hatte bei 1024
+        Pixeln noch 6 Pixel Luft — die Pipeline hat genau das gemeldet.
+      */}
+      {aktiv && (
+        <span
+          aria-hidden="true"
+          className={['absolute top-0 text-ink', right ? 'left-0.5' : 'right-0.5'].join(' ')}
+        >
+          {sort?.direction === 'asc' ? '▲' : '▼'}
+        </span>
       )}
     </th>
   );

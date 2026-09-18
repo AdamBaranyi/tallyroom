@@ -7,6 +7,7 @@ import {
   PortalOverviewPage,
   PortalProjectsPage,
 } from '../features/portal/PortalPages.tsx';
+import { PortalReportPage } from '../features/report/PortalReportPage.tsx';
 import { PortalRequestDetailPage } from '../features/portal/PortalRequestDetailPage.tsx';
 import { PortalRequestsPage } from '../features/portal/PortalRequestsPage.tsx';
 import { PortalShell } from '../features/portal/PortalShell.tsx';
@@ -39,6 +40,7 @@ export function PortalRoutes({ user }: { user: SessionUser }) {
           element={<PortalRequestDetailPage workspace={workspace} />}
         />
         <Route path="documents" element={<PortalDocumentsPage workspace={workspace} />} />
+        <Route path="report" element={<PortalReportPage workspace={workspace} />} />
         <Route path="account" element={<PortalAccountPage workspace={workspace} />} />
         <Route path="*" element={<Navigate to={portalPath(workspace.id, 'overview')} replace />} />
       </Route>

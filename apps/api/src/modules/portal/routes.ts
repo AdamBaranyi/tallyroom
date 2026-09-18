@@ -4,9 +4,11 @@ import {
   ALLOWED_DOCUMENT_MIME,
   clientRequestInputSchema,
   commentInputSchema,
+  reportQuerySchema,
 } from '@tallyroom/contracts';
 import type { AuthRepository } from '../auth/repository.ts';
 import { getPortal, requirePortalClient } from './context.ts';
+import type { ReportService } from '../report/service.ts';
 import type { PortalService } from './service.ts';
 
 const idSchema = z.uuid();
@@ -15,12 +17,23 @@ const idempotencyKeySchema = z.string().trim().min(8).max(200);
 /** Der Kunde kommentiert öffentlich; eine Sichtbarkeit schickt er nicht mit. */
 const clientCommentSchema = commentInputSchema.pick({ body: true });
 
-export function createPortalRouter(service: PortalService, authRepository: AuthRepository): Router {
+export function createPortalRouter(
+  service: PortalService,
+  report: ReportService,
+  authRepository: AuthRepository,
+): Router {
   const router = Router({ mergeParams: true });
   router.use(requirePortalClient(authRepository));
 
   router.get('/overview', async (req, res) => {
     res.json(await service.overview(getPortal(req)));
+  });
+
+  /** Derselbe Monatsbericht, den das Team sieht — aus denselben Daten. */
+  router.get('/report', async (req, res) => {
+    const { month } = reportQuerySchema.parse(req.query);
+    const scope = getPortal(req);
+    res.json(await report.build(scope.workspaceId, scope.customerId, scope.timezone, month));
   });
 
   router.get('/projects', async (req, res) => {

@@ -42,6 +42,9 @@ import {
   createInvitationPublicRouter,
 } from './modules/invitations/routes.ts';
 import { createInvitationService } from './modules/invitations/service.ts';
+import { createReportRepository } from './modules/report/repository.ts';
+import { createReportRouter } from './modules/report/routes.ts';
+import { createReportService } from './modules/report/service.ts';
 import { createPortalRepository } from './modules/portal/repository.ts';
 import { createPortalRouter } from './modules/portal/routes.ts';
 import { createPortalService } from './modules/portal/service.ts';
@@ -127,6 +130,8 @@ export function createApp({ env, db, pool, logger, storage }: AppDependencies): 
   const portalRepository = createPortalRepository(db);
   const portalService = createPortalService(db, portalRepository, documentStorage, demoLimits);
 
+  const reportService = createReportService(portalRepository, createReportRepository(db));
+
   const exportService = createExportService(createExportRepository(db), documentStorage);
   const handoverService = createHandoverService(portalRepository, documentStorage);
 
@@ -186,8 +191,15 @@ export function createApp({ env, db, pool, logger, storage }: AppDependencies): 
     '/api/v1/workspaces/:workspaceId/export',
     createExportRouter(exportService, handoverService, authRepository),
   );
+  app.use(
+    '/api/v1/workspaces/:workspaceId/report',
+    createReportRouter(reportService, authRepository),
+  );
   app.use('/api/v1/demo', createDemoRouter(demoService, env));
-  app.use('/api/v1/portal/:workspaceId', createPortalRouter(portalService, authRepository));
+  app.use(
+    '/api/v1/portal/:workspaceId',
+    createPortalRouter(portalService, reportService, authRepository),
+  );
 
   app.use(notFoundHandler);
   app.use(errorHandler);

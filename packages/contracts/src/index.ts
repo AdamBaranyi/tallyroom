@@ -12,6 +12,7 @@ export * from './money.ts';
 export * from './pagination.ts';
 export * from './portal.ts';
 export * from './project.ts';
+export * from './report.ts';
 export * from './search.ts';
 export * from './service-contract.ts';
 export * from './service-request.ts';
