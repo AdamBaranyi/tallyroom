@@ -540,6 +540,14 @@ entsteht aus der Datenschicht des Portals und enthält deshalb nichts Internes �
 Archiv und sucht den internen Vermerk. ZIP ist selbst geschrieben (120 Zeilen, kein ZIP64) und wird
 im Test von `unzip` gegengelesen.
 
+**Monatsbericht.** Je Kunde und Monat, aus dem Bestand gerechnet statt abgelegt: erledigte
+Meilensteine, eröffnete und erledigte Anfragen, freigegebene Dokumente, laufende Projekte mit ihren
+Meilensteinen, der vereinbarte Monatswert am Monatsende und die offenen Punkte mit der Seite, bei
+der sie liegen. «Erledigt» und «gelöst» kommen aus dem Protokoll — eine Tabelle kennt nur ihren
+heutigen Stand. Derselbe Bericht steht in der Teamansicht und im Portal; es gibt keinen
+Freigabeschritt und keine abgelegte Fassung, also auch nicht den Schritt, an dem ein Bericht sonst
+liegen bleibt. Drucken übernimmt der Browser, die Navigation trägt `print:hidden`.
+
 **Sortierbare Listen.** Die vier Listen sortieren über ihre Spaltenköpfe, mit `aria-sort`, Zustand
 in der URL und einer Prüfung gegen die erlaubten Felder; eine erfundene Sortierung fällt auf die
 Vorgabe zurück, statt eine 422 mit leerer Liste zu erzeugen.
@@ -554,7 +562,6 @@ Bedienelemente, die ohnehin scheitern würden.
 | ------------------------------- | ----------------------------------------------------------------------------- |
 | Massenauswahl mit Rückgängig    | Braucht ein eigenes Muster für «rückgängig» statt einer Bestätigung je Zeile  |
 | Benachrichtigungen in der App   | Ohne Mailversand ein eigenes Postfach samt Lesestand; entworfen, nicht gebaut |
-| Monatsbericht als Datei         | Erzeugung serverseitig; Entscheid PDF gegen Druckansicht steht aus            |
 | Löschen von Workspace und Konto | Der Auszug steht, das Löschen mit Fristen und Sicherungen fehlt               |
 | Passkeys als zweiter Anmeldeweg | WebAuthn ohne Fremddienst; grösster Einzelpunkt der Liste                     |
 
