@@ -52,8 +52,31 @@ Header `X-CSRF-Token`, verglichen in konstanter Zeit, und die Herkunft aus `Orig
 abgewiesen, nicht durchgewinkt.
 
 **Autorisierung.** Standardmässig verweigert. `requireWorkspace` schlägt die Mitgliedschaft
-serverseitig nach; ohne sie gibt es 404 statt 403. `requireInternal` und `requireOwner` bauen
-darauf auf. Versteckte Schaltflächen und schwer zu erratende IDs gelten nicht als Zugriffskontrolle.
+serverseitig nach; ohne sie gibt es 404 statt 403. `requireInternal`, `requireWriter` und
+`requireOwner` bauen darauf auf. Versteckte Schaltflächen und schwer zu erratende IDs gelten nicht
+als Zugriffskontrolle.
+
+`requireWriter` trennt Lesen von Ändern: die Rolle `viewer` sieht denselben Bestand wie ein
+Mitglied und wird an jeder ändernden Route mit 403 abgewiesen. 403 und nicht 404, weil die Sache für
+diese Rolle sichtbar ist — ihre Existenz zu leugnen wäre sinnlos. Geprüft in
+`tests/integration/viewer-role.test.ts`, einschliesslich der Grenze, dass der vollständige
+Datenauszug beim Owner bleibt.
+
+**Protokoll mit Hash-Kette.** Jeder Eintrag im Aktivitätsprotokoll hasht seinen Inhalt zusammen mit
+dem Hash seines Vorgängers im selben Workspace (SHA-256, kanonische Form mit sortierten
+Metadaten-Schlüsseln). Wer einen Eintrag nachträglich ändert oder entfernt, müsste alle folgenden
+Hashes neu rechnen; `GET …/activity/integrity` meldet die erste gebrochene Stelle. Das ersetzt
+keinen schreibgeschützten Speicher — mit Datenbankzugang lässt sich die ganze Kette neu schreiben —,
+macht eine einzelne Änderung aber nachweisbar. Beim Anhängen hält eine Sperre je Workspace die
+Reihenfolge; ohne sie gabelt die Kette bei zwei gleichzeitigen Schreibern. Einträge von vor der
+Einführung tragen keinen Hash und werden getrennt gezählt statt als Bruch gemeldet.
+
+**Datenauszug.** Zwei Archive mit zwei Berechtigungen: der vollständige Auszug eines Workspace
+gehört dem Owner und enthält interne Notizen, Mitgliedschaften und das Protokoll — Passwort-Hashes
+enthält er nicht, ein Test sucht danach. Das Übergabepaket je Kunde entsteht aus der Datenschicht
+des Kundenportals, damit dieselbe Grenze gilt wie dort; ein Test öffnet das Archiv und prüft, dass
+der interne Vermerk fehlt. Der ZIP-Schreiber ist projekteigen (kein ZIP64, Archiv im
+Arbeitsspeicher) und wird im Test von `unzip` gegengelesen.
 
 **Eingaben.** Alle Nutzdaten werden mit Zod validiert, alles SQL läuft parametrisiert über Drizzle.
 Umgebungsvariablen werden beim Start einmal geprüft; ein Platzhalter-`SESSION_SECRET` bricht den
@@ -243,6 +266,13 @@ Ehrlich benannt, weil sie zu späteren Meilensteinen gehören:
 - **Mehrfaktor-Authentisierung** ist bewusst nicht Teil des Umfangs.
 - **Sicherungen** liegen auf demselben Server wie die Anwendung. Eine Kopie ausser Haus fehlt
   noch; sie wird verschlüsselt, bevor sie den Server verlässt.
+- **Die Hash-Kette des Protokolls** schützt gegen eine einzelne nachträgliche Änderung, nicht gegen
+  jemanden mit Datenbankzugang, der die Kette vollständig neu berechnet. Dagegen hülfe nur ein
+  Speicher, der nichts überschreiben lässt, oder ein Anker ausserhalb des Servers.
+- **Der Datenauszug entsteht im Arbeitsspeicher.** Für einen Workspace dieser Grössenordnung ist das
+  richtig; ab Archiven jenseits einiger hundert Megabyte gehörte er als Strom auf die Platte.
+- **Löschen von Workspace und Konto** fehlt noch. Der Auszug steht, das Gegenstück dazu ist offen
+  und in `IMPLEMENTATION_STATUS.md` vermerkt.
 
 ## Prüfprotokoll
 

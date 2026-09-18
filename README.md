@@ -247,10 +247,18 @@ sich das Ganze über `DEMO_ENABLED=false`; dann existiert der Bereich nicht.
 
 ## Bewusst nicht enthalten
 
-Diese Punkte fehlen als Entscheidung, nicht als Versehen:
+Diese Punkte fehlen als Entscheidung, nicht als Versehen. Zu jedem steht, was stattdessen da ist:
 
-- **Passwort-Reset per E-Mail.** Ohne Mailversand nicht sauber baubar. Passwörter setzt der
-  Betreiber mit `admin:reset-password` neu.
-- Zahlungen, Rechnungen, Stripe, Kalender, E-Mail-Versand, Echtzeit-Benachrichtigungen
-- Mehrfaktor-Authentisierung und öffentliche Selbstregistrierung
-- Weitere Währungen — im MVP ist alles CHF und monatlich
+- **Passwort-Reset per E-Mail.** Ohne Mailversand nicht sauber baubar. Stattdessen setzt der
+  Betreiber ein neues Passwort mit `admin:reset-password`; danach enden alle Sitzungen des Kontos.
+- **Zweiter Faktor und Anmeldung über einen Identitätsdienst.** Die öffentliche Demo hinge sonst an
+  einem zweiten Dienst und fiele mit ihm aus. Stattdessen: serverseitige Sitzungen mit Rotation,
+  Rate-Limit auf der Anmeldung, Argon2id. Kommt der erste echte Nutzer, wird ein Identitätsdienst
+  als zweiter Anmeldeweg ergänzt, die bestehende Anmeldung bleibt daneben.
+- **SAML-SSO und SCIM.** Eine Einkaufsanforderung von Konzernen, kein Handwerk, das dieses Projekt
+  zeigen soll. Stattdessen Rollen mit einer Grenze, die serverseitig an jeder ändernden Route steht.
+- **Zahlungen, Rechnungen, Zeiterfassung, Kalender, Mailversand.** Eigene Produkte, jedes für sich
+  grösser als dieses hier. Verträge tragen deshalb einen vereinbarten Wert, keinen Zahlungseingang.
+- **Werkzeuge für Agenten auf Kundendaten (WebMCP).** Die Anwendung liegt hinter einer Anmeldung;
+  einem Agenten Zugriff auf fremde Kundendaten zu geben wäre keine Verbesserung.
+- **Öffentliche Selbstregistrierung** und weitere Währungen — im MVP ist alles CHF und monatlich.
