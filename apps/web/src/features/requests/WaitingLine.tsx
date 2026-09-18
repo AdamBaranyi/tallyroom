@@ -32,7 +32,9 @@ export function WaitingLine({ waitingOn, waitingSince, perspective = 'team' }: W
 
   return (
     <span
-      className={['text-body whitespace-nowrap', urgent ? 'text-warning' : 'text-muted'].join(' ')}
+      // Kein `whitespace-nowrap`: in der Statusspalte der Anfragetabelle
+      // zwang die Zeile die Tabelle über 1024 Pixel hinaus. Sie darf brechen.
+      className={['text-body', urgent ? 'text-warning' : 'text-muted'].join(' ')}
     >
       {side} {m.since(days)}
     </span>
