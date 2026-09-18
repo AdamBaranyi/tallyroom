@@ -24,7 +24,9 @@ export const reportMessages = defineMessages({
       opened: 'eröffnet',
       resolved: 'erledigt',
       contracts: (count: number) =>
-        count === 1 ? 'aus 1 bestätigten Vertrag' : `aus ${count} bestätigten Verträgen`,
+        count === 1
+          ? 'CHF · aus 1 bestätigten Vertrag'
+          : `CHF · aus ${count} bestätigten Verträgen`,
       milestones: (done: number, total: number) => `${done} von ${total} Meilensteinen`,
       milestonesDone: 'abgeschlossene Meilensteine',
     },
@@ -57,7 +59,7 @@ export const reportMessages = defineMessages({
       opened: 'ouvertes',
       resolved: 'résolues',
       contracts: (count: number) =>
-        count === 1 ? "d'un contrat confirmé" : `de ${count} contrats confirmés`,
+        count === 1 ? "CHF · d'un contrat confirmé" : `CHF · de ${count} contrats confirmés`,
       milestones: (done: number, total: number) => `${done} jalons sur ${total}`,
       milestonesDone: 'jalons terminés',
     },
@@ -90,7 +92,7 @@ export const reportMessages = defineMessages({
       opened: 'aperte',
       resolved: 'risolte',
       contracts: (count: number) =>
-        count === 1 ? 'da 1 contratto confermato' : `da ${count} contratti confermati`,
+        count === 1 ? 'CHF · da 1 contratto confermato' : `CHF · da ${count} contratti confermati`,
       milestones: (done: number, total: number) => `${done} traguardi su ${total}`,
       milestonesDone: 'traguardi completati',
     },
@@ -123,7 +125,7 @@ export const reportMessages = defineMessages({
       opened: 'opened',
       resolved: 'resolved',
       contracts: (count: number) =>
-        count === 1 ? 'from 1 confirmed contract' : `from ${count} confirmed contracts`,
+        count === 1 ? 'CHF · from 1 confirmed contract' : `CHF · from ${count} confirmed contracts`,
       milestones: (done: number, total: number) => `${done} of ${total} milestones`,
       milestonesDone: 'milestones completed',
     },
