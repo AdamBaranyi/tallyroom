@@ -41,4 +41,12 @@ test.describe('Monatsbericht', () => {
 
     await expect(page.getByText(/aus dem laufenden Bestand und dem Protokoll/)).toBeVisible();
   });
+
+  /*
+   * Die Portalfassung prüft nicht dieser Lauf. Der Rollenwechsel im
+   * Demo-Banner tauscht die gemeinsame Sitzung aller Tests gegen einen
+   * Kundenzugang — danach landen die übrigen Prüfungen im Portal statt in der
+   * Teamansicht. Geprüft wird sie in `production.spec.ts`, das jeden Eintrag
+   * der Portalnavigation besucht, und in `tests/integration/report.test.ts`.
+   */
 });
