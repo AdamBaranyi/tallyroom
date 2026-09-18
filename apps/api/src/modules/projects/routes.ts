@@ -14,6 +14,7 @@ import {
   requireAuth,
   requireInternal,
   requireWorkspace,
+  requireWriter,
 } from '../workspaces/context.ts';
 import type { MilestoneService } from './milestone-service.ts';
 import type { ProjectService } from './service.ts';
@@ -35,7 +36,7 @@ export function createProjectRouter(
     res.json(await projectService.list(workspaceId, timezone, query, page));
   });
 
-  router.post('/', async (req, res) => {
+  router.post('/', requireWriter, async (req, res) => {
     const input = projectInputSchema.parse(req.body);
     const { workspaceId, timezone, userId } = getWorkspace(req);
     res.status(201).json(await projectService.create(workspaceId, timezone, userId, input));
@@ -47,7 +48,7 @@ export function createProjectRouter(
     res.json(await projectService.get(workspaceId, timezone, projectId));
   });
 
-  router.patch('/:projectId', async (req, res) => {
+  router.patch('/:projectId', requireWriter, async (req, res) => {
     const projectId = idSchema.parse(req.params.projectId);
     const input = projectUpdateSchema.parse(req.body);
     const { workspaceId, timezone, userId } = getWorkspace(req);
@@ -60,7 +61,7 @@ export function createProjectRouter(
     res.json({ data: await milestoneService.list(workspaceId, timezone, projectId) });
   });
 
-  router.post('/:projectId/milestones', async (req, res) => {
+  router.post('/:projectId/milestones', requireWriter, async (req, res) => {
     const projectId = idSchema.parse(req.params.projectId);
     const input = milestoneInputSchema.parse(req.body);
     const { workspaceId, timezone, userId } = getWorkspace(req);
@@ -69,7 +70,7 @@ export function createProjectRouter(
       .json({ data: await milestoneService.add(workspaceId, timezone, userId, projectId, input) });
   });
 
-  router.patch('/milestones/:milestoneId', async (req, res) => {
+  router.patch('/milestones/:milestoneId', requireWriter, async (req, res) => {
     const milestoneId = idSchema.parse(req.params.milestoneId);
     const input = milestoneUpdateSchema.parse(req.body);
     const { workspaceId, timezone, userId } = getWorkspace(req);

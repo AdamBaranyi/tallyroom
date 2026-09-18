@@ -13,6 +13,7 @@ import {
   requireAuth,
   requireInternal,
   requireWorkspace,
+  requireWriter,
 } from '../workspaces/context.ts';
 import type { DocumentService } from './service.ts';
 
@@ -49,6 +50,7 @@ export function createDocumentRouter(
 
   router.post(
     '/',
+    requireWriter,
     uploadLimiter,
     // Rohes PDF im Body statt Multipart: eine Abhängigkeit weniger, und die
     // Grenze greift, bevor Daten im Speicher landen.
@@ -70,7 +72,7 @@ export function createDocumentRouter(
   );
 
   /** Nur in der Demo sinnvoll, aber überall erlaubt — es legt nichts Fremdes ab. */
-  router.post('/sample', uploadLimiter, async (req, res) => {
+  router.post('/sample', requireWriter, uploadLimiter, async (req, res) => {
     const { customerId } = z.object({ customerId: z.uuid() }).parse(req.query);
     const { workspaceId, userId } = getWorkspace(req);
     res.status(201).json(await service.addSample(workspaceId, userId, customerId));
@@ -105,14 +107,14 @@ export function createDocumentRouter(
     res.end(Buffer.from(bytes));
   });
 
-  router.patch('/:documentId/visibility', async (req, res) => {
+  router.patch('/:documentId/visibility', requireWriter, async (req, res) => {
     const documentId = idSchema.parse(req.params.documentId);
     const { clientVisible } = documentVisibilitySchema.parse(req.body);
     const { workspaceId, userId } = getWorkspace(req);
     res.json(await service.setVisibility(workspaceId, userId, documentId, clientVisible));
   });
 
-  router.delete('/:documentId', async (req, res) => {
+  router.delete('/:documentId', requireWriter, async (req, res) => {
     const documentId = idSchema.parse(req.params.documentId);
     const { workspaceId, userId } = getWorkspace(req);
     await service.remove(workspaceId, userId, documentId);

@@ -1,5 +1,5 @@
 import { Clock, FlaskConical, Signpost, UserRound, Users } from 'lucide-react';
-import type { WorkspaceSummary } from '@tallyroom/contracts';
+import type { MembershipRole, WorkspaceSummary } from '@tallyroom/contracts';
 import { workspacePath } from '../../lib/paths.ts';
 import { portalPath } from '../../lib/portal-paths.ts';
 import { useMessages } from '../../i18n/messages.ts';
@@ -25,7 +25,7 @@ export function DemoBanner({ workspace }: { workspace: WorkspaceSummary }) {
    * der einzige Weg, bei dem garantiert nichts aus der vorherigen Ansicht
    * stehen bleibt — weder im Zwischenspeicher noch in den Komponenten.
    */
-  function switchTo(userId: string, role: 'owner' | 'member' | 'client') {
+  function switchTo(userId: string, role: MembershipRole) {
     switchIdentity.mutate(userId, {
       onSuccess: () => {
         window.location.assign(

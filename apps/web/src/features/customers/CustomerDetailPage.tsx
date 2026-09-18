@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import { Link, useParams } from 'react-router';
-import type { WorkspaceSummary } from '@tallyroom/contracts';
+import { isWritingRole, type WorkspaceSummary } from '@tallyroom/contracts';
 import { Button } from '../../components/base/Button.tsx';
 import { workspacePath } from '../../lib/paths.ts';
 import { Card, CardHeader } from '../../components/base/Card.tsx';
@@ -23,6 +23,7 @@ import { useRecordTitlePreview } from '../../lib/use-record-title.ts';
 export function CustomerDetailPage({ workspace }: { workspace: WorkspaceSummary }) {
   const { customerId } = useParams();
   const [editing, setEditing] = useState(false);
+  const darfSchreiben = isWritingRole(workspace.role);
   const m = useMessages(customerMessages);
 
   const query = useCustomer(workspace.id, customerId);
@@ -55,10 +56,12 @@ export function CustomerDetailPage({ workspace }: { workspace: WorkspaceSummary 
             {customer.archivedAt && <ArchivedBadge />}
           </div>
         </div>
-        <Button onClick={() => setEditing(true)}>
-          <Pencil size={15} strokeWidth={1.8} aria-hidden="true" />
-          {m.detail.edit}
-        </Button>
+        {darfSchreiben && (
+          <Button onClick={() => setEditing(true)}>
+            <Pencil size={15} strokeWidth={1.8} aria-hidden="true" />
+            {m.detail.edit}
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -102,7 +105,7 @@ export function CustomerDetailPage({ workspace }: { workspace: WorkspaceSummary 
         )}
       </Card>
 
-      <ArchiveSection workspace={workspace} customer={customer} />
+      {darfSchreiben && <ArchiveSection workspace={workspace} customer={customer} />}
 
       <HandoverCard workspaceId={workspace.id} customerId={customer.id} />
 

@@ -14,6 +14,7 @@ import {
   requireAuth,
   requireInternal,
   requireWorkspace,
+  requireWriter,
 } from '../workspaces/context.ts';
 import type { RequestService } from './service.ts';
 
@@ -34,7 +35,7 @@ export function createRequestRouter(
     res.json(await service.list(workspaceId, query, page));
   });
 
-  router.post('/', async (req, res) => {
+  router.post('/', requireWriter, async (req, res) => {
     const input = requestInputSchema.parse(req.body);
     const { workspaceId, userId } = getWorkspace(req);
     // Optional: ohne Schlüssel gibt es keinen Doppelklickschutz, aber auch
@@ -55,14 +56,14 @@ export function createRequestRouter(
     res.json(await service.get(workspaceId, requestId));
   });
 
-  router.patch('/:requestId', async (req, res) => {
+  router.patch('/:requestId', requireWriter, async (req, res) => {
     const requestId = idSchema.parse(req.params.requestId);
     const input = requestUpdateSchema.parse(req.body);
     const { workspaceId, userId } = getWorkspace(req);
     res.json(await service.update(workspaceId, userId, requestId, input));
   });
 
-  router.post('/:requestId/status', async (req, res) => {
+  router.post('/:requestId/status', requireWriter, async (req, res) => {
     const requestId = idSchema.parse(req.params.requestId);
     const { status, version } = requestStatusChangeSchema.parse(req.body);
     const { workspaceId, userId } = getWorkspace(req);
@@ -75,7 +76,7 @@ export function createRequestRouter(
     res.json({ data: await service.listComments(workspaceId, requestId) });
   });
 
-  router.post('/:requestId/comments', async (req, res) => {
+  router.post('/:requestId/comments', requireWriter, async (req, res) => {
     const requestId = idSchema.parse(req.params.requestId);
     const input = commentInputSchema.parse(req.body);
     const { workspaceId, userId } = getWorkspace(req);

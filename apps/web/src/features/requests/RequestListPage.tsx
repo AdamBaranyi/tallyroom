@@ -6,6 +6,7 @@ import {
   REQUEST_STATUS,
   type RequestStatus,
   type WorkspaceSummary,
+  isWritingRole,
 } from '@tallyroom/contracts';
 import { Button } from '../../components/base/Button.tsx';
 import { Card } from '../../components/base/Card.tsx';
@@ -26,6 +27,7 @@ import { FilterGroup, SearchField, SelectField } from '../../components/base/Con
 
 export function RequestListPage({ workspace }: { workspace: WorkspaceSummary }) {
   const [params, setParams] = useSearchParams();
+  const darfSchreiben = isWritingRole(workspace.role);
   const [dialogOpen, setDialogOpen] = useState(false);
   const texts = useMessages(requestMessages);
   const m = texts.list;
@@ -80,10 +82,12 @@ export function RequestListPage({ workspace }: { workspace: WorkspaceSummary }) 
           <h1 className="text-section font-semibold tracking-[-0.02em]">{m.title}</h1>
           <p className="mt-1 text-body text-muted">{m.lead}</p>
         </div>
-        <Button variant="primary" disabled={availableCustomers.length === 0} onClick={openDialog}>
-          <Plus size={16} strokeWidth={2} aria-hidden="true" />
-          {texts.create}
-        </Button>
+        {darfSchreiben && (
+          <Button variant="primary" disabled={availableCustomers.length === 0} onClick={openDialog}>
+            <Plus size={16} strokeWidth={2} aria-hidden="true" />
+            {texts.create}
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">

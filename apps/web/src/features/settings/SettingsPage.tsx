@@ -5,6 +5,7 @@ import {
   type CreatedInvitation,
   type MembershipRole,
   type WorkspaceSummary,
+  isWritingRole,
 } from '@tallyroom/contracts';
 import { Button } from '../../components/base/Button.tsx';
 import { Card, CardHeader } from '../../components/base/Card.tsx';
@@ -22,6 +23,7 @@ import { settingsMessages } from './messages.ts';
 
 export function SettingsPage({ workspace }: { workspace: WorkspaceSummary }) {
   const m = useMessages(settingsMessages);
+  const darfSchreiben = isWritingRole(workspace.role);
   const roleName = useMessages(domainMessages).role;
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<MembershipRole>('member');
@@ -76,98 +78,100 @@ export function SettingsPage({ workspace }: { workspace: WorkspaceSummary }) {
         </p>
       </div>
 
-      <Card>
-        <CardHeader
-          title={m.invite.title}
-          action={<span className="text-body text-muted">{m.invite.validity}</span>}
-        />
-        <form onSubmit={submit} className="flex flex-col gap-4 px-4 pb-5 sm:px-5">
-          {message && (
-            <p
-              role="alert"
-              className="rounded-sm border border-line bg-raised px-3 py-2.5 text-body text-danger"
-            >
-              {message}
-            </p>
-          )}
-
-          <TextField
-            id="einladung-email"
-            label={m.invite.email}
-            type="email"
-            autoComplete="off"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
+      {darfSchreiben && (
+        <Card>
+          <CardHeader
+            title={m.invite.title}
+            action={<span className="text-body text-muted">{m.invite.validity}</span>}
           />
+          <form onSubmit={submit} className="flex flex-col gap-4 px-4 pb-5 sm:px-5">
+            {message && (
+              <p
+                role="alert"
+                className="rounded-sm border border-line bg-raised px-3 py-2.5 text-body text-danger"
+              >
+                {message}
+              </p>
+            )}
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="einladung-rolle" className="text-body font-medium">
-              {m.invite.role}
-            </label>
-            <select
-              id="einladung-rolle"
-              value={role}
-              onChange={(event) => setRole(event.target.value as MembershipRole)}
-              className="text-body min-h-11 w-full rounded-sm border border-line bg-surface px-3 text-ink"
-            >
-              {MEMBERSHIP_ROLES.map((option) => (
-                <option key={option} value={option}>
-                  {`${roleName[option]} — ${m.roleDescription[option]}`}
-                </option>
-              ))}
-            </select>
-          </div>
+            <TextField
+              id="einladung-email"
+              label={m.invite.email}
+              type="email"
+              autoComplete="off"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
 
-          {role === 'client' && (
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="einladung-kunde" className="text-body font-medium">
-                {m.invite.customer}
+              <label htmlFor="einladung-rolle" className="text-body font-medium">
+                {m.invite.role}
               </label>
               <select
-                id="einladung-kunde"
-                value={customerId}
-                onChange={(event) => setCustomerId(event.target.value)}
+                id="einladung-rolle"
+                value={role}
+                onChange={(event) => setRole(event.target.value as MembershipRole)}
                 className="text-body min-h-11 w-full rounded-sm border border-line bg-surface px-3 text-ink"
               >
-                <option value="">{m.invite.chooseCustomer}</option>
-                {available.map((customer) => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.name}
+                {MEMBERSHIP_ROLES.map((option) => (
+                  <option key={option} value={option}>
+                    {`${roleName[option]} — ${m.roleDescription[option]}`}
                   </option>
                 ))}
               </select>
-              <p className="text-body text-muted">{m.invite.clientHint}</p>
             </div>
-          )}
 
-          <div className="flex justify-end">
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={create.isPending || email.trim() === ''}
-            >
-              <Plus size={16} strokeWidth={2} aria-hidden="true" />
-              {create.isPending ? m.invite.creating : m.invite.submit}
-            </Button>
-          </div>
-        </form>
+            {role === 'client' && (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="einladung-kunde" className="text-body font-medium">
+                  {m.invite.customer}
+                </label>
+                <select
+                  id="einladung-kunde"
+                  value={customerId}
+                  onChange={(event) => setCustomerId(event.target.value)}
+                  className="text-body min-h-11 w-full rounded-sm border border-line bg-surface px-3 text-ink"
+                >
+                  <option value="">{m.invite.chooseCustomer}</option>
+                  {available.map((customer) => (
+                    <option key={customer.id} value={customer.id}>
+                      {customer.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-body text-muted">{m.invite.clientHint}</p>
+              </div>
+            )}
 
-        {created && (
-          <div className="border-t border-line-soft bg-raised px-4 py-4 sm:px-5">
-            <p className="text-body font-medium">{m.created.linkFor(created.email)}</p>
-            <p className="mt-1 text-body text-muted">{m.created.shownOnce}</p>
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-              <code className="min-w-0 flex-1 overflow-x-auto rounded-sm border border-line bg-surface px-3 py-2.5 font-mono text-body">
-                {created.inviteUrl}
-              </code>
-              <Button onClick={() => void copyLink(created.inviteUrl)}>
-                <Copy size={15} strokeWidth={1.8} aria-hidden="true" />
-                {copied ? m.created.copied : m.created.copy}
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={create.isPending || email.trim() === ''}
+              >
+                <Plus size={16} strokeWidth={2} aria-hidden="true" />
+                {create.isPending ? m.invite.creating : m.invite.submit}
               </Button>
             </div>
-          </div>
-        )}
-      </Card>
+          </form>
+
+          {created && (
+            <div className="border-t border-line-soft bg-raised px-4 py-4 sm:px-5">
+              <p className="text-body font-medium">{m.created.linkFor(created.email)}</p>
+              <p className="mt-1 text-body text-muted">{m.created.shownOnce}</p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <code className="min-w-0 flex-1 overflow-x-auto rounded-sm border border-line bg-surface px-3 py-2.5 font-mono text-body">
+                  {created.inviteUrl}
+                </code>
+                <Button onClick={() => void copyLink(created.inviteUrl)}>
+                  <Copy size={15} strokeWidth={1.8} aria-hidden="true" />
+                  {copied ? m.created.copied : m.created.copy}
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
 
       <Card>
         <CardHeader title={m.list.title} />

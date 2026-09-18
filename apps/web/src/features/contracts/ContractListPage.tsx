@@ -7,6 +7,7 @@ import {
   type ContractVisibleStatus,
   type WorkspaceSummary,
   CONTRACT_SORT_FIELDS,
+  isWritingRole,
 } from '@tallyroom/contracts';
 import { Button } from '../../components/base/Button.tsx';
 import { Card } from '../../components/base/Card.tsx';
@@ -27,6 +28,7 @@ import { contractMessages } from './messages.ts';
 
 export function ContractListPage({ workspace }: { workspace: WorkspaceSummary }) {
   const [params, setParams] = useSearchParams();
+  const darfSchreiben = isWritingRole(workspace.role);
   const [dialogOpen, setDialogOpen] = useState(false);
   const m = useMessages(contractMessages);
   const domain = useMessages(domainMessages);
@@ -71,14 +73,16 @@ export function ContractListPage({ workspace }: { workspace: WorkspaceSummary })
           <h1 className="text-section font-semibold tracking-[-0.02em]">{m.list.title}</h1>
           <p className="mt-1 text-body text-muted">{m.list.lead}</p>
         </div>
-        <Button
-          variant="primary"
-          disabled={availableCustomers.length === 0}
-          onClick={() => setDialogOpen(true)}
-        >
-          <Plus size={16} strokeWidth={2} aria-hidden="true" />
-          {m.createContract}
-        </Button>
+        {darfSchreiben && (
+          <Button
+            variant="primary"
+            disabled={availableCustomers.length === 0}
+            onClick={() => setDialogOpen(true)}
+          >
+            <Plus size={16} strokeWidth={2} aria-hidden="true" />
+            {m.createContract}
+          </Button>
+        )}
       </div>
 
       {board.data && (

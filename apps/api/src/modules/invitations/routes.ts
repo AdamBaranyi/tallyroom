@@ -10,6 +10,7 @@ import {
   requireInternal,
   requireOwner,
   requireWorkspace,
+  requireWriter,
 } from '../workspaces/context.ts';
 import type { InvitationService } from './service.ts';
 
@@ -33,13 +34,13 @@ export function createInvitationAdminRouter(
     res.json({ data: await service.list(workspaceId) });
   });
 
-  router.post('/', async (req, res) => {
+  router.post('/', requireWriter, async (req, res) => {
     const input = invitationInputSchema.parse(req.body);
     const { workspaceId, userId } = getWorkspace(req);
     res.status(201).json(await service.create(workspaceId, userId, input));
   });
 
-  router.delete('/:invitationId', async (req, res) => {
+  router.delete('/:invitationId', requireWriter, async (req, res) => {
     const invitationId = idSchema.parse(req.params.invitationId);
     const { workspaceId } = getWorkspace(req);
     await service.revoke(workspaceId, invitationId);

@@ -1,3 +1,4 @@
+import type { MembershipRole } from '@tallyroom/contracts';
 import { and, eq, ne, sql } from 'drizzle-orm';
 import type { Database } from '@tallyroom/db';
 import { memberships, sessions, users, workspaces } from '@tallyroom/db';
@@ -23,7 +24,7 @@ export interface MembershipRecord {
   workspaceId: string;
   workspaceName: string;
   timezone: string;
-  role: 'owner' | 'member' | 'client';
+  role: MembershipRole;
   customerId: string | null;
   isDemo: boolean;
 }

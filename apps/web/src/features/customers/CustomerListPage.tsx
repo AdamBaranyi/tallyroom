@@ -6,6 +6,7 @@ import {
   type CustomerStatusFilter,
   type WorkspaceSummary,
   CUSTOMER_SORT_FIELDS,
+  isWritingRole,
 } from '@tallyroom/contracts';
 import { Button } from '../../components/base/Button.tsx';
 import { workspacePath } from '../../lib/paths.ts';
@@ -26,6 +27,7 @@ export function CustomerListPage({ workspace }: { workspace: WorkspaceSummary })
   const [params, setParams] = useSearchParams();
   const [dialogOpen, setDialogOpen] = useState(false);
   const m = useMessages(customerMessages);
+  const darfSchreiben = isWritingRole(workspace.role);
 
   const search = params.get('search') ?? '';
   const status = (params.get('status') as CustomerStatusFilter | null) ?? 'active';
@@ -56,10 +58,12 @@ export function CustomerListPage({ workspace }: { workspace: WorkspaceSummary })
           <h1 className="text-section font-semibold tracking-[-0.02em]">{m.list.title}</h1>
           <p className="mt-1 text-body text-muted">{m.list.lead}</p>
         </div>
-        <Button variant="primary" onClick={() => setDialogOpen(true)}>
-          <Plus size={16} strokeWidth={2} aria-hidden="true" />
-          {m.createCustomer}
-        </Button>
+        {darfSchreiben && (
+          <Button variant="primary" onClick={() => setDialogOpen(true)}>
+            <Plus size={16} strokeWidth={2} aria-hidden="true" />
+            {m.createCustomer}
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -91,7 +95,7 @@ export function CustomerListPage({ workspace }: { workspace: WorkspaceSummary })
             title={search ? m.list.noMatch : m.list.empty}
             detail={search ? m.list.noMatchDetail(search) : m.list.emptyDetail}
             action={
-              !search ? (
+              !search && darfSchreiben ? (
                 <Button variant="primary" onClick={() => setDialogOpen(true)}>
                   <Plus size={16} strokeWidth={2} aria-hidden="true" />
                   {m.createCustomer}

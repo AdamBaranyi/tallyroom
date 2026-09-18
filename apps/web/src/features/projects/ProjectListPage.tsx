@@ -6,6 +6,7 @@ import {
   PROJECT_STATUS,
   type ProjectStatus,
   type WorkspaceSummary,
+  isWritingRole,
 } from '@tallyroom/contracts';
 import { Button } from '../../components/base/Button.tsx';
 import { workspacePath } from '../../lib/paths.ts';
@@ -25,6 +26,7 @@ import { projectMessages } from './messages.ts';
 
 export function ProjectListPage({ workspace }: { workspace: WorkspaceSummary }) {
   const [params, setParams] = useSearchParams();
+  const darfSchreiben = isWritingRole(workspace.role);
   const [dialogOpen, setDialogOpen] = useState(false);
   const m = useMessages(projectMessages);
   const domain = useMessages(domainMessages);
@@ -67,14 +69,16 @@ export function ProjectListPage({ workspace }: { workspace: WorkspaceSummary }) 
           <h1 className="text-section font-semibold tracking-[-0.02em]">{m.list.title}</h1>
           <p className="mt-1 text-body text-muted">{m.list.lead}</p>
         </div>
-        <Button
-          variant="primary"
-          disabled={availableCustomers.length === 0}
-          onClick={() => setDialogOpen(true)}
-        >
-          <Plus size={16} strokeWidth={2} aria-hidden="true" />
-          {m.createProject}
-        </Button>
+        {darfSchreiben && (
+          <Button
+            variant="primary"
+            disabled={availableCustomers.length === 0}
+            onClick={() => setDialogOpen(true)}
+          >
+            <Plus size={16} strokeWidth={2} aria-hidden="true" />
+            {m.createProject}
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
