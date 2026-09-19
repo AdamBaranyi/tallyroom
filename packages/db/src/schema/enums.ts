@@ -1,7 +1,7 @@
 import { pgEnum } from 'drizzle-orm/pg-core';
 
 /** Rollen innerhalb eines Workspace. Client ist immer genau einem Kunden zugeordnet. */
-export const membershipRole = pgEnum('membership_role', ['owner', 'member', 'client']);
+export const membershipRole = pgEnum('membership_role', ['owner', 'member', 'viewer', 'client']);
 
 export const projectStatus = pgEnum('project_status', [
   'planned',

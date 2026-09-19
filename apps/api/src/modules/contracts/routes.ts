@@ -13,6 +13,7 @@ import {
   requireAuth,
   requireInternal,
   requireWorkspace,
+  requireWriter,
 } from '../workspaces/context.ts';
 import type { ContractService } from './service.ts';
 
@@ -32,7 +33,7 @@ export function createContractRouter(
     res.json(await service.list(workspaceId, timezone, query, page));
   });
 
-  router.post('/', async (req, res) => {
+  router.post('/', requireWriter, async (req, res) => {
     const input = contractInputSchema.parse(req.body);
     const { workspaceId, timezone, userId } = getWorkspace(req);
     res.status(201).json(await service.create(workspaceId, timezone, userId, input));
@@ -45,7 +46,7 @@ export function createContractRouter(
     res.json(await service.get(workspaceId, timezone, contractId, query.onDate));
   });
 
-  router.patch('/:contractId', async (req, res) => {
+  router.patch('/:contractId', requireWriter, async (req, res) => {
     const contractId = idSchema.parse(req.params.contractId);
     const input = contractUpdateSchema.parse(req.body);
     const { workspaceId, timezone, userId } = getWorkspace(req);
@@ -58,7 +59,7 @@ export function createContractRouter(
     res.json({ data: await service.listRates(workspaceId, contractId) });
   });
 
-  router.post('/:contractId/rates', async (req, res) => {
+  router.post('/:contractId/rates', requireWriter, async (req, res) => {
     const contractId = idSchema.parse(req.params.contractId);
     const input = rateInputSchema.parse(req.body);
     const { workspaceId, userId } = getWorkspace(req);

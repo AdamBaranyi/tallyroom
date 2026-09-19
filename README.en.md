@@ -246,10 +246,18 @@ off, and the demo area then does not exist.
 
 ## Deliberately left out
 
-These are missing by decision, not by oversight:
+These are missing by decision, not by oversight. Each one says what stands in its place:
 
-- **Password reset by email.** It cannot be built properly without sending email. The operator
-  sets a new password with `admin:reset-password`.
-- Payments, invoices, Stripe, calendar, sending email, real-time notifications
-- Multi-factor authentication and public self-registration
-- Other currencies — in the MVP everything is CHF and monthly
+- **Password reset by email.** It cannot be built properly without sending email. Instead the
+  operator sets a new password with `admin:reset-password`; every session of that account ends.
+- **A second factor and login through an identity provider.** The public demo would otherwise hang
+  on a second service and fall with it. Instead: server-side sessions with rotation, a rate limit
+  on login, Argon2id. When the first real user arrives, an identity provider is added as a second
+  route in, and the existing login stays beside it.
+- **SAML SSO and SCIM.** A procurement requirement of large companies, not craft this project sets
+  out to show. Instead, roles with a boundary that sits on every changing route on the server.
+- **Payments, invoices, time tracking, calendar, sending email.** Products of their own, each
+  larger than this one. Contracts therefore carry an agreed value, not a payment received.
+- **Agent tools on customer data (WebMCP).** The application sits behind a login; handing an agent
+  access to somebody else's customer data would not be an improvement.
+- **Public self-registration** and other currencies — in the MVP everything is CHF and monthly.

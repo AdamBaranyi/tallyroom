@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { ArrowLeft, Pencil } from 'lucide-react';
+import { ArrowLeft, FileBarChart, Pencil } from 'lucide-react';
 import { Link, useParams } from 'react-router';
-import type { WorkspaceSummary } from '@tallyroom/contracts';
+import { isWritingRole, type WorkspaceSummary } from '@tallyroom/contracts';
 import { Button } from '../../components/base/Button.tsx';
 import { workspacePath } from '../../lib/paths.ts';
 import { Card, CardHeader } from '../../components/base/Card.tsx';
 import { Dialog } from '../../components/base/Dialog.tsx';
 import { ErrorState, LoadingState } from '../../components/base/EmptyState.tsx';
 import { ArchivedBadge } from '../../components/base/StatusBadge.tsx';
+import { RecordActivity } from '../activity/RecordActivity.tsx';
+import { HandoverCard } from '../export/HandoverCard.tsx';
 import { useMessages } from '../../i18n/messages.ts';
 import { ProjectRows } from '../projects/ProjectRows.tsx';
 import { useProjects } from '../projects/api.ts';
@@ -21,6 +23,7 @@ import { useRecordTitlePreview } from '../../lib/use-record-title.ts';
 export function CustomerDetailPage({ workspace }: { workspace: WorkspaceSummary }) {
   const { customerId } = useParams();
   const [editing, setEditing] = useState(false);
+  const darfSchreiben = isWritingRole(workspace.role);
   const m = useMessages(customerMessages);
 
   const query = useCustomer(workspace.id, customerId);
@@ -53,10 +56,21 @@ export function CustomerDetailPage({ workspace }: { workspace: WorkspaceSummary 
             {customer.archivedAt && <ArchivedBadge />}
           </div>
         </div>
-        <Button onClick={() => setEditing(true)}>
-          <Pencil size={15} strokeWidth={1.8} aria-hidden="true" />
-          {m.detail.edit}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            to={workspacePath(workspace.id, 'customers', customer.id, 'report')}
+            className="text-body inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-line bg-surface px-4 font-medium text-ink no-underline hover:border-ink"
+          >
+            <FileBarChart size={15} strokeWidth={1.8} aria-hidden="true" />
+            {m.detail.report}
+          </Link>
+          {darfSchreiben && (
+            <Button onClick={() => setEditing(true)}>
+              <Pencil size={15} strokeWidth={1.8} aria-hidden="true" />
+              {m.detail.edit}
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -100,7 +114,11 @@ export function CustomerDetailPage({ workspace }: { workspace: WorkspaceSummary 
         )}
       </Card>
 
-      <ArchiveSection workspace={workspace} customer={customer} />
+      {darfSchreiben && <ArchiveSection workspace={workspace} customer={customer} />}
+
+      <HandoverCard workspaceId={workspace.id} customerId={customer.id} />
+
+      <RecordActivity workspaceId={workspace.id} entityType="customer" entityId={customer.id} />
 
       <Dialog open={editing} title={m.editCustomer} onClose={() => setEditing(false)}>
         <CustomerForm

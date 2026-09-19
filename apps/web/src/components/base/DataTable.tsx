@@ -27,17 +27,71 @@ export function TableHead({ children }: { children: ReactNode }) {
   );
 }
 
-export function Th({ children, right = false }: { children: ReactNode; right?: boolean }) {
+const KOPF_KLASSEN =
+  'font-condensed text-body font-semibold tracking-[0.06em] text-muted uppercase';
+
+interface ThProps {
+  children: ReactNode;
+  right?: boolean;
+  /** Macht die Spalte sortierbar. Ohne diese Angaben bleibt sie ein Titel. */
+  sort?:
+    | {
+        /** Wie diese Spalte in der Abfrage heisst. */
+        field: string;
+        /** Das gerade sortierte Feld und seine Richtung. */
+        active: string;
+        direction: 'asc' | 'desc';
+        onSort: (field: string) => void;
+      }
+    | undefined;
+}
+
+/**
+ * Sortierbare Spalten tragen einen Knopf, keinen Klickbereich am `th`:
+ * so erreicht die Tastatur sie, und Screenreader lesen `aria-sort` mit.
+ * Das Zeichen dahinter ist ein Dreieck aus Tinte, kein Symbol in Datenfarbe.
+ */
+export function Th({ children, right = false, sort }: ThProps) {
+  const aktiv = sort ? sort.active === sort.field : false;
+  const ariaSort = aktiv ? (sort?.direction === 'asc' ? 'ascending' : 'descending') : undefined;
+
   return (
     <th
       scope="col"
-      className={[
-        'font-condensed text-body font-semibold tracking-[0.06em] text-muted uppercase',
-        'px-3 pb-2',
-        right ? 'text-right' : 'text-left',
-      ].join(' ')}
+      aria-sort={sort ? (ariaSort ?? 'none') : undefined}
+      className={[KOPF_KLASSEN, 'relative px-3 pb-2', right ? 'text-right' : 'text-left'].join(' ')}
     >
-      {children}
+      {sort ? (
+        <button
+          type="button"
+          onClick={() => sort.onSort(sort.field)}
+          className={[
+            // 24 Pixel hoch: das Mindestmass aus WCAG 2.2 für Zeigeziele.
+            // Die 44 der übrigen Bedienelemente würden den Tabellenkopf
+            // aufblähen, und er ist Teil des Rasters, nicht der Bedienung.
+            'inline-flex min-h-6 items-center transition-colors ease-state duration-[var(--dur-snap)]',
+            aktiv ? 'text-ink' : 'hover:text-ink',
+          ].join(' ')}
+        >
+          {children}
+        </button>
+      ) : (
+        children
+      )}
+
+      {/*
+        Das Zeichen liegt im Polster der Zelle statt im Textfluss: im Fluss
+        verbreiterte es den Kopf, und die schmalste Tabelle hatte bei 1024
+        Pixeln noch 6 Pixel Luft — die Pipeline hat genau das gemeldet.
+      */}
+      {aktiv && (
+        <span
+          aria-hidden="true"
+          className={['absolute top-0 text-ink', right ? 'left-0.5' : 'right-0.5'].join(' ')}
+        >
+          {sort?.direction === 'asc' ? '▲' : '▼'}
+        </span>
+      )}
     </th>
   );
 }

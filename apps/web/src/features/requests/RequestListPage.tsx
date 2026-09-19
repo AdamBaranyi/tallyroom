@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useSearchParams } from 'react-router';
-import { REQUEST_STATUS, type RequestStatus, type WorkspaceSummary } from '@tallyroom/contracts';
+import {
+  REQUEST_SORT_FIELDS,
+  REQUEST_STATUS,
+  type RequestStatus,
+  type WorkspaceSummary,
+  isWritingRole,
+} from '@tallyroom/contracts';
 import { Button } from '../../components/base/Button.tsx';
 import { Card } from '../../components/base/Card.tsx';
 import { Dialog } from '../../components/base/Dialog.tsx';
@@ -9,26 +15,42 @@ import { EmptyState, ErrorState, LoadingState } from '../../components/base/Empt
 import { Pagination } from '../../components/base/Pagination.tsx';
 import { domainMessages } from '../../i18n/domain-messages.ts';
 import { useMessages } from '../../i18n/messages.ts';
+import { readSort, toggleSort } from '../../lib/sorting.ts';
 import { workspacePath } from '../../lib/paths.ts';
 import { useCustomers } from '../customers/api.ts';
 import { useCreateRequest, useRequests } from './api.ts';
+import { waitingMessages } from './waiting-messages.ts';
 import { requestMessages } from './messages.ts';
 import { RequestForm } from './RequestForm.tsx';
 import { RequestRows } from './RequestRows.tsx';
-import { SearchField, SelectField } from '../../components/base/Controls.tsx';
+import { FilterGroup, SearchField, SelectField } from '../../components/base/Controls.tsx';
 
 export function RequestListPage({ workspace }: { workspace: WorkspaceSummary }) {
   const [params, setParams] = useSearchParams();
+  const darfSchreiben = isWritingRole(workspace.role);
   const [dialogOpen, setDialogOpen] = useState(false);
   const texts = useMessages(requestMessages);
   const m = texts.list;
   const statusLabels = useMessages(domainMessages).requestStatus;
+  const waiting = useMessages(waitingMessages);
 
   const search = params.get('search') ?? '';
   const status = (params.get('status') as RequestStatus | null) ?? undefined;
+  const waitingOn = (params.get('waitingOn') as 'team' | 'client' | null) ?? undefined;
   const page = Number(params.get('page') ?? '1');
+  const { field: sort, direction } = readSort(params, REQUEST_SORT_FIELDS, {
+    field: 'updatedAt',
+    direction: 'desc',
+  });
 
-  const query = useRequests(workspace.id, { search, ...(status ? { status } : {}), page });
+  const query = useRequests(workspace.id, {
+    search,
+    ...(status ? { status } : {}),
+    ...(waitingOn ? { waitingOn } : {}),
+    page,
+    sort,
+    direction,
+  });
   const customers = useCustomers(workspace.id, { status: 'active', pageSize: 100 });
   const create = useCreateRequest(workspace.id);
 
@@ -60,10 +82,12 @@ export function RequestListPage({ workspace }: { workspace: WorkspaceSummary }) 
           <h1 className="text-section font-semibold tracking-[-0.02em]">{m.title}</h1>
           <p className="mt-1 text-body text-muted">{m.lead}</p>
         </div>
-        <Button variant="primary" disabled={availableCustomers.length === 0} onClick={openDialog}>
-          <Plus size={16} strokeWidth={2} aria-hidden="true" />
-          {texts.create}
-        </Button>
+        {darfSchreiben && (
+          <Button variant="primary" disabled={availableCustomers.length === 0} onClick={openDialog}>
+            <Plus size={16} strokeWidth={2} aria-hidden="true" />
+            {texts.create}
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -87,6 +111,17 @@ export function RequestListPage({ workspace }: { workspace: WorkspaceSummary }) 
             </option>
           ))}
         </SelectField>
+
+        <FilterGroup
+          label={waiting.label}
+          active={waitingOn ?? 'all'}
+          options={[
+            { value: 'all', label: waiting.filter.all },
+            { value: 'team', label: waiting.filter.team },
+            { value: 'client', label: waiting.filter.client },
+          ]}
+          onSelect={(option) => patchParams({ waitingOn: option === 'all' ? null : option })}
+        />
       </div>
 
       <Card>
@@ -112,6 +147,11 @@ export function RequestListPage({ workspace }: { workspace: WorkspaceSummary }) 
               <RequestRows
                 requests={query.data.data}
                 basePath={workspacePath(workspace.id, 'requests')}
+                sort={{
+                  active: sort,
+                  direction,
+                  onSort: (field) => patchParams(toggleSort(sort, direction, field)),
+                }}
               />
             </div>
             <Pagination

@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useSearchParams } from 'react-router';
-import { PROJECT_STATUS, type ProjectStatus, type WorkspaceSummary } from '@tallyroom/contracts';
+import {
+  PROJECT_SORT_FIELDS,
+  PROJECT_STATUS,
+  type ProjectStatus,
+  type WorkspaceSummary,
+  isWritingRole,
+} from '@tallyroom/contracts';
 import { Button } from '../../components/base/Button.tsx';
 import { workspacePath } from '../../lib/paths.ts';
 import { Card } from '../../components/base/Card.tsx';
@@ -15,10 +21,12 @@ import { ProjectRows } from './ProjectRows.tsx';
 import { SearchField, SelectField } from '../../components/base/Controls.tsx';
 import { domainMessages } from '../../i18n/domain-messages.ts';
 import { useMessages } from '../../i18n/messages.ts';
+import { readSort, toggleSort } from '../../lib/sorting.ts';
 import { projectMessages } from './messages.ts';
 
 export function ProjectListPage({ workspace }: { workspace: WorkspaceSummary }) {
   const [params, setParams] = useSearchParams();
+  const darfSchreiben = isWritingRole(workspace.role);
   const [dialogOpen, setDialogOpen] = useState(false);
   const m = useMessages(projectMessages);
   const domain = useMessages(domainMessages);
@@ -26,8 +34,18 @@ export function ProjectListPage({ workspace }: { workspace: WorkspaceSummary }) 
   const search = params.get('search') ?? '';
   const status = (params.get('status') as ProjectStatus | null) ?? undefined;
   const page = Number(params.get('page') ?? '1');
+  const { field: sort, direction } = readSort(params, PROJECT_SORT_FIELDS, {
+    field: 'name',
+    direction: 'asc',
+  });
 
-  const query = useProjects(workspace.id, { search, ...(status ? { status } : {}), page });
+  const query = useProjects(workspace.id, {
+    search,
+    ...(status ? { status } : {}),
+    page,
+    sort,
+    direction,
+  });
   // Nur aktive Kunden können ein neues Projekt bekommen.
   const customers = useCustomers(workspace.id, { status: 'active', pageSize: 100 });
   const create = useCreateProject(workspace.id);
@@ -51,14 +69,16 @@ export function ProjectListPage({ workspace }: { workspace: WorkspaceSummary }) 
           <h1 className="text-section font-semibold tracking-[-0.02em]">{m.list.title}</h1>
           <p className="mt-1 text-body text-muted">{m.list.lead}</p>
         </div>
-        <Button
-          variant="primary"
-          disabled={availableCustomers.length === 0}
-          onClick={() => setDialogOpen(true)}
-        >
-          <Plus size={16} strokeWidth={2} aria-hidden="true" />
-          {m.createProject}
-        </Button>
+        {darfSchreiben && (
+          <Button
+            variant="primary"
+            disabled={availableCustomers.length === 0}
+            onClick={() => setDialogOpen(true)}
+          >
+            <Plus size={16} strokeWidth={2} aria-hidden="true" />
+            {m.createProject}
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -108,6 +128,11 @@ export function ProjectListPage({ workspace }: { workspace: WorkspaceSummary }) 
               <ProjectRows
                 projects={query.data.data}
                 basePath={workspacePath(workspace.id, 'projects')}
+                sort={{
+                  active: sort,
+                  direction,
+                  onSort: (field) => patchParams(toggleSort(sort, direction, field)),
+                }}
               />
             </div>
             <Pagination

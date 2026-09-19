@@ -16,11 +16,14 @@ import {
 } from './api.ts';
 import { portalMessages } from './messages.ts';
 import { portalRequestMessages } from './request-messages.ts';
+import { WaitingLine } from '../requests/WaitingLine.tsx';
+import { waitingMessages } from '../requests/waiting-messages.ts';
 
 export function PortalOverviewPage({ workspace }: { workspace: WorkspaceSummary }) {
   const query = usePortalOverview(workspace.id);
   const m = useMessages(portalMessages);
   const r = useMessages(portalRequestMessages).requests;
+  const waiting = useMessages(waitingMessages);
 
   if (query.isPending) return <LoadingState label={m.overview.loading} />;
   if (query.isError || !query.data) {
@@ -28,6 +31,7 @@ export function PortalOverviewPage({ workspace }: { workspace: WorkspaceSummary 
   }
 
   const data = query.data;
+  const waitingOnClient = data.openRequests.filter((request) => request.waitingOn === 'client');
 
   return (
     <div className="mx-auto flex w-full max-w-[900px] flex-col gap-8">
@@ -69,18 +73,37 @@ export function PortalOverviewPage({ workspace }: { workspace: WorkspaceSummary 
         {data.openRequests.length === 0 ? (
           <p className="px-4 pb-5 text-body text-muted sm:px-5">{m.overview.noOpenRequests}</p>
         ) : (
-          <ul className="flex flex-col">
-            {data.openRequests.map((request) => (
-              <li key={request.id} className="border-t border-line-soft">
-                <Link
-                  to={portalPath(workspace.id, 'requests', request.id)}
-                  className="block px-4 py-3 no-underline hover:bg-raised sm:px-5"
-                >
-                  <span className="font-medium text-ink">{request.subject}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <>
+            {/*
+              Was beim Kunden liegt, steht zuoberst und in seinen Worten. Die
+              Teamansicht zählt dieselben Vorgänge von der anderen Seite.
+            */}
+            {waitingOnClient.length > 0 && (
+              <p className="border-t border-line-soft px-4 py-3 text-body sm:px-5">
+                <span className="font-medium text-ink">
+                  {waiting.holdingUp(waitingOnClient.length)}
+                </span>{' '}
+                <span className="text-muted">{waiting.holdingUpDetail}</span>
+              </p>
+            )}
+            <ul className="flex flex-col">
+              {data.openRequests.map((request) => (
+                <li key={request.id} className="border-t border-line-soft">
+                  <Link
+                    to={portalPath(workspace.id, 'requests', request.id)}
+                    className="flex flex-col gap-1 px-4 py-3 no-underline hover:bg-raised sm:px-5"
+                  >
+                    <span className="font-medium text-ink">{request.subject}</span>
+                    <WaitingLine
+                      waitingOn={request.waitingOn}
+                      waitingSince={request.waitingSince}
+                      perspective="client"
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </Card>
     </div>

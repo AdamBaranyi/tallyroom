@@ -22,7 +22,12 @@ export const domainMessages = defineMessages({
       completed: 'Abgeschlossen',
       archived: 'Archiviert',
     },
-    role: { owner: 'Owner', member: 'Mitglied', client: 'Kundenzugang' },
+    role: {
+      owner: 'Owner',
+      member: 'Mitglied',
+      viewer: 'Nur lesen',
+      client: 'Kundenzugang',
+    },
   },
   fr: {
     requestStatus: {
@@ -40,7 +45,12 @@ export const domainMessages = defineMessages({
       completed: 'Terminé',
       archived: 'Archivé',
     },
-    role: { owner: 'Propriétaire', member: 'Membre', client: 'Accès client' },
+    role: {
+      owner: 'Propriétaire',
+      member: 'Membre',
+      viewer: 'Lecture seule',
+      client: 'Accès client',
+    },
   },
   it: {
     requestStatus: {
@@ -63,7 +73,12 @@ export const domainMessages = defineMessages({
       completed: 'Completato',
       archived: 'Archiviato',
     },
-    role: { owner: 'Proprietario', member: 'Membro', client: 'Accesso cliente' },
+    role: {
+      owner: 'Proprietario',
+      member: 'Membro',
+      viewer: 'Sola lettura',
+      client: 'Accesso cliente',
+    },
   },
   en: {
     requestStatus: {
@@ -81,6 +96,11 @@ export const domainMessages = defineMessages({
       completed: 'Completed',
       archived: 'Archived',
     },
-    role: { owner: 'Owner', member: 'Member', client: 'Client login' },
+    role: {
+      owner: 'Owner',
+      member: 'Member',
+      viewer: 'Read only',
+      client: 'Client login',
+    },
   },
 });

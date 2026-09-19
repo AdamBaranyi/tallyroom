@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  FileBarChart,
   FileText,
   FolderKanban,
   LayoutGrid,
@@ -34,6 +35,7 @@ const NAV_ITEMS = [
   { to: 'contracts', icon: FileText },
   { to: 'requests', icon: MessageSquare },
   { to: 'documents', icon: Paperclip },
+  { to: 'report', icon: FileBarChart },
   { to: 'account', icon: UserRound },
 ] as const;
 

@@ -12,6 +12,8 @@ interface Props {
   workspaceId: string;
   requestId: string;
   comments: RequestComment[];
+  /** Ohne Schreibrecht steht der Verlauf da, das Formular nicht. */
+  canWrite?: boolean;
 }
 
 function formatMoment(iso: string, tag: string): string {
@@ -29,7 +31,7 @@ function formatMoment(iso: string, tag: string): string {
  * unterschieden — nicht nur farblich, sondern mit Symbol und Wort. Wer hier
  * schreibt, muss auf einen Blick sehen, wer es lesen wird.
  */
-export function CommentThread({ workspaceId, requestId, comments }: Props) {
+export function CommentThread({ workspaceId, requestId, comments, canWrite = true }: Props) {
   const [body, setBody] = useState('');
   const [visibility, setVisibility] = useState<CommentVisibility>('internal');
   const add = useAddRequestComment(workspaceId, requestId);
@@ -84,71 +86,73 @@ export function CommentThread({ workspaceId, requestId, comments }: Props) {
         })}
       </ul>
 
-      <form
-        onSubmit={submit}
-        className="flex flex-col gap-3 border-t border-line-soft px-4 py-4 sm:px-5"
-      >
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="kommentar-text" className="text-body font-medium">
-            {m.label}
-          </label>
-          <textarea
-            id="kommentar-text"
-            rows={3}
-            value={body}
-            onChange={(event) => setBody(event.target.value)}
-            className="text-body w-full resize-y rounded-sm border border-line bg-surface px-3 py-2.5 text-ink"
-          />
-        </div>
-
-        <fieldset className="flex flex-col gap-2">
-          <legend className="text-body font-medium text-muted">{m.visibility}</legend>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            {(['internal', 'public'] as const).map((option) => (
-              <label
-                key={option}
-                className={[
-                  'flex min-h-11 flex-1 cursor-pointer items-center gap-2.5 rounded-sm border px-3 text-body',
-                  visibility === option ? 'border-ink bg-raised' : 'border-line',
-                ].join(' ')}
-              >
-                <input
-                  type="radio"
-                  name="sichtbarkeit"
-                  value={option}
-                  checked={visibility === option}
-                  onChange={() => setVisibility(option)}
-                  className="size-4 accent-[var(--action-bg)]"
-                />
-                {option === 'internal' ? (
-                  <>
-                    <Lock size={14} strokeWidth={2} aria-hidden="true" />
-                    {m.internalOnly}
-                  </>
-                ) : (
-                  <>
-                    <Users size={14} strokeWidth={2} aria-hidden="true" />
-                    {m.visibleToCustomer}
-                  </>
-                )}
-              </label>
-            ))}
+      {canWrite && (
+        <form
+          onSubmit={submit}
+          className="flex flex-col gap-3 border-t border-line-soft px-4 py-4 sm:px-5"
+        >
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="kommentar-text" className="text-body font-medium">
+              {m.label}
+            </label>
+            <textarea
+              id="kommentar-text"
+              rows={3}
+              value={body}
+              onChange={(event) => setBody(event.target.value)}
+              className="text-body w-full resize-y rounded-sm border border-line bg-surface px-3 py-2.5 text-ink"
+            />
           </div>
-        </fieldset>
 
-        <div className="flex justify-end">
-          <Button type="submit" variant="primary" disabled={add.isPending || body.trim() === ''}>
-            <Send size={15} strokeWidth={2} aria-hidden="true" />
-            {add.isPending ? m.saving : m.submit}
-          </Button>
-        </div>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="text-body font-medium text-muted">{m.visibility}</legend>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              {(['internal', 'public'] as const).map((option) => (
+                <label
+                  key={option}
+                  className={[
+                    'flex min-h-11 flex-1 cursor-pointer items-center gap-2.5 rounded-sm border px-3 text-body',
+                    visibility === option ? 'border-ink bg-raised' : 'border-line',
+                  ].join(' ')}
+                >
+                  <input
+                    type="radio"
+                    name="sichtbarkeit"
+                    value={option}
+                    checked={visibility === option}
+                    onChange={() => setVisibility(option)}
+                    className="size-4 accent-[var(--action-bg)]"
+                  />
+                  {option === 'internal' ? (
+                    <>
+                      <Lock size={14} strokeWidth={2} aria-hidden="true" />
+                      {m.internalOnly}
+                    </>
+                  ) : (
+                    <>
+                      <Users size={14} strokeWidth={2} aria-hidden="true" />
+                      {m.visibleToCustomer}
+                    </>
+                  )}
+                </label>
+              ))}
+            </div>
+          </fieldset>
 
-        {add.isError && (
-          <p role="alert" className="text-body text-danger">
-            {m.saveFailed}
-          </p>
-        )}
-      </form>
+          <div className="flex justify-end">
+            <Button type="submit" variant="primary" disabled={add.isPending || body.trim() === ''}>
+              <Send size={15} strokeWidth={2} aria-hidden="true" />
+              {add.isPending ? m.saving : m.submit}
+            </Button>
+          </div>
+
+          {add.isError && (
+            <p role="alert" className="text-body text-danger">
+              {m.saveFailed}
+            </p>
+          )}
+        </form>
+      )}
     </div>
   );
 }

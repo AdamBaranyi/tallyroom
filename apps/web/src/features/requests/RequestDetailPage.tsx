@@ -4,15 +4,18 @@ import {
   ALLOWED_TRANSITIONS,
   type RequestStatus,
   type WorkspaceSummary,
+  isWritingRole,
 } from '@tallyroom/contracts';
 import { Card, CardHeader } from '../../components/base/Card.tsx';
 import { ErrorState, LoadingState } from '../../components/base/EmptyState.tsx';
 import { domainMessages } from '../../i18n/domain-messages.ts';
+import { RecordActivity } from '../activity/RecordActivity.tsx';
 import { useMessages } from '../../i18n/messages.ts';
 import { ApiRequestError } from '../../lib/api.ts';
 import { workspacePath } from '../../lib/paths.ts';
 import { CommentThread } from './CommentThread.tsx';
 import { PriorityBadge, RequestStatusBadge } from './labels.tsx';
+import { WaitingLine } from './WaitingLine.tsx';
 import { requestMessages } from './messages.ts';
 import { useChangeRequestStatus, useRequest, useRequestComments } from './api.ts';
 import { PendingRecord, RecordHeading } from '../../components/base/RecordLink.tsx';
@@ -26,6 +29,7 @@ export function RequestDetailPage({ workspace }: { workspace: WorkspaceSummary }
   const m = useMessages(requestMessages).detail;
   const statusLabels = useMessages(domainMessages).requestStatus;
 
+  const darfSchreiben = isWritingRole(workspace.role);
   const preview = useRecordTitlePreview();
   if (query.isPending) return <PendingRecord title={preview} label={m.loading} />;
   if (query.isError || !query.data) {
@@ -56,22 +60,25 @@ export function RequestDetailPage({ workspace }: { workspace: WorkspaceSummary }
             <span>{request.customerName}</span>
             {request.projectName && <span>· {request.projectName}</span>}
             <RequestStatusBadge status={request.status} />
+            <WaitingLine waitingOn={request.waitingOn} waitingSince={request.waitingSince} />
           </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
           {/* Nur die vom Server erlaubten Übergänge stehen zur Wahl. */}
-          {(ALLOWED_TRANSITIONS[request.status] ?? []).map((next: RequestStatus) => (
-            <button
-              key={next}
-              type="button"
-              disabled={changeStatus.isPending}
-              onClick={() => changeStatus.mutate({ status: next, version: request.version })}
-              className="min-h-11 rounded-sm border border-line px-3 text-body font-medium text-muted transition-colors hover:text-ink disabled:opacity-60"
-            >
-              {statusLabels[next]}
-            </button>
-          ))}
+          {(darfSchreiben ? (ALLOWED_TRANSITIONS[request.status] ?? []) : []).map(
+            (next: RequestStatus) => (
+              <button
+                key={next}
+                type="button"
+                disabled={changeStatus.isPending}
+                onClick={() => changeStatus.mutate({ status: next, version: request.version })}
+                className="min-h-11 rounded-sm border border-line px-3 text-body font-medium text-muted transition-colors hover:text-ink disabled:opacity-60"
+              >
+                {statusLabels[next]}
+              </button>
+            ),
+          )}
         </div>
       </div>
 
@@ -109,9 +116,14 @@ export function RequestDetailPage({ workspace }: { workspace: WorkspaceSummary }
             workspaceId={workspace.id}
             requestId={requestId}
             comments={comments.data}
+            canWrite={darfSchreiben}
           />
         )}
       </Card>
+
+      {requestId && (
+        <RecordActivity workspaceId={workspace.id} entityType="request" entityId={requestId} />
+      )}
     </div>
   );
 }

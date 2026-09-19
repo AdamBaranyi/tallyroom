@@ -15,7 +15,13 @@ test.describe('Prüfbreiten', () => {
   });
 
   test('Rechtsseiten laufen nicht seitlich', async ({ page }) => {
-    for (const pfad of ['/impressum', '/datenschutz']) {
+    for (const pfad of [
+      '/impressum',
+      '/datenschutz',
+      '/barrierefreiheit',
+      '/vertrauen',
+      '/status',
+    ]) {
       await page.goto(pfad);
       await warteAufSchriften(page);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
@@ -103,6 +109,7 @@ test.describe('Übersetzungen bei 320 Pixeln', () => {
     'contracts',
     'requests',
     'documents',
+    'activity',
     'settings',
   ];
 
@@ -117,6 +124,9 @@ test.describe('Übersetzungen bei 320 Pixeln', () => {
         '/',
         '/impressum',
         '/datenschutz',
+        '/barrierefreiheit',
+        '/vertrauen',
+        '/status',
         ...SECTIONS.map((s) => `/app/${workspaceId}/${s}`),
       ];
 

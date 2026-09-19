@@ -54,6 +54,36 @@ export function SelectField({
   );
 }
 
+interface DateFieldProps {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+/**
+ * Datumsfeld im selben Raster wie die Auswahlfelder. `type="date"` statt
+ * eigener Kalender: der des Browsers ist auf jedem Gerät bedienbar und kennt
+ * die Schreibweise des Systems.
+ */
+export function DateField({ id, label, value, onChange }: DateFieldProps) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className={CONTROL_LABEL}>
+        {label}
+      </label>
+      <input
+        id={id}
+        name={id}
+        type="date"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={`min-h-11 ${CONTROL_BASE}`}
+      />
+    </div>
+  );
+}
+
 interface FilterGroupProps<T extends string> {
   label: string;
   options: { value: T; label: string }[];

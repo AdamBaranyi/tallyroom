@@ -15,10 +15,17 @@ import { ContractStatusBadge } from './ContractStatusBadge.tsx';
 import { useMessages } from '../../i18n/messages.ts';
 import { contractMessages } from './messages.ts';
 
+interface SortProps {
+  active: string;
+  direction: 'asc' | 'desc';
+  onSort: (field: string) => void;
+}
+
 interface Props {
   contracts: ServiceContract[];
   basePath: string;
   showCustomer?: boolean;
+  sort?: SortProps;
 }
 
 /**
@@ -46,7 +53,7 @@ function term(contract: ServiceContract, openTerm: (start: string) => string): s
   return contract.endDate ? `${start} – ${formatDate(contract.endDate)}` : openTerm(start);
 }
 
-export function ContractRows({ contracts, basePath, showCustomer = true }: Props) {
+export function ContractRows({ contracts, basePath, showCustomer = true, sort }: Props) {
   const m = useMessages(contractMessages);
   return (
     <>
@@ -79,10 +86,10 @@ export function ContractRows({ contracts, basePath, showCustomer = true }: Props
 
       <DataTable>
         <TableHead>
-          <Th>{m.name}</Th>
-          {showCustomer && <Th>{m.customer}</Th>}
+          <Th sort={sort && { ...sort, field: 'name' }}>{m.name}</Th>
+          {showCustomer && <Th sort={sort && { ...sort, field: 'customerName' }}>{m.customer}</Th>}
           <Th>{m.status}</Th>
-          <Th>{m.rows.term}</Th>
+          <Th sort={sort && { ...sort, field: 'startDate' }}>{m.rows.term}</Th>
           <Th right>{m.rows.monthlyChf}</Th>
         </TableHead>
         <tbody>

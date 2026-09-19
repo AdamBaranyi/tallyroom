@@ -22,6 +22,7 @@ export const settingsMessages = defineMessages({
     roleDescription: {
       owner: 'verwaltet Workspace und Mitgliedschaften',
       member: 'arbeitet an Kunden, Projekten und Anfragen',
+      viewer: 'sieht denselben Bestand, ändert nichts',
       client: 'sieht nur freigegebene Inhalte eines Kunden',
     },
     created: {
@@ -63,6 +64,7 @@ export const settingsMessages = defineMessages({
     roleDescription: {
       owner: "gère l'espace de travail et les membres",
       member: 'travaille sur les clients, les projets et les demandes',
+      viewer: 'voit les mêmes données, ne modifie rien',
       client: "voit uniquement les contenus partagés d'un client",
     },
     created: {
@@ -105,6 +107,7 @@ export const settingsMessages = defineMessages({
     roleDescription: {
       owner: "gestisce l'area di lavoro e i membri",
       member: 'lavora su clienti, progetti e richieste',
+      viewer: 'vede gli stessi dati, non modifica nulla',
       client: 'vede solo i contenuti condivisi di un cliente',
     },
     created: {
@@ -145,6 +148,7 @@ export const settingsMessages = defineMessages({
     roleDescription: {
       owner: 'manages the workspace and memberships',
       member: 'works on customers, projects and requests',
+      viewer: 'sees the same data, changes nothing',
       client: 'sees only the shared content of one customer',
     },
     created: {

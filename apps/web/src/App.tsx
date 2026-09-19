@@ -28,6 +28,17 @@ const ImprintPage = lazy(() =>
 const PrivacyPage = lazy(() =>
   import('./features/legal/PrivacyPage.tsx').then((modul) => ({ default: modul.PrivacyPage })),
 );
+const AccessibilityPage = lazy(() =>
+  import('./features/legal/AccessibilityPage.tsx').then((modul) => ({
+    default: modul.AccessibilityPage,
+  })),
+);
+const TrustPage = lazy(() =>
+  import('./features/legal/TrustPage.tsx').then((modul) => ({ default: modul.TrustPage })),
+);
+const StatusPage = lazy(() =>
+  import('./features/legal/StatusPage.tsx').then((modul) => ({ default: modul.StatusPage })),
+);
 
 export function App() {
   const session = useSession();
@@ -51,6 +62,9 @@ export function App() {
         <Route path="/join/:token" element={<JoinPage />} />
         <Route path="/impressum" element={<ImprintPage />} />
         <Route path="/datenschutz" element={<PrivacyPage />} />
+        <Route path="/barrierefreiheit" element={<AccessibilityPage />} />
+        <Route path="/vertrauen" element={<TrustPage />} />
+        <Route path="/status" element={<StatusPage />} />
         <Route
           path="/app/:workspaceId/*"
           element={user ? <WorkspaceRoutes user={user} /> : <Navigate to="/login" replace />}

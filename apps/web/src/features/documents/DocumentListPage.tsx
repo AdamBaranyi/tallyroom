@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Download, Eye, EyeOff, FilePlus2, Trash2, Upload } from 'lucide-react';
-import { MAX_DOCUMENT_BYTES, type WorkspaceSummary } from '@tallyroom/contracts';
+import { isWritingRole, MAX_DOCUMENT_BYTES, type WorkspaceSummary } from '@tallyroom/contracts';
 import { Button } from '../../components/base/Button.tsx';
 import { Card } from '../../components/base/Card.tsx';
 import { EmptyState, ErrorState, LoadingState } from '../../components/base/EmptyState.tsx';
@@ -25,6 +25,7 @@ function formatSize(bytes: number): string {
 }
 
 export function DocumentListPage({ workspace }: { workspace: WorkspaceSummary }) {
+  const darfSchreiben = isWritingRole(workspace.role);
   const fileInput = useRef<HTMLInputElement>(null);
   const [customerId, setCustomerId] = useState('');
 
@@ -68,7 +69,7 @@ export function DocumentListPage({ workspace }: { workspace: WorkspaceSummary })
             {workspace.isDemo ? m.leadDemo : m.lead(MAX_DOCUMENT_BYTES / (1024 * 1024))}
           </p>
         </div>
-        {workspace.isDemo ? (
+        {!darfSchreiben ? null : workspace.isDemo ? (
           <Button
             variant="primary"
             disabled={!uploadTarget || addSample.isPending}

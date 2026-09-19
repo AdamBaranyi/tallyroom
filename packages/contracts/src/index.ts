@@ -1,4 +1,5 @@
 export * from './i18n.ts';
+export * from './activity.ts';
 export * from './auth.ts';
 export * from './customer.ts';
 export * from './dashboard.ts';
@@ -11,6 +12,7 @@ export * from './money.ts';
 export * from './pagination.ts';
 export * from './portal.ts';
 export * from './project.ts';
+export * from './report.ts';
 export * from './search.ts';
 export * from './service-contract.ts';
 export * from './service-request.ts';

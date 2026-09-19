@@ -1,0 +1,9 @@
+# Security contact for Tallyroom (RFC 9116).
+# The address itself lives on the linked page, not in this file: the
+# repository is public, and its history stays.
+
+Contact: https://tallyroom.adambaranyi.xyz/vertrauen
+Expires: 2027-09-18T00:00:00.000Z
+Preferred-Languages: de, en
+Canonical: https://tallyroom.adambaranyi.xyz/.well-known/security.txt
+Policy: https://tallyroom.adambaranyi.xyz/vertrauen

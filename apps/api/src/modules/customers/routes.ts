@@ -12,6 +12,7 @@ import {
   requireAuth,
   requireInternal,
   requireWorkspace,
+  requireWriter,
 } from '../workspaces/context.ts';
 import type { CustomerService } from './service.ts';
 
@@ -35,7 +36,7 @@ export function createCustomerRouter(
     res.json(await service.list(workspaceId, query, page));
   });
 
-  router.post('/', async (req, res) => {
+  router.post('/', requireWriter, async (req, res) => {
     const input = customerInputSchema.parse(req.body);
     const { workspaceId, userId } = getWorkspace(req);
     res.status(201).json(await service.create(workspaceId, userId, input));
@@ -47,7 +48,7 @@ export function createCustomerRouter(
     res.json(await service.get(workspaceId, customerId));
   });
 
-  router.patch('/:customerId', async (req, res) => {
+  router.patch('/:customerId', requireWriter, async (req, res) => {
     const customerId = idSchema.parse(req.params.customerId);
     const input = customerUpdateSchema.parse(req.body);
     const { workspaceId, userId } = getWorkspace(req);
@@ -61,13 +62,13 @@ export function createCustomerRouter(
     res.json(await service.blockers(workspaceId, customerId));
   });
 
-  router.post('/:customerId/archive', async (req, res) => {
+  router.post('/:customerId/archive', requireWriter, async (req, res) => {
     const customerId = idSchema.parse(req.params.customerId);
     const { workspaceId, userId } = getWorkspace(req);
     res.json(await service.archive(workspaceId, userId, customerId));
   });
 
-  router.post('/:customerId/restore', async (req, res) => {
+  router.post('/:customerId/restore', requireWriter, async (req, res) => {
     const customerId = idSchema.parse(req.params.customerId);
     const { workspaceId, userId } = getWorkspace(req);
     res.json(await service.restore(workspaceId, userId, customerId));

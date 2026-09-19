@@ -11,6 +11,9 @@ import { errorHandler, notFoundHandler } from './middleware/error-handler.ts';
 import { requestContext } from './middleware/request-context.ts';
 import { requestLocale } from './middleware/request-locale.ts';
 import { createSessionMiddleware } from './middleware/session.ts';
+import { createActivityRepository } from './modules/activity/repository.ts';
+import { createActivityRouter } from './modules/activity/routes.ts';
+import { createActivityService } from './modules/activity/service.ts';
 import { createAuthRepository } from './modules/auth/repository.ts';
 import { createAuthRouter } from './modules/auth/routes.ts';
 import { createAuthService } from './modules/auth/service.ts';
@@ -26,6 +29,10 @@ import { createDemoLimits } from './modules/demo/limits.ts';
 import { createDemoRepository } from './modules/demo/repository.ts';
 import { createDemoRouter } from './modules/demo/routes.ts';
 import { createDemoService } from './modules/demo/service.ts';
+import { createExportRepository } from './modules/export/repository.ts';
+import { createExportRouter } from './modules/export/routes.ts';
+import { createExportService } from './modules/export/service.ts';
+import { createHandoverService } from './modules/export/handover.ts';
 import { createDocumentRepository } from './modules/documents/repository.ts';
 import { createDocumentRouter } from './modules/documents/routes.ts';
 import { createDocumentService } from './modules/documents/service.ts';
@@ -35,6 +42,9 @@ import {
   createInvitationPublicRouter,
 } from './modules/invitations/routes.ts';
 import { createInvitationService } from './modules/invitations/service.ts';
+import { createReportRepository } from './modules/report/repository.ts';
+import { createReportRouter } from './modules/report/routes.ts';
+import { createReportService } from './modules/report/service.ts';
 import { createPortalRepository } from './modules/portal/repository.ts';
 import { createPortalRouter } from './modules/portal/routes.ts';
 import { createPortalService } from './modules/portal/service.ts';
@@ -80,6 +90,8 @@ export function createApp({ env, db, pool, logger, storage }: AppDependencies): 
   const authRepository = createAuthRepository(db);
   const authService = createAuthService(authRepository);
 
+  const activityService = createActivityService(createActivityRepository(db));
+
   const demoLimits = createDemoLimits(db);
 
   const customerRepository = createCustomerRepository(db);
@@ -118,6 +130,11 @@ export function createApp({ env, db, pool, logger, storage }: AppDependencies): 
   const portalRepository = createPortalRepository(db);
   const portalService = createPortalService(db, portalRepository, documentStorage, demoLimits);
 
+  const reportService = createReportService(portalRepository, createReportRepository(db));
+
+  const exportService = createExportService(createExportRepository(db), documentStorage);
+  const handoverService = createHandoverService(portalRepository, documentStorage);
+
   const projectRepository = createProjectRepository(db);
   const projectService = createProjectService(db, projectRepository, demoLimits);
   const milestoneService = createMilestoneService(db, projectRepository);
@@ -133,6 +150,10 @@ export function createApp({ env, db, pool, logger, storage }: AppDependencies): 
     }),
   );
   app.use('/api/v1/workspaces', createWorkspaceRouter(authRepository));
+  app.use(
+    '/api/v1/workspaces/:workspaceId/activity',
+    createActivityRouter(activityService, authRepository),
+  );
   app.use(
     '/api/v1/workspaces/:workspaceId/customers',
     createCustomerRouter(customerService, authRepository),
@@ -166,8 +187,19 @@ export function createApp({ env, db, pool, logger, storage }: AppDependencies): 
     createInvitationAdminRouter(invitationService, authRepository),
   );
   app.use('/api/v1/invitations', createInvitationPublicRouter(invitationService));
+  app.use(
+    '/api/v1/workspaces/:workspaceId/export',
+    createExportRouter(exportService, handoverService, authRepository),
+  );
+  app.use(
+    '/api/v1/workspaces/:workspaceId/report',
+    createReportRouter(reportService, authRepository),
+  );
   app.use('/api/v1/demo', createDemoRouter(demoService, env));
-  app.use('/api/v1/portal/:workspaceId', createPortalRouter(portalService, authRepository));
+  app.use(
+    '/api/v1/portal/:workspaceId',
+    createPortalRouter(portalService, reportService, authRepository),
+  );
 
   app.use(notFoundHandler);
   app.use(errorHandler);

@@ -2,6 +2,7 @@ import type { Transaction } from '../client.ts';
 import { customers } from '../schema/customers.ts';
 import { milestones, projects } from '../schema/projects.ts';
 import { contractRates, serviceContracts } from '../schema/service-contracts.ts';
+import { seedActivityLog } from './activity.ts';
 import { insertDocuments, insertRequests, type SeedStorage } from './attachments.ts';
 import { SEED_CONTRACTS } from './contract-data.ts';
 import { SEED_CUSTOMERS, type SeedCustomer } from './data.ts';
@@ -192,6 +193,13 @@ export async function seedWorkspaceContent(
     customerIds,
     options.storage,
   );
+
+  // Zum Schluss, wenn alles steht: das Protokoll aus dem Bestand ableiten.
+  await seedActivityLog(tx, {
+    workspaceId: options.workspaceId,
+    ownerUserId: options.ownerUserId,
+    reference: options.reference,
+  });
 
   return {
     customerIds,

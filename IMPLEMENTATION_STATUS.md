@@ -1,9 +1,9 @@
 # Umsetzungsstand
 
-Stand: 12.09.2026 · Meilensteine 1–5 und 6a abgeschlossen · live unter
-<https://tallyroom.adambaranyi.xyz> · Meilenstein 6: D0 bis D8 erledigt
+Stand: 19.09.2026 · Meilensteine 1–6 abgeschlossen · live unter
+<https://tallyroom.adambaranyi.xyz> · Meilenstein 7 (Standardlücken) in Arbeit
 
-214 Unit- und Integrationstests · 292 End-to-End-Prüfungen über sechs Breiten · Lint ohne Fehler
+276 Unit- und Integrationstests · 426 End-to-End-Prüfungen über sechs Breiten · Lint ohne Fehler
 und ohne Warnungen · Typecheck in allen vier Paketen sauber · keine Anfrage an Dritte.
 
 ## Erledigt — Meilenstein 1: Fundament und Pipeline
@@ -506,6 +506,73 @@ Geschmack, und nennt zu jeder den Beleg. Dazu verweist die Fusszeile der öffent
 Quelltext und Fallstudie — der einzige Link ins Repository stand bis dahin im Impressum, wo ihn
 niemand sucht —, und beide READMEs öffnen mit einem Bild des Dashboards in Dunkel, aufgenommen im
 heutigen Stand.
+
+## Erledigt — Meilenstein 7: Standardlücken (19.09.2026)
+
+Aus einer Durchsicht «was erwartet ein Käufer 2026, das hier fehlt», mit Belegen statt Bauchgefühl.
+Die offenen Punkte stehen am Ende dieses Abschnitts.
+
+**Aktivitätsprotokoll, sichtbar und versiegelt.** `activity_events` wurde seit Meilenstein 1 in
+jedem Modul geschrieben und nie gelesen — kein Endpunkt, keine Ansicht. Jetzt:
+
+- Protokollseite mit Filtern nach Bereich, Zeitraum und Objekt; Verlauf an Kunde, Projekt und
+  Anfrage; Ausgabe als CSV und JSON; Aufbewahrung zwölf Monate mit täglichem Aufräumlauf.
+- Hash-Kette je Workspace: jeder Eintrag hasht seinen Inhalt mit dem Hash des Vorgängers. Die
+  Prüfung meldet die erste gebrochene Stelle; ein Integrationstest ändert einen Eintrag direkt in
+  der Datenbank und erwartet genau das.
+- Die Kette braucht eine stabile Reihenfolge (`sequence`) und eine Sperre je Workspace beim
+  Anhängen, sonst gabelt sie bei zwei gleichzeitigen Schreibern.
+- Der Vorführ-Seed schreibt sein eigenes Protokoll, sonst stünde in der Demo eine leere Seite.
+
+**Wer hält auf.** Jede offene Anfrage nennt die Seite, bei der sie liegt, und seit wann; Teamansicht
+und Portal sprechen dieselbe Lage aus ihren zwei Blickrichtungen. Das Dashboard teilt die offenen
+Anfragen auf beide Seiten auf und nennt den ältesten Vorgang. Der Zeitpunkt kommt aus dem
+Protokoll, nicht aus einer zweiten Spalte.
+
+**Barrierefreiheitserklärung, Vertrauensseite, Statusseite** samt `/.well-known/security.txt`
+(RFC 9116). Alle drei nennen auch die Grenzen: Kontrast 3,7:1 bei der gedämpftesten Farbe, keine
+Prüfung durch Betroffene, keine Zertifizierung, keine Dauerüberwachung von aussen. Die Statusseite
+prüft den Bereitschaftsendpunkt im Browser der Besucherin und sagt das.
+
+**Datenauszug und Übergabepaket.** Der vollständige Auszug (Owner) enthält alle Tabellen als JSON
+und CSV, die Dokumente als Dateien, Mitgliedschaften und das Protokoll. Das Übergabepaket je Kunde
+entsteht aus der Datenschicht des Portals und enthält deshalb nichts Internes — ein Test öffnet das
+Archiv und sucht den internen Vermerk. ZIP ist selbst geschrieben (120 Zeilen, kein ZIP64) und wird
+im Test von `unzip` gegengelesen.
+
+**Monatsbericht.** Je Kunde und Monat, aus dem Bestand gerechnet statt abgelegt: erledigte
+Meilensteine, eröffnete und erledigte Anfragen, freigegebene Dokumente, laufende Projekte mit ihren
+Meilensteinen, der vereinbarte Monatswert am Monatsende und die offenen Punkte mit der Seite, bei
+der sie liegen. «Erledigt» und «gelöst» kommen aus dem Protokoll — eine Tabelle kennt nur ihren
+heutigen Stand. Derselbe Bericht steht in der Teamansicht und im Portal; es gibt keinen
+Freigabeschritt und keine abgelegte Fassung, also auch nicht den Schritt, an dem ein Bericht sonst
+liegen bleibt. Drucken übernimmt der Browser, die Navigation trägt `print:hidden`.
+
+**Sortierbare Listen.** Die vier Listen sortieren über ihre Spaltenköpfe, mit `aria-sort`, Zustand
+in der URL und einer Prüfung gegen die erlaubten Felder; eine erfundene Sortierung fällt auf die
+Vorgabe zurück, statt eine 422 mit leerer Liste zu erzeugen.
+
+**Rolle «Nur lesen».** `viewer` sieht denselben Bestand wie ein Mitglied, samt internen Notizen, und
+wird an jeder ändernden Route mit 403 abgewiesen. Die Oberfläche zeigt für diese Rolle keine
+Bedienelemente, die ohnehin scheitern würden.
+
+**Nachweise (19.09.2026).** 276 Unit- und Integrationstests gegen PostgreSQL 18 grün, 426
+End-to-End-Prüfungen über sechs Breiten grün (78 übersprungen, alle mit Absicht — Begründung in
+`docs/TESTING.md`), `bun run verify` ohne Fehler, längste Datei 383 Zeilen.
+
+Zwei Fehler fand erst die Pipeline über sechs Breiten, nie der lokale Lauf auf 1440 Pixeln: die
+Wartezeile mit `whitespace-nowrap` und der Sortierpfeil im Textfluss zwangen die Anfragetabelle
+beide Male über 1024 Pixel hinaus. Deshalb steht die Breitenprüfung in der Pipeline und nicht nur
+im Kopf.
+
+**Offen aus derselben Durchsicht, in dieser Reihenfolge:**
+
+| Punkt                           | Warum er noch fehlt                                                           |
+| ------------------------------- | ----------------------------------------------------------------------------- |
+| Massenauswahl mit Rückgängig    | Braucht ein eigenes Muster für «rückgängig» statt einer Bestätigung je Zeile  |
+| Benachrichtigungen in der App   | Ohne Mailversand ein eigenes Postfach samt Lesestand; entworfen, nicht gebaut |
+| Löschen von Workspace und Konto | Der Auszug steht, das Löschen mit Fristen und Sicherungen fehlt               |
+| Passkeys als zweiter Anmeldeweg | WebAuthn ohne Fremddienst; grösster Einzelpunkt der Liste                     |
 
 ## Bewusst zurückgestellt
 

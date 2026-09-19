@@ -19,6 +19,7 @@ export const portalMessages = defineMessages({
       contracts: 'Verträge',
       requests: 'Anfragen',
       documents: 'Dokumente',
+      report: 'Bericht',
       account: 'Konto',
     },
     account: {
@@ -88,6 +89,7 @@ export const portalMessages = defineMessages({
       contracts: 'Contrats',
       requests: 'Demandes',
       documents: 'Documents',
+      report: 'Rapport',
       account: 'Compte',
     },
     account: {
@@ -158,6 +160,7 @@ export const portalMessages = defineMessages({
       contracts: 'Contratti',
       requests: 'Richieste',
       documents: 'Documenti',
+      report: 'Rapporto',
       account: 'Account',
     },
     account: {
@@ -228,6 +231,7 @@ export const portalMessages = defineMessages({
       contracts: 'Contracts',
       requests: 'Requests',
       documents: 'Documents',
+      report: 'Report',
       account: 'Account',
     },
     account: {

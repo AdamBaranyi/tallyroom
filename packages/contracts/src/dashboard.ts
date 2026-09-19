@@ -36,6 +36,15 @@ export const dashboardSchema = z.object({
   monthlyContractValueMinor: z.number().int(),
   confirmedContracts: z.number().int(),
   history: z.array(monthlyValuePointSchema),
+  /**
+   * Offene Anfragen, aufgeteilt nach der Seite, bei der der Ball liegt. Die
+   * Summe der beiden ist die Zahl der offenen Anfragen; getrennt sagt sie,
+   * ob es an uns liegt oder am Kunden.
+   */
+  requestsWaitingOnTeam: z.number().int(),
+  requestsWaitingOnClient: z.number().int(),
+  /** Tage, die der am längsten offene Vorgang schon liegt; null ohne offene. */
+  longestWaitDays: z.number().int().nullable(),
 });
 
 export type Dashboard = z.infer<typeof dashboardSchema>;

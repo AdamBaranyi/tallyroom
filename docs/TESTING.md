@@ -27,8 +27,8 @@ bun run verify   # Format, Dateilänge, Schriftgrösse, Lint, Typen
 bun run test     # Unit- und Integrationstests
 ```
 
-Ergebnis vom 12.09.2026: **214 Tests grün**, Lint ohne Fehler und ohne Warnungen, Typecheck in
-allen vier Paketen sauber, alle Code-Dateien unter der 400-Zeilen-Grenze (längste: 378 Zeilen).
+Ergebnis vom 19.09.2026: **276 Tests grün**, Lint ohne Fehler und ohne Warnungen, Typecheck in
+allen vier Paketen sauber, alle Code-Dateien unter der 400-Zeilen-Grenze (längste: 383 Zeilen).
 
 Die Integrationstests brauchen die Testdatenbank und die Umgebungsdatei:
 
@@ -47,7 +47,7 @@ bun run test:e2e        # alle sechs Breiten
 bun run test:e2e:ui     # zum Nachsehen, wenn etwas rot ist
 ```
 
-**292 Prüfungen im Lauf, gut zwei Minuten** (12.09.2026). Dazu kommen 62 übersprungene,
+**426 Prüfungen im Lauf, gut drei Minuten** (19.09.2026). Dazu kommen 78 übersprungene,
 alle mit Absicht: Die drei Messungen gegen Lastdaten und die sechs Sprachprüfungen laufen nur bei
 1440 Pixeln, die drei Breitenprüfungen der Übersetzungen nur bei 320, und die Navigation hinter
 dem Hamburger nur unter 1024. Sechsmal dieselbe Zahl wäre keine zusätzliche Erkenntnis.

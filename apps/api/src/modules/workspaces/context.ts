@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
-import { isInternalRole, type MembershipRole } from '@tallyroom/contracts';
+import { isInternalRole, isWritingRole, type MembershipRole } from '@tallyroom/contracts';
 import { forbidden, notFound, unauthenticated } from '../../lib/http-error.ts';
 import type { AuthRepository } from '../auth/repository.ts';
 
@@ -91,6 +91,27 @@ export function requireInternal(req: Request, _res: Response, next: NextFunction
   if (!isInternalRole(context.role)) {
     next(
       notFound({ de: 'Nicht gefunden.', fr: 'Introuvable.', it: 'Non trovato.', en: 'Not found.' }),
+    );
+    return;
+  }
+  next();
+}
+
+/**
+ * Alles, was Daten ändert. Die Rolle `viewer` liest denselben Bestand und
+ * bekommt hier 403 — nicht 404: dass es die Sache gibt, weiss sie ohnehin,
+ * sie sieht sie ja.
+ */
+export function requireWriter(req: Request, _res: Response, next: NextFunction): void {
+  const context = getWorkspace(req);
+  if (!isWritingRole(context.role)) {
+    next(
+      forbidden({
+        de: 'Dieses Konto darf mitlesen, aber nichts ändern.',
+        fr: 'Ce compte peut consulter, mais rien modifier.',
+        it: 'Questo account può leggere, ma non modificare nulla.',
+        en: 'This account may read along, but change nothing.',
+      }),
     );
     return;
   }

@@ -16,10 +16,17 @@ import { formatDate } from '../../lib/format.ts';
 import { useMessages } from '../../i18n/messages.ts';
 import { projectMessages } from './messages.ts';
 
+interface SortProps {
+  active: string;
+  direction: 'asc' | 'desc';
+  onSort: (field: string) => void;
+}
+
 interface Props {
   projects: Project[];
   basePath: string;
   showCustomer?: boolean;
+  sort?: SortProps;
 }
 
 /** Fortschritt als Balken und als Zahl — nicht allein über die Farbe. */
@@ -52,7 +59,7 @@ function OverdueMark({ count }: { count: number }) {
   );
 }
 
-export function ProjectRows({ projects, basePath, showCustomer = true }: Props) {
+export function ProjectRows({ projects, basePath, showCustomer = true, sort }: Props) {
   const m = useMessages(projectMessages);
   return (
     <>
@@ -79,10 +86,10 @@ export function ProjectRows({ projects, basePath, showCustomer = true }: Props) 
 
       <DataTable>
         <TableHead>
-          <Th>{m.rows.project}</Th>
-          {showCustomer && <Th>{m.customer}</Th>}
-          <Th>{m.status}</Th>
-          <Th>{m.targetDate}</Th>
+          <Th sort={sort && { ...sort, field: 'name' }}>{m.rows.project}</Th>
+          {showCustomer && <Th sort={sort && { ...sort, field: 'customerName' }}>{m.customer}</Th>}
+          <Th sort={sort && { ...sort, field: 'status' }}>{m.status}</Th>
+          <Th sort={sort && { ...sort, field: 'targetDate' }}>{m.targetDate}</Th>
           <Th>{m.rows.progress}</Th>
         </TableHead>
         <tbody>
