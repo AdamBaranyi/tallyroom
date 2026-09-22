@@ -163,19 +163,30 @@ test.describe('Teamansicht', () => {
     expectSaysNot(offen.spokenPhrase, 'arrow');
 
     // «Web» trifft in der Demo vier Einträge; so gibt es einen zweiten, zu dem
-    // der Pfeil wandern kann.
-    await feld.fill('Web');
+    // der Pfeil wandern kann. Die Eingabe steht in `capture`: Guidepup hört nur
+    // während seiner eigenen Befehle zu, eine Statusmeldung danach ginge verloren.
     const treffer = page.getByRole('option');
-    await expect(treffer.nth(1)).toBeVisible();
+    const gesucht = await screenReader.capture(
+      async () => {
+        await feld.fill('Web');
+        await expect(treffer.nth(1)).toBeVisible();
+        await expect(page.getByRole('dialog').getByRole('status')).toContainText('Treffer');
+      },
+      { capture: true },
+    );
     const [erster, zweiter] = await Promise.all([
       treffer.nth(0).locator('span').nth(1).textContent(),
       treffer.nth(1).locator('span').nth(1).textContent(),
     ]);
-    await expectEventuallySays(screenReader, ['Treffer', erster ?? '']);
+    expectSays(gesucht.spokenPhrase, 'Treffer', erster ?? '');
 
-    await screenReader.clearSpokenPhraseLog();
-    await screenReader.capture(() => page.keyboard.press('ArrowDown'), { capture: true });
-    await expect(feld).toHaveAttribute('aria-activedescendant', 'palette-treffer-1');
-    await expectEventuallySays(screenReader, [zweiter ?? '']);
+    const pfeil = await screenReader.capture(
+      async () => {
+        await page.keyboard.press('ArrowDown');
+        await expect(feld).toHaveAttribute('aria-activedescendant', 'palette-treffer-1');
+      },
+      { capture: true },
+    );
+    expectSays(pfeil.spokenPhrase, zweiter ?? '');
   });
 });

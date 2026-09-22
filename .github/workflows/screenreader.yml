@@ -64,6 +64,15 @@ jobs:
       - name: VoiceOver für die Steuerung einrichten
         uses: guidepup/setup-action@acf1a64cc26292ebe0db6a28d1341bd1bae93c65 # 0.21.0
 
+      # Zweimal öffnete sich im ersten Test die Schnellnotiz von macOS, und
+      # VoiceOver sagte sie statt der Seite an. Vermutlich die heisse Ecke unten
+      # rechts: Der Zeiger folgt dem VoiceOver-Cursor, und der Pausenknopf steht
+      # unten rechts. Auf diesem Rechner braucht niemand die Ecke.
+      - name: Heisse Ecken abschalten
+        run: |
+          for corner in tl tr bl br; do defaults write com.apple.dock "wvous-$corner-corner" -int 1; done
+          killall Dock
+
       - name: Prüfung mit VoiceOver
         run: bunx playwright test -c playwright.screenreader.config.ts --project=voiceover
 
