@@ -1,8 +1,11 @@
 # Fallstudie
 
+**Deutsch** · [English](CASE_STUDY.md)
+
 Tallyroom ist ein Portfolio-Projekt: ein SaaS-Dashboard mit Kundenportal für kleine
-Digitalagenturen, gebaut zwischen dem 09. und dem 12.09.2026 und seit dem 11.09.2026 live unter
-<https://tallyroom.adambaranyi.xyz>. Alle Firmen, Personen und Zahlen darin sind erfunden.
+Digitalagenturen, seit dem 11.09.2026 live unter <https://tallyroom.adambaranyi.xyz>. Gebaut in
+zwei Etappen: die Grundlage vom 09. bis 12.09.2026, die Lücken zum heutigen Standard am 18. und
+19.09.2026. Alle Firmen, Personen und Zahlen darin sind erfunden.
 
 Diese Seite erklärt die Entscheidungen — jede aus einer Nutzeraufgabe, nicht aus Geschmack — und
 nennt zu jeder den Beleg. Was gemessen wurde, steht mit Zahl da; was nicht gemessen ist, steht
@@ -82,7 +85,8 @@ das benannt, was er war: der KI-Standard in besserer Kleidung. Er ist ersetzt wo
 verteidigt.
 
 ![Das Dashboard im heutigen Stand, dunkel: Seitenleiste, Kennzahlband mit monatlichem
-Vertragswert, Diagramm der letzten sechs Monate](screenshots/dashboard-dunkel.png)
+Vertragswert, offene Anfragen nach der Seite, bei der sie liegen, Diagramm der letzten sechs
+Monate](screenshots/dashboard-dunkel.png)
 
 ### Lesbarkeit schlägt Dichte
 
@@ -107,9 +111,10 @@ Momente. Kein Hochzählen von Zahlen, kein Scroll-Fade, kein Parallax. Der Nebel
 ist ein eigener Shader von 2.9 KB statt einer 155-KB-Bibliothek, läuft nur dort, hält bei
 `prefers-reduced-motion` still und hat einen Knopf zum Anhalten (WCAG 2.2.2).
 
-_Beleg:_ Lighthouse gegen die Live-Seite: Desktop 100 in allen vier Kategorien, mobil 99 in drei von
-vier Läufen. Die Startseite lädt 135.7 KB JavaScript (gzip) gegen ein Budget von 142 KB, das die CI
-prüft; Teamansicht, Portal und Rechtsseiten kommen erst beim Aufruf dazu.
+_Beleg:_ Lighthouse gegen die Live-Seite am 22.09.2026, je zwei Läufe: mobil 99 in der Leistung und
+100 in den übrigen drei Kategorien, Desktop 100 in allen vier. Die Startseite lädt 137.0 KB
+JavaScript (gzip) gegen ein Budget von 142 KB, das die CI prüft; Teamansicht, Portal und
+Rechtsseiten kommen erst beim Aufruf dazu.
 
 ### Sicherheit als Voreinstellung, nicht als Kapitel
 
@@ -127,29 +132,106 @@ Der Deploy wird von Hand ausgelöst — eine grüne Pipeline deployt nichts. Das
 Datenbank **vor** der Migration, weil Migrationen nur vorwärts laufen. Jede Nacht um 02:30 sichert
 ein Timer Datenbank und Dokumente mit Prüfsumme je Objekt.
 
-_Beleg:_ Die Probe-Wiederherstellung ist auf dem Server tatsächlich gelaufen: 16 Tabellen mit
-denselben Zeilenzahlen, 18 aktive Dokumente mit Datei, 18 Objekte Prüfsumme für Prüfsumme gleich.
-Die Gegenprobe mit einem entfernten Dokument scheitert wie gewollt. Eine Sicherung, die nie
-zurückgespielt wurde, ist eine Hoffnung.
+_Beleg:_ Die Probe-Wiederherstellung ist am 11.09.2026 auf dem Server tatsächlich gelaufen: 16
+Tabellen mit denselben Zeilenzahlen, 18 aktive Dokumente mit Datei, 18 Objekte Prüfsumme für
+Prüfsumme gleich. Die Gegenprobe mit einem entfernten Dokument scheitert wie gewollt. Eine
+Sicherung, die nie zurückgespielt wurde, ist eine Hoffnung.
+
+## Die zweite Etappe: was ein Käufer erwartet
+
+Nach dem ersten Deploy kam eine Durchsicht mit Quellen statt Bauchgefühl: Was erwartet jemand, der
+2026 ein solches Werkzeug kauft — an Sicherheit, an Bedienung, an Umgang mit seinen Daten —, und
+was fehlt hier? Was daraus gebaut ist, steht in diesem Kapitel. Die vier offenen Punkte stehen mit
+Begründung in [IMPLEMENTATION_STATUS.md](../IMPLEMENTATION_STATUS.md).
+
+### Ein Protokoll, das jemand liest
+
+Der wichtigste Befund war keine fehlende Funktion. Seit dem ersten Meilenstein schrieb jedes Modul
+jede Änderung in `activity_events` — und nichts las sie. Kein Endpunkt, keine Ansicht. Ein
+Protokoll, das niemand lesen kann, beweist niemandem etwas.
+
+Jetzt hat es eine eigene Seite mit Filtern nach Bereich, Zeitraum und Objekt, einen Verlauf an
+Kunde, Projekt und Anfrage, einen Auszug als CSV und JSON und eine Aufbewahrung von zwölf Monaten.
+Zellen, die mit `=`, `+`, `-` oder `@` beginnen, entschärft der Auszug, damit eine
+Tabellenkalkulation sie nicht als Formel ausführt.
+
+Und es ist versiegelt: Jeder Eintrag hasht seinen Inhalt zusammen mit dem Hash seines Vorgängers.
+Wer einen Eintrag nachträglich ändert, bricht die Kette an genau dieser Stelle. Eine Kette braucht
+dafür zwei Dinge, die man leicht vergisst: eine feste Reihenfolge, die nicht vom Zeitstempel
+abhängt, und eine Sperre je Workspace beim Anhängen. Ohne die Sperre lesen zwei gleichzeitige
+Schreiber denselben Vorgänger, und die Kette gabelt sich.
+
+_Beleg:_ Ein Integrationstest ändert einen Eintrag direkt in der Datenbank und erwartet, dass die
+Prüfung genau diesen meldet. Nach dem Deploy am 19.09.2026 in der Produktion nachgeprüft: 80 von 80
+Einträgen versiegelt, dann eine echte Statusänderung — Eintrag 81 hing versiegelt an, die Kette
+blieb unversehrt. Die Grenze steht in [SECURITY.md](SECURITY.md): Die Kette macht eine einzelne
+Änderung nachweisbar, ersetzt aber keinen schreibgeschützten Speicher — wer Zugang zur Datenbank
+hat, kann sie ganz neu schreiben.
+
+### Wer hält auf
+
+Der Status sagt „Wartet auf Kunde". Was er nicht sagt, ist seit wann — und das ist der eigentliche
+Befund. Eine Anfrage, die seit elf Tagen beim Kunden liegt, ist etwas anderes als eine von gestern.
+
+Jede offene Anfrage nennt jetzt die Seite, bei der sie liegt, und die Dauer; ab einer Woche steht
+die Zeile in der Warnfarbe. Das Dashboard teilt die offenen Anfragen auf: bei uns, beim Kunden, ältester
+Vorgang. Im Portal dreht sich die Blickrichtung: Aus „Bei uns seit 38 Tagen" wird „Beim Team seit
+38 Tagen".
+
+Der Zeitpunkt kommt aus dem Protokoll, nicht aus einer neuen Spalte. Eine zweite Stelle für
+dieselbe Tatsache läuft beim ersten Fehler auseinander.
+
+_Beleg:_ Integrationstests geben den Ball an den Kunden ab und wieder zurück und prüfen, dass die
+Wartezeit ab dem letzten Statuswechsel zählt, nicht ab dem Anlegen.
+
+### Wer geht, nimmt seine Daten mit
+
+Zwei Auszüge mit zwei Berechtigungen. Der Owner lädt den ganzen Workspace als ZIP: alle Tabellen
+als JSON und CSV, die Dokumente als Dateien, Mitgliedschaften und Protokoll. Für einen einzelnen
+Kunden gibt es ein Übergabepaket mit genau dem, was er im Portal sieht — etwa wenn die
+Zusammenarbeit endet.
+
+Das Übergabepaket baut auf der Datenschicht des Portals auf, nicht auf einer eigenen Abfrage. So
+gilt dieselbe Grenze „nichts Internes", die 16 Tests schon prüfen, statt einer zweiten, die man
+erst noch prüfen müsste.
+
+_Beleg:_ Ein Integrationstest öffnet das Archiv und sucht den internen Vermerk; er darf nirgends
+vorkommen. Das ZIP-Format ist selbst geschrieben, rund 120 Zeilen ohne Abhängigkeit, und wird im
+Test vom echten `unzip` gegengelesen.
+
+### Was sonst dazukam
+
+- **Monatsbericht je Kunde**, aus Bestand und Protokoll gerechnet statt abgelegt. Derselbe Bericht
+  steht in Teamansicht und Portal — zwei Fassungen wären zwei Gelegenheiten, verschiedene Zahlen zu
+  zeigen. Drucken übernimmt der Browser.
+- **Rolle „Nur lesen"**: sieht, was ein Mitglied sieht, und wird an jeder ändernden Route
+  serverseitig abgewiesen. Die Oberfläche zeigt ihr keine Knöpfe, die ohnehin scheitern würden.
+- **Sortierbare Listen** über die Spaltenköpfe, mit `aria-sort` und dem Zustand in der URL. Eine
+  erfundene Sortierung fällt auf die Vorgabe zurück, statt eine leere Liste zu liefern.
+- **Seiten zu Barrierefreiheit, Vertrauen und Status**, dazu `security.txt` nach RFC 9116. Die
+  Statusseite prüft im Browser des Besuchers und sagt dazu, was nicht überwacht wird: Es gibt keine
+  Dauerüberwachung von aussen. Eine grüne Anzeige ohne Messung dahinter wäre Dekoration.
 
 ## Was geprüft ist
 
+Gemessen am 22.09.2026:
+
 | Prüfung                                | Ergebnis                                             |
 | -------------------------------------- | ---------------------------------------------------- |
-| Unit- und Integrationstests            | 214 grün, gegen eine echte PostgreSQL                |
-| Playwright über sechs Breiten          | 292 grün, samt axe in hell und dunkel, vier Sprachen |
-| WebKit und Firefox, iPhone bis Desktop | 296 grün                                             |
+| Unit- und Integrationstests            | 276 grün, gegen eine echte PostgreSQL                |
+| Playwright über sechs Breiten          | 426 grün, samt axe in hell und dunkel, vier Sprachen |
+| WebKit und Firefox, iPhone bis Desktop | 430 grün                                             |
 | Produktionsprüfung gegen den Server    | 3 von 3, null CSP-Verstösse, null Konsolenfehler     |
-| Lighthouse live                        | Desktop 4 × 100, mobil 99                            |
-| Erstlast der Startseite                | 135.7 KB gzip gegen ein Budget von 142 KB            |
+| Lighthouse live                        | mobil 99 · 100 · 100 · 100, Desktop 4 × 100          |
+| Erstlast der Startseite                | 137.0 KB gzip gegen ein Budget von 142 KB            |
 
 Alle Verfahren und die bekannten Lücken stehen in [TESTING.md](TESTING.md).
 
 ## Wo ich danebenlag
 
-[DIAGNOSTICS.md](DIAGNOSTICS.md) führt 25 Befunde, davon vier als **Fehldiagnose** gekennzeichnet —
+[DIAGNOSTICS.md](DIAGNOSTICS.md) führt 28 Befunde, davon vier als **Fehldiagnose** gekennzeichnet —
 dort war meine erste Erklärung falsch. Sie stehen bewusst mit drin, weil eine falsche Fährte teurer
-ist als der Fehler selbst. Drei, die mich etwas gelehrt haben:
+ist als der Fehler selbst. Fünf, die mich etwas gelehrt haben:
 
 - **Ungeschichtetes CSS schlägt jede Utility.** `no-underline` stand an zwanzig Stellen und hat nie
   gewirkt. Dieselbe Falle traf Monate später den Umbruch der Schrift. Wer eine Klasse setzt und
@@ -160,13 +242,26 @@ ist als der Fehler selbst. Drei, die mich etwas gelehrt haben:
 - **Ein Überlauf ohne schuldiges Element.** In Safaris Engine zog die Beschriftung einer
   Auswahlliste die Seite auf 429 Pixel, während die Liste selbst 317 breit war. Inhalt kann über
   seinen Kasten hinausragen; die Mindestbreite war die falsche Spur.
+- **Ein Zeitstempel, der keiner war.** Drizzle wandelt Zeitstempel nur für Spalten um, die es aus
+  dem Schema kennt. Derselbe Zeitstempel aus einem SQL-Ausdruck kam als Zeichenkette zurück, obwohl
+  die Typangabe `Date` versprach. Der Typecheck war grün, und jede Statusänderung lieferte 500.
+  Eine Typangabe an rohem SQL ist eine Behauptung, keine Prüfung — gefunden haben es die
+  Integrationstests, nicht der Compiler.
+- **Grün auf einer Breite ist nicht grün.** Zweimal lief die Anfragetabelle bei 1024 Pixeln über:
+  einmal um 10 Pixel, weil die neue Wartezeile nicht umbrechen durfte, einmal um 6, weil ein
+  Sortierpfeil im Textfluss stand. Lokal hatte ich nur bei 1440 geprüft. Gemeldet hat beides die
+  Pipeline über sechs Breiten, bevor es live ging.
 
 ## Was bewusst fehlt
 
 Passwort-Reset per E-Mail (ohne Mailversand nicht sauber baubar — der Betreiber setzt Passwörter
 mit einem Befehl neu), Zahlungen und Rechnungen, Mehrfaktor-Authentisierung, öffentliche
-Selbstregistrierung, weitere Währungen. Jede dieser Lücken ist eine Entscheidung mit Begründung,
-keine Vergesslichkeit.
+Selbstregistrierung, weitere Währungen, SAML-SSO und SCIM. Jede dieser Lücken ist eine Entscheidung
+mit Begründung, keine Vergesslichkeit.
+
+Offen, aber nicht verworfen, sind vier Punkte aus der Durchsicht: Massenauswahl mit Rückgängig,
+Benachrichtigungen in der Anwendung, das Löschen von Workspace und Konto und Passkeys als zweiter
+Anmeldeweg.
 
 ## Was ich mitnehme
 
@@ -174,3 +269,6 @@ Die teuersten Fehler waren nicht die kaputten, sondern die stillen: eine Klasse 
 Test, der nie scheitern konnte, eine Sicherung, die niemand zurückgespielt hat. Jeder davon steht
 heute unter einer Prüfung, die anschlägt — das ist der eigentliche Unterschied zwischen „läuft bei
 mir" und „läuft".
+
+Die zweite Etappe hat denselben Befund eine Ebene höher gezeigt. Ein Protokoll, das jedes Modul
+schreibt und nichts liest, arbeitet nicht falsch. Es beweist nur nie jemandem etwas.
