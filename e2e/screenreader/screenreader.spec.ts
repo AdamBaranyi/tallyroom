@@ -158,9 +158,14 @@ test.describe('Teamansicht', () => {
       name: 'Kunde, Projekt, Vertrag oder Anfrage suchen',
     });
     await expect(feld).toBeFocused();
-    expectSays(offen.spokenPhrase, 'Kunde, Projekt, Vertrag oder Anfrage suchen');
-    // Die Tastenzeile mit ↑ ↓ ↵ las NVDA als Symbolnamen vor.
-    expectSaysNot(offen.spokenPhrase, 'arrow');
+    expectSays(
+      offen.spokenPhrase,
+      'Kunde, Projekt, Vertrag oder Anfrage suchen',
+      'Mit den Pfeiltasten einen Treffer wählen',
+    );
+    // «↵» las NVDA als «downwards arrow corner leftwards» vor. Nicht auf «arrow»
+    // prüfen: VoiceOver nennt in seinen eigenen Hinweisen Tasten beim Namen.
+    expectSaysNot(offen.spokenPhrase, 'corner leftwards');
 
     // «Web» trifft in der Demo vier Einträge; so gibt es einen zweiten, zu dem
     // der Pfeil wandern kann. Die Eingabe steht in `capture`: Guidepup hört nur

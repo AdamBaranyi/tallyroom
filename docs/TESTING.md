@@ -20,6 +20,9 @@ deployt nichts, der Deploy wird bewusst ausgelöst.
 | Playwright über sechs Breiten  | die End-to-End-Prüfungen samt axe, gegen Entwicklungsserver und Garage         |
 | Produktionsaufbau von aussen   | Images bauen, Aufbau starten wie auf dem Server, `e2e/production.spec.ts`      |
 
+Dazu `.github/workflows/screenreader.yml` mit zwei weiteren Jobs: echtes VoiceOver auf macOS und
+echtes NVDA auf Windows, siehe unten.
+
 ## Ausgeführt
 
 ```bash
@@ -191,6 +194,43 @@ Nicht Teil der CI, weil beide Browser ein eigener Download sind. WebKit auf dem 
 Engine, aber nicht iOS; ein echtes iPhone ersetzt es nicht. Edge ist Chromium und damit durch die
 Hauptsuite abgedeckt, der Internet Explorer ist seit 2022 eingestellt.
 
+### Mit echten Screenreadern
+
+`.github/workflows/screenreader.yml`, bei jedem Push und jeder Pull Request. Kein Nachbau: Auf
+einem macOS-Rechner steuert [Guidepup](https://www.guidepup.dev) das echte VoiceOver in Safaris
+Engine, auf einem Windows-Rechner das echte NVDA in Firefox. Beide brauchen einen sichtbaren
+Browser und laufen einzeln nacheinander.
+
+Sieben Prüfungen, je Screenreader dieselben. Sie gelten Stellen, die axe nicht beurteilen kann —
+ob etwas angesagt wird, wohin der Fokus geht, ob ein Dialog seinen Namen nennt:
+
+| Prüfung                    | Was gehört werden muss                                              |
+| -------------------------- | ------------------------------------------------------------------- |
+| Pausenknopf der Startseite | Name, Rolle und Zustand, auch beim zweiten Besuch des Knopfs        |
+| Anmeldung, leeres Formular | der Fokus springt ins Feld, der Fehler wird mitgesprochen           |
+| Anmeldung, falsche Daten   | die Meldung, ohne dass der Fokus springt                            |
+| Teamansicht                | der Sprunglink zuerst, danach die Hauptüberschrift                  |
+| Kettenprüfung              | das Ergebnis, nicht nur der Knopf                                   |
+| Dialog «Kunde anlegen»     | der Dialog nennt seinen Namen, Escape gibt den Fokus zurück         |
+| Kommandopalette            | wie viele Treffer, welcher markiert ist, und der nächste beim Pfeil |
+
+Auf den Rechnern von GitHub gibt es kein Docker. Die API startet deshalb über
+`e2e/screenreader/server.ts` gegen eine PostgreSQL auf dem Rechner selbst — über Homebrew auf
+macOS, die mitgelieferte 17 auf Windows — und legt die Dateien im Speicher ab, wie die
+Integrationstests. Geprüft wird, was angesagt wird, nicht die Anbindung an S3.
+
+**Die Prüfungen haben drei Fehler gefunden, die axe nicht sieht**, alle in DIAGNOSTICS Nummer 29:
+Das Ergebnis der Kettenprüfung wurde nicht angesagt, die Kommandopalette nannte den markierten
+Treffer nicht, und die Tastenhilfe ↑ ↓ ↵ las NVDA als Zeichennamen vor. Behoben und seither
+geprüft.
+
+**Grenzen.** Automatisch geprüft ist nicht dasselbe wie von Menschen geprüft, die täglich mit
+einem Screenreader arbeiten; das steht auch auf der Barrierefreiheitsseite. VoiceOver läuft auf
+macOS, nicht auf iOS. Die Rollen sagen beide Screenreader in ihrer eigenen Sprache an, auf den
+Rechnern von GitHub englisch; der Test vergleicht deshalb ohne Rücksicht auf Satzzeichen und
+Reihenfolge. Und Guidepup hört nur während seiner eigenen Befehle zu — eine Handlung, deren Ansage
+geprüft wird, gehört in `capture()`.
+
 ### Sicherung und Wiederherstellung
 
 `apps/api/src/backup/archive.test.ts`, 9 Tests: das Dokumentarchiv spielt Byte für Byte samt
@@ -345,13 +385,13 @@ Erscheinungsbild in Hell und Dunkel geprüft, Umschaltung wirkt sofort.
 
 - **Reale Geräte.** Alle Messungen stammen aus der Browser-Emulation. Das ist kein Nachweis für ein
   bestimmtes Telefon. Es wird keine Unterstützung eines konkreten Altgeräts behauptet.
-- **Firefox und WebKit.** Bisher nur Chromium. Die Hauptabläufe sollen in Meilenstein 6 in allen
-  drei Engines laufen.
+- **Reale Screenreader-Nutzung.** VoiceOver und NVDA laufen automatisiert (siehe oben), aber
+  niemand, der täglich mit einem Screenreader arbeitet, hat die Anwendung bedient.
 - **Reflow bei 400 % Zoom** ab 1280 Pixeln. Steht aus; die 320-Pixel-Messung deckt denselben
   Layoutzustand ab, ersetzt die Zoomprüfung aber nicht.
 - **Barrierefreiheit insgesamt.** Tastaturbedienung, sichtbarer Fokus, beschriftete Felder,
-  Sprungmarke und reduzierte Bewegung sind umgesetzt, aber nicht systematisch mit Screenreader
-  geprüft.
+  Sprungmarke und reduzierte Bewegung sind umgesetzt und geprüft; die sieben Screenreader-Abläufe
+  decken aber nicht jede Seite und jeden Dialog ab.
 - **Reale Last durch gleichzeitige Nutzer.** Gemessen wurde nacheinander, nicht unter Parallellast.
 
 ## Performance
