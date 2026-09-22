@@ -27,7 +27,7 @@ bun run verify   # Format, Dateilänge, Schriftgrösse, Lint, Typen
 bun run test     # Unit- und Integrationstests
 ```
 
-Ergebnis vom 19.09.2026: **276 Tests grün**, Lint ohne Fehler und ohne Warnungen, Typecheck in
+Ergebnis vom 22.09.2026: **276 Tests grün**, Lint ohne Fehler und ohne Warnungen, Typecheck in
 allen vier Paketen sauber, alle Code-Dateien unter der 400-Zeilen-Grenze (längste: 383 Zeilen).
 
 Die Integrationstests brauchen die Testdatenbank und die Umgebungsdatei:
@@ -86,9 +86,11 @@ Seit dem 11.09.2026 wirklich ohne Bewegung — vorher wurde die Einstellung stil
 (DIAGNOSTICS Nummer 20).
 
 **Nebel der Startseite** (`e2e/landing.spec.ts`, alle sechs Breiten): er blendet hinter dem Text
-auf, die Überschrift wartet nicht darauf; «Bewegung anhalten» hält ihn wirklich an — zwei
-Aufnahmen der Leinwand im Abstand von 700 ms sind dann gleich, vorher verschieden — und die Wahl
-gilt nach dem Neuladen; bei reduzierter Bewegung steht er still, und es gibt keinen Knopf.
+auf, die Überschrift wartet nicht darauf; «Bewegung anhalten» hält ihn wirklich an — gezählt wird
+jeder Zeichenaufruf der Leinwand, laufend steigt die Zahl, angehalten nicht — und die Wahl gilt
+nach dem Neuladen; bei reduzierter Bewegung steht er still, und es gibt keinen Knopf. Bis zum
+22.09.2026 verglich der Test zwei Aufnahmen der Leinwand; auf dem iPhone mass das auch den Link
+darüber mit (DIAGNOSTICS Nummer 28).
 Kontrast gemessen, weil axe Text über einer Leinwand nicht beurteilen kann: an der ungünstigsten
 Stelle von sechs Momenten, bei sieben Breiten und in beiden Erscheinungsbildern mindestens 5.44:1
 für grauen Fliesstext. Lighthouse gegen den lokalen Produktionsbau mit Nebel: mobil dreimal 98, Blockade 0 bis 20 ms;
@@ -158,6 +160,11 @@ Läufen gleich). Desktop 100 in allen vier Kategorien. Dazu die öffentlichen Se
 (iPhone SE, iPhone 15, Safari 1440) und Firefox 390: kleinste Schrift 16 px, kein waagerechter
 Überlauf, kein Wort mitten im Wort gebrochen.
 
+Nach dem Deploy von Meilenstein 7, am 22.09.2026, gegen dieselbe Adresse: **3 von 3 grün.**
+Lighthouse je zwei Läufe: mobil Leistung 99, die übrigen drei Kategorien 100 (FCP 1,5 s, LCP 2,0 s,
+Blockade 0 ms); Desktop viermal 100. Zwei Läufe davor liefen neben einem Testlauf auf demselben
+Rechner, mobil 96 mit 190 ms Blockade; sie zählen nicht.
+
 ### In Safari und Firefox
 
 ```bash
@@ -172,6 +179,13 @@ bei 1440 Pixeln, Firefox bei 390. Ergebnis vom 12.09.2026: **296 bestanden, kein
 davon war ein Fehler der Anwendung (DIAGNOSTICS Nummer 22). Am 12.09.2026 kamen zwei rote dazu,
 die es doch waren: in WebKit zog die Auswahlliste der Rollen die Seite auf (DIAGNOSTICS
 Nummer 25).
+
+Ergebnis vom 22.09.2026: **430 bestanden, keine rot**, dazu 74 übersprungene. Der erste Lauf an
+diesem Tag hatte zwei rote, beide der Pausentest des Nebels auf iPhone SE und iPhone 15 — kein
+Fehler der Anwendung, sondern der Messung (DIAGNOSTICS Nummer 28). Ein zweiter Lauf fiel in eine
+Stunde, in der andere Testläufe den Rechner auslasteten (Lastmittel über 100 bei acht Kernen):
+achtzehn rote in Firefox 1440, alle an Zeitgrenzen. Wiederholt auf ruhigem Rechner: grün. Wer
+diese Suite laufen lässt, prüft zuerst `uptime`.
 
 Nicht Teil der CI, weil beide Browser ein eigener Download sind. WebKit auf dem Mac ist Safaris
 Engine, aber nicht iOS; ein echtes iPhone ersetzt es nicht. Edge ist Chromium und damit durch die

@@ -566,13 +566,102 @@ Engines prüft.
 
 ---
 
+## 26 · Ein Zeitstempel aus rohem SQL kam als Zeichenkette
+
+**Symptom.** Nach dem Einbau von «Wer hält auf» antwortete jede Statusänderung einer Anfrage mit
+dem Status 500. Typecheck und Lint waren grün. Die neuen Tests in
+`tests/integration/waiting.test.ts` scheiterten, darunter «gibt den Ball an den Kunden ab und
+wieder zurück».
+
+**Messung.** Im Log der API:
+
+```text
+TypeError: (statusChangedAt ?? row.createdAt).toISOString is not a function
+  at toDto (apps/api/src/modules/requests/service.ts:48:54)
+```
+
+**Ursache.** `statusChangedAt` ist ein SQL-Ausdruck — der letzte Statuswechsel aus dem Protokoll —
+und war als `sql<Date | null>` typisiert. Drizzle wandelt Zeitstempel aber nur für Spalten um, die
+es aus dem Schema kennt. Ein Ausdruck ist keine; der Treiber liefert ihn als Zeichenkette. Die
+Typangabe hat der Compiler geglaubt, geprüft hat sie niemand.
+
+**Korrektur.** Der Ausdruck ist jetzt `sql<string | null>`, der Aufrufer macht selbst ein `Date`
+daraus. Die Begründung steht am Ausdruck in `apps/api/src/lib/request-waiting.ts`.
+
+**Regel.** Die Typangabe an `sql<…>` ist eine Zusicherung, keine Umwandlung. Was aus rohem SQL kommt,
+gilt als Zeichenkette, bis ein Test das Gegenteil zeigt. Es ist die zweite Falle dieser Art nach
+Diagnose 7: Wo Drizzle rohes SQL durchreicht, gelten seine Zusicherungen nicht mehr.
+
+---
+
+## 27 · Zweimal Überlauf bei 1024 Pixeln, lokal nie gesehen
+
+**Symptom.** Die Pipeline über sechs Breiten meldete für die Anfrageliste bei 1024 Pixeln einen
+waagerechten Überlauf — zweimal hintereinander, mit verschiedenen Ursachen. Lokal war alles grün;
+dort lief der Durchgang nur bei 1440.
+
+**Messung.** Die Meldung des Überlauftests, erst vor, dann nach der ersten Korrektur:
+
+```text
+{"scrollWidth":1034,"clientWidth":1024,"schuldige":["table.hidden.w-full.border-collapse …"]}
+{"scrollWidth":1030,"clientWidth":1024,"schuldige":["table.hidden.w-full.border-collapse …"]}
+```
+
+**Ursache.** Erstens trug die neue Wartezeile `whitespace-nowrap`; «Beim Kunden seit 38 Tagen»
+setzte damit die Mindestbreite der Statusspalte. Zweitens stand der Sortierpfeil im Textfluss des
+Spaltenkopfs und verbreiterte ihn, bis die Tabelle 6 Pixel über den Rand ragte.
+
+**Korrektur.** Die Wartezeile darf umbrechen. Der Pfeil liegt absolut im Polster der Zelle und
+erscheint nur an der aktiven Spalte.
+
+**Regel.** Ein Durchgang auf einer Breite prüft eine Breite. Wer an einer Tabelle etwas ändert, prüft
+bei 1024 — dort erscheint sie zum ersten Mal statt der Karten, neben der fest stehenden
+Seitenleiste, und hat am wenigsten Platz.
+
+---
+
+## 28 · Der Nebel stand, der Test meldete Bewegung
+
+**Symptom.** In Safaris Engine auf iPhone SE und iPhone 15 scheiterte «Bewegung anhalten hält ihn
+wirklich an»: Nach dem Klick auf den Knopf waren zwei Aufnahmen der Leinwand im Abstand von 700 ms
+verschieden. Sechs von sechs Läufen, auch auf einem Rechner ohne Last. Auf iPad, Safari und Firefox
+am Schreibtisch und in Chromium über alle sechs Breiten grün. Die Browserprüfung läuft nicht in der
+CI; aufgefallen ist es beim Nachmessen für die Fallstudie.
+
+**Messung.** Gegen die Live-Seite, WebKit mit dem Profil des iPhone 15, jeder Aufruf von
+`drawArrays` gezählt:
+
+```text
+laufend      27 → 55 Bilder in einer Sekunde
+angehalten   kein weiteres Bild über zweieinhalb Sekunden
+scrollY      455 beim Klick, 172 bei beiden Aufnahmen
+:hover       beim Klick der Knopf, bei beiden Aufnahmen a(Anmelden)
+```
+
+Die beiden Aufnahmen verglichen Pixel für Pixel: 3171 von 2.7 Millionen verschieden, höchstens 25
+Stufen je Kanal, alle in einem Kasten von 74 × 12 CSS-Pixeln — genau um die Schrift «Anmelden».
+
+**Ursache.** Nicht der Nebel. Auf dem iPhone ist der Hero höher als der Bildschirm; die Aufnahme der
+Leinwand scrollt sie ins Bild, und danach liegt der Zeiger, der eben den Knopf gedrückt hat, auf dem
+Link «Anmelden». Dessen Darstellung wechselte zwischen den beiden Aufnahmen. Die Messung verglich
+die Pixel einer Fläche, über der Bedienelemente liegen, und mass deren Zustände mit.
+
+**Korrektur.** Der Test zählt jetzt die Bilder, die der Nebel zeichnet: ein Skript im Dokument
+zählt jeden Aufruf von `drawArrays`. Laufend muss die Zahl steigen, angehalten und bei reduzierter
+Bewegung nicht. Ohne Zeichenaufruf ändert sich eine WebGL-Fläche nicht.
+
+**Regel.** Eine Pixelmessung über einer Fläche mit Bedienelementen misst auch die Bedienelemente.
+Bewegung einer WebGL-Leinwand misst man an ihren Zeichenaufrufen, nicht an ihrem Bild.
+
+---
+
 ## Was daraus als Werkzeug geblieben ist
 
 | Werkzeug                    | Hält fest                                                    |
 | --------------------------- | ------------------------------------------------------------ |
 | `bun run verify`            | Format, Dateilänge, Lint samt `jsx-a11y`, Typen              |
-| `bun run test`              | 214 Unit- und Integrationstests                              |
-| `bun run test:e2e`          | 292 Prüfungen über sechs Breiten, samt axe und vier Sprachen |
+| `bun run test`              | 276 Unit- und Integrationstests                              |
+| `bun run test:e2e`          | 426 Prüfungen über sechs Breiten, samt axe und vier Sprachen |
 | `bun run check:font-floor`  | Keine Schrift unter 16 px, im Quelltext                      |
 | `e2e/font-size.spec.ts`     | Dasselbe im Browser, dazu kein Wort mitten im Wort gebrochen |
 | `bun run check:bundle-size` | Erstlast 142 KB, CSS 8 KB, Diagramm 115 KB, je gzip          |

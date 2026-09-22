@@ -1,10 +1,11 @@
 # Umsetzungsstand
 
-Stand: 19.09.2026 · Meilensteine 1–6 abgeschlossen · live unter
-<https://tallyroom.adambaranyi.xyz> · Meilenstein 7 (Standardlücken) in Arbeit
+Stand: 22.09.2026 · Meilensteine 1–7 abgeschlossen, Meilenstein 7 seit dem 19.09.2026 live unter
+<https://tallyroom.adambaranyi.xyz>
 
-276 Unit- und Integrationstests · 426 End-to-End-Prüfungen über sechs Breiten · Lint ohne Fehler
-und ohne Warnungen · Typecheck in allen vier Paketen sauber · keine Anfrage an Dritte.
+276 Unit- und Integrationstests · 426 End-to-End-Prüfungen über sechs Breiten · 430 in WebKit und
+Firefox · Lint ohne Fehler und ohne Warnungen · Typecheck in allen vier Paketen sauber · keine
+Anfrage an Dritte.
 
 ## Erledigt — Meilenstein 1: Fundament und Pipeline
 
@@ -573,6 +574,17 @@ im Kopf.
 | Benachrichtigungen in der App   | Ohne Mailversand ein eigenes Postfach samt Lesestand; entworfen, nicht gebaut |
 | Löschen von Workspace und Konto | Der Auszug steht, das Löschen mit Fristen und Sicherungen fehlt               |
 | Passkeys als zweiter Anmeldeweg | WebAuthn ohne Fremddienst; grösster Einzelpunkt der Liste                     |
+
+## Erledigt — Fallstudie nachgeführt, zweisprachig (22.09.2026)
+
+- `docs/FALLSTUDIE.md` auf den Stand nach Meilenstein 7 gebracht: neues Kapitel zur zweiten Etappe,
+  zwei neue Lehren, alle Zahlen am 22.09.2026 neu gemessen statt fortgeschrieben, neues Bild des
+  Dashboards. Daneben `docs/CASE_STUDY.md` auf Englisch; beide verlinken sich gegenseitig, die
+  READMEs verlinken je ihre Sprache.
+- Beim Nachmessen aufgefallen: Der Pausentest des Nebels scheiterte auf iPhone-WebKit, obwohl der
+  Nebel stand. Er zählt jetzt Zeichenaufrufe statt Bilder zu vergleichen (DIAGNOSTICS Nummer 28).
+  Die Anwendung selbst ist unverändert.
+- Neu in DIAGNOSTICS: Nummer 26 (Zeitstempel aus rohem SQL), 27 (Überlauf bei 1024) und 28.
 
 ## Bewusst zurückgestellt
 

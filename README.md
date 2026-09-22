@@ -15,14 +15,17 @@ Portfolio-Projekt von Adam Baranyi. Alle Daten in der Anwendung sind erfunden.
 > **Live seit dem 11.09.2026** unter <https://tallyroom.adambaranyi.xyz>, auf einem eigenen Server
 > mit Caddy, Docker Compose und Let's Encrypt.
 >
-> **Stand: Meilenstein 6 von 6.** Alle Pflichtfunktionen stehen, samt isolierter Besucher-Demo mit
+> **Stand: Meilenstein 7.** Alle Pflichtfunktionen stehen, samt isolierter Besucher-Demo mit
 > Rollenwechsel und Kommandopalette. Das Deployment ist vollständig: D0 bis D8, samt
-> nächtlicher Sicherung, bestandener Probe-Wiederherstellung auf dem Server, der Server-Anleitung
-> unten und einer [Fallstudie](docs/FALLSTUDIE.md). Der genaue Stand steht in
+> nächtlicher Sicherung, bestandener Probe-Wiederherstellung auf dem Server und der
+> Server-Anleitung unten. Meilenstein 7 schliesst Lücken zum heutigen Standard: ein versiegeltes
+> Protokoll, «wer hält auf», Datenauszug und Übergabepaket, Monatsbericht, Rolle «Nur lesen».
+> Warum und mit welchem Beleg: [Fallstudie](docs/FALLSTUDIE.md). Der genaue Stand steht in
 > [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
 
 ![Dashboard von Tallyroom in der dunklen Fassung: Seitenleiste, Kennzahlband mit monatlichem
-Vertragswert, Diagramm der letzten sechs Monate](docs/screenshots/dashboard-dunkel.png)
+Vertragswert, offene Anfragen nach der Seite, bei der sie liegen, Diagramm der letzten sechs
+Monate](docs/screenshots/dashboard-dunkel.png)
 
 ## Technischer Aufbau
 
@@ -122,9 +125,9 @@ bun run test:e2e:browsers # dieselben Prüfungen in Safaris und Firefox' Engine
 Die Integrationstests brauchen die laufende Testdatenbank und `TEST_DATABASE_URL` aus der `.env`.
 `bun run test` liest die Datei nicht selbst, deshalb lokal: `bun --env-file=.env run vitest run`.
 
-Stand 12.09.2026: 214 Unit- und Integrationstests, 292 Playwright-Prüfungen über sechs Breiten
-(samt axe, allen vier Sprachen und dem Rundgang) und eine Produktionsprüfung gegen den Liveserver
-mit 3 von 3. Einzelheiten in [docs/TESTING.md](docs/TESTING.md).
+Stand 22.09.2026: 276 Unit- und Integrationstests, 426 Playwright-Prüfungen über sechs Breiten
+(samt axe, allen vier Sprachen und dem Rundgang), 430 in den Engines von Safari und Firefox und eine
+Produktionsprüfung gegen den Liveserver mit 3 von 3. Einzelheiten in [docs/TESTING.md](docs/TESTING.md).
 
 ### Performance messen
 
@@ -141,11 +144,11 @@ stehen in [docs/TESTING.md](docs/TESTING.md).
 
 ### Lighthouse und Bundle-Grösse
 
-Gegen die Live-Seite am 11.09.2026, je zwei Läufe: mobil Leistung 98 bis 99, Barrierefreiheit,
-Best Practices und SEO je 100; Desktop in allen vier Kategorien 100.
+Gegen die Live-Seite am 22.09.2026, je zwei Läufe: mobil Leistung 99, Barrierefreiheit, Best
+Practices und SEO je 100; Desktop in allen vier Kategorien 100.
 
-Die Startseite lädt 135.7 KB JavaScript (gzip). Teamansicht, Kundenportal und Rechtsseiten werden
-erst beim Aufruf nachgeladen.
+Die Startseite lädt 137.0 KB JavaScript (gzip) gegen ein Budget von 142 KB. Teamansicht,
+Kundenportal und Rechtsseiten werden erst beim Aufruf nachgeladen.
 
 ## Auf einem eigenen Server
 
@@ -238,6 +241,7 @@ sich das Ganze über `DEMO_ENABLED=false`; dann existiert der Bereich nicht.
 ## Dokumentation
 
 - [docs/FALLSTUDIE.md](docs/FALLSTUDIE.md) — Entscheidungen aus Nutzeraufgaben, mit Belegen
+  (englisch: [docs/CASE_STUDY.md](docs/CASE_STUDY.md))
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Aufbau, Datenmodell, Entscheidungen, Codequalität
 - [docs/SECURITY.md](docs/SECURITY.md) — Bedrohungsübersicht, Schutzmassnahmen, geprüfte Fälle
 - [docs/TESTING.md](docs/TESTING.md) — ausgeführte Tests, Prüfbreiten, bekannte Lücken

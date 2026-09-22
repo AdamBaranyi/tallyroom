@@ -15,14 +15,16 @@ A portfolio project by Adam Baranyi. All data in the application is made up.
 > **Live since 11.09.2026** at <https://tallyroom.adambaranyi.xyz>, on its own server with Caddy,
 > Docker Compose and Let's Encrypt.
 >
-> **Status: milestone 6 of 6.** All required features are in place, including an isolated visitor
+> **Status: milestone 7.** All required features are in place, including an isolated visitor
 > demo with role switching and a command palette. Deployment is complete, D0 to D8: nightly
-> backups, a passed restore drill on the server, the server guide below and a
-> [case study](docs/FALLSTUDIE.md) (German). The detailed
-> status is in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) (German).
+> backups, a passed restore drill on the server and the server guide below. Milestone 7 closes gaps
+> to today's standard: a sealed activity log, who is holding a request up, data export and a client
+> handover package, a monthly report and a read-only role. The reasons and the evidence are in the
+> [case study](docs/CASE_STUDY.md). The detailed status is in
+> [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) (German).
 
-![Tallyroom's dashboard in dark mode: sidebar, metric band with the monthly contract value and a
-six-month chart](docs/screenshots/dashboard-dunkel.png)
+![Tallyroom's dashboard in dark mode: sidebar, metric band with the monthly contract value, open
+requests split by who is holding them up, and a six-month chart](docs/screenshots/dashboard-dunkel.png)
 
 ## Tech stack
 
@@ -122,9 +124,10 @@ The integration tests need the test database running and `TEST_DATABASE_URL` fro
 `bun run test` does not read that file itself, so run them locally with
 `bun --env-file=.env run vitest run`.
 
-As of 12.09.2026: 214 unit and integration tests, 292 Playwright checks across six widths
-(including axe, all four languages and the tour) and a production check against the live server,
-3 of 3 passing. Details in [docs/TESTING.md](docs/TESTING.md) (German).
+As of 22.09.2026: 276 unit and integration tests, 426 Playwright checks across six widths
+(including axe, all four languages and the tour), 430 in the Safari and Firefox engines and a
+production check against the live server, 3 of 3 passing. Details in
+[docs/TESTING.md](docs/TESTING.md) (German).
 
 ### Measuring performance
 
@@ -141,11 +144,11 @@ are in [docs/TESTING.md](docs/TESTING.md) (German).
 
 ### Lighthouse and bundle size
 
-Against the live site on 11.09.2026, two runs each: on mobile, 98 to 99 for performance and 100
-each for accessibility, best practices and SEO; on desktop, 100 in all four categories.
+Against the live site on 22.09.2026, two runs each: on mobile, 99 for performance and 100 each
+for accessibility, best practices and SEO; on desktop, 100 in all four categories.
 
-The start page loads 135.7 KB of JavaScript (gzip). The team view, client portal and legal pages
-are loaded on demand.
+The start page loads 137.0 KB of JavaScript (gzip) against a 142 KB budget. The team view, client
+portal and legal pages are loaded on demand.
 
 ## On your own server
 
@@ -234,8 +237,8 @@ off, and the demo area then does not exist.
 
 ## Documentation
 
-- [docs/FALLSTUDIE.md](docs/FALLSTUDIE.md) (German) — decisions traced back to user tasks, with
-  evidence
+- [docs/CASE_STUDY.md](docs/CASE_STUDY.md) — decisions traced back to user tasks, with evidence
+  (German version: [docs/FALLSTUDIE.md](docs/FALLSTUDIE.md))
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (German) — structure, data model, decisions, code
   quality
 - [docs/SECURITY.md](docs/SECURITY.md) (German) — threat overview, safeguards, tested cases

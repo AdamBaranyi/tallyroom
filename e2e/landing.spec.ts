@@ -6,6 +6,30 @@ import { expect, test, type Page } from '@playwright/test';
  */
 test.use({ storageState: { cookies: [], origins: [] } });
 
+/**
+ * Zählt jedes Bild, das der Nebel zeichnet.
+ *
+ * Früher verglich der Test zwei Aufnahmen der Leinwand. Auf dem iPhone ist
+ * der Hero höher als der Bildschirm; die Aufnahme scrollt, danach liegt der
+ * Zeiger auf «Anmelden», und dessen Darstellung wechselte zwischen beiden
+ * Bildern. Der Test meldete Bewegung, obwohl der Nebel stand — Diagnose 28 in
+ * `docs/DIAGNOSTICS.md`. Ohne Zeichenaufruf ändert sich eine WebGL-Fläche
+ * nicht; das ist die Messung.
+ */
+async function countFogFrames(page: Page) {
+  await page.addInitScript(() => {
+    const zaehler = window as unknown as { __fogFrames: number };
+    zaehler.__fogFrames = 0;
+    for (const proto of [WebGLRenderingContext.prototype, WebGL2RenderingContext.prototype]) {
+      const original = proto.drawArrays;
+      proto.drawArrays = function (this: WebGLRenderingContext, ...args) {
+        zaehler.__fogFrames += 1;
+        return original.apply(this, args);
+      } as typeof original;
+    }
+  });
+}
+
 async function openLanding(page: Page) {
   await page.goto('/');
   // Aufgeblendet heisst: die Blende ist durch, nicht nur begonnen.
@@ -15,16 +39,20 @@ async function openLanding(page: Page) {
   });
 }
 
-/** Zwei Aufnahmen der Leinwand mit Abstand. Gleich heisst: nichts bewegt sich. */
+/** Zeichnet der Nebel in einer knappen Sekunde ein neues Bild? */
 async function fogMoves(page: Page): Promise<boolean> {
-  const fog = page.locator('canvas[data-fog]');
-  // Farbwechsel am Knopf nach einem Klick sollen nicht als Bewegung zählen.
+  const frames = () =>
+    page.evaluate(() => (window as unknown as { __fogFrames: number }).__fogFrames);
+  // Ein Bild, das beim Anhalten schon unterwegs war, zählt nicht als Bewegung.
   await page.waitForTimeout(300);
-  const first = await fog.screenshot();
+  const first = await frames();
   await page.waitForTimeout(700);
-  const second = await fog.screenshot();
-  return !first.equals(second);
+  return (await frames()) > first;
 }
+
+test.beforeEach(async ({ page }) => {
+  await countFogFrames(page);
+});
 
 test.describe('Nebel auf der Startseite', () => {
   test('blendet hinter dem Text auf, die Überschrift wartet nicht darauf', async ({ page }) => {
