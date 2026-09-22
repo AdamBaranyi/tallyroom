@@ -4,7 +4,7 @@ Stand: 22.09.2026 · Meilensteine 1–7 abgeschlossen, Meilenstein 7 seit dem 19
 <https://tallyroom.adambaranyi.xyz>
 
 276 Unit- und Integrationstests · 426 End-to-End-Prüfungen über sechs Breiten · 430 in WebKit und
-Firefox · Lint ohne Fehler und ohne Warnungen · Typecheck in allen vier Paketen sauber · keine
+Firefox · 7 Abläufe mit echtem VoiceOver und echtem NVDA · Lint ohne Fehler und ohne Warnungen · Typecheck in allen vier Paketen sauber · keine
 Anfrage an Dritte.
 
 ## Erledigt — Meilenstein 1: Fundament und Pipeline
@@ -585,6 +585,19 @@ im Kopf.
   Nebel stand. Er zählt jetzt Zeichenaufrufe statt Bilder zu vergleichen (DIAGNOSTICS Nummer 28).
   Die Anwendung selbst ist unverändert.
 - Neu in DIAGNOSTICS: Nummer 26 (Zeitstempel aus rohem SQL), 27 (Überlauf bei 1024) und 28.
+
+## Erledigt — Prüfung mit echten Screenreadern (22.09.2026)
+
+- `.github/workflows/screenreader.yml`: zwei Jobs bei jedem Push und jeder Pull Request — echtes
+  VoiceOver in Safaris Engine auf macOS, echtes NVDA in Firefox auf Windows, gesteuert über
+  Guidepup. Sieben Abläufe je Screenreader, Ergebnis 7 von 7 und 7 von 7.
+- Auf beiden Rechnern gibt es kein Docker: `e2e/screenreader/server.ts` startet die API gegen eine
+  PostgreSQL auf dem Rechner selbst und legt Dateien im Speicher ab, wie die Integrationstests.
+- **Drei Fehler gefunden, die axe nicht sieht** (DIAGNOSTICS Nummer 29): Das Ergebnis der
+  Kettenprüfung wurde nicht angesagt, die Kommandopalette nannte den markierten Treffer nicht, und
+  NVDA las die Tastenhilfe ↑ ↓ ↵ als Zeichennamen vor. Alle drei behoben.
+- Gemessene Grenze, die bleibt: VoiceOver sagt in der Palette die Zahl der Treffer, den Namen erst
+  beim Wandern mit den Pfeilen. NVDA sagt beides. Steht auf der Barrierefreiheitsseite.
 
 ## Bewusst zurückgestellt
 

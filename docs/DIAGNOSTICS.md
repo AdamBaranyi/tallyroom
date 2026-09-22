@@ -655,6 +655,105 @@ Bewegung einer WebGL-Leinwand misst man an ihren Zeichenaufrufen, nicht an ihrem
 
 ---
 
+## 29 · Statusmeldungen, die mit ihrem Behälter erscheinen, hört niemand
+
+**Symptom.** Gefunden mit echtem VoiceOver und NVDA (Nummer 30 zum Aufbau). Nach «Kette prüfen»
+stand das Ergebnis sichtbar da, mit `role="status"`, und axe hatte nichts auszusetzen. Keiner der
+beiden Screenreader sagte es an. In der Kommandopalette hörte man nie, welcher Treffer markiert
+ist. Und die Tastenhilfe klang bei NVDA wie ein Rätsel.
+
+**Messung.** Aus den Protokollen der Läufe vom 22.09.2026:
+
+```text
+NVDA, Kette prüfen:  main landmark, Kette prüfen, button · same page, link,
+                     Zum Inhalt springen · main landmark, Kette prüfen, button
+VoiceOver, Palette:  expanded list Treffer 1 item completion selected
+NVDA, Palette:       Springen zu, dialog, Mindestens 2 Zeichen eingeben. up arrow
+                     down arrow wählen downwards arrow corner leftwards springen
+                     Esc schliessen
+```
+
+In der ersten Ansage fehlt das Ergebnis, in der zweiten der Treffer, in der dritten steht statt eines
+Hinweises eine Reihe von Zeichennamen.
+
+**Ursache.** Drei, alle im Markup, keine im Screenreader:
+
+1. Die Statusrolle stand am Kasten, und der Kasten kam erst mit seinem Inhalt ins Dokument.
+   Screenreader überwachen eine Live-Region erst, wenn sie da ist; was zugleich mit ihr erscheint,
+   ist für sie keine Änderung. Dasselbe galt für die Zeile «Kein Treffer» der Palette.
+2. Die Palette markierte den ersten Treffer, sobald die Liste erschien. `aria-activedescendant`
+   stand damit schon, bevor jemand eine Taste drückte — und bei nur einem Treffer ändert auch der
+   Pfeil nichts, es gab also nie einen Wechsel, den ein Screenreader hätte ansagen können.
+3. Die Zeichen ↑ ↓ ↵ stehen in der Tastenzeile für sich. NVDA liest dafür die Namen der Zeichen.
+
+**Korrektur.** Je eine unsichtbare Statuszeile, die immer im Dokument steht: bei der Kette mit
+dem Befund als Satz, bei der Palette mit Anzahl und markiertem Treffer. Das Wandern mit den
+Pfeilen sagt der Screenreader weiter über `aria-activedescendant` selbst an. Die Tastenzeile ist
+für Hilfsmittel verborgen; derselbe Hinweis steht als Satz in der Beschreibung des Suchfelds, in
+allen vier Sprachen.
+
+**Was VoiceOver trotzdem nicht sagt.** Die Statuszeile der Palette liest NVDA zuverlässig,
+VoiceOver nicht: Er redet im selben Moment über seine eigene Auswahl («expanded list Treffer 4
+items completion selected») und sagt die Zeile auch dann nicht an, wenn sie ausserhalb des Dialogs
+steht, das Feld `aria-autocomplete="list"` trägt und der Text erst 400 Millisekunden später kommt.
+Drei Versuche, drei Messungen, gleiches Ergebnis. Wer mit VoiceOver sucht, hört also, **wie viele**
+Treffer es gibt, und erfährt beim Wandern mit den Pfeilen, **welcher** — das sagen beide an.
+
+**Regel.** Eine Statusmeldung braucht einen Behälter, der schon da ist, bevor sich sein Inhalt
+ändert. `role="status"` an einem Element, das bedingt erscheint, ist eine Meldung, die niemand
+hört — und keine automatische Prüfung merkt es, nur ein Screenreader. Und: Richtiges Markup heisst
+nicht, dass jeder Screenreader es vorliest. Was der eine sagt und der andere nicht, gehört
+gemessen und aufgeschrieben, nicht behauptet.
+
+---
+
+## 30 · NVDA hörte auf der Startseite nichts
+
+**Symptom.** Im ersten Lauf der Screenreader-Prüfung gab NVDA auf der Startseite bei 20 Sprüngen
+zur nächsten Überschrift 20 leere Ansagen. Auf dem Dashboard ging derselbe Befehl sofort. Auf
+macOS öffnete sich im ersten Test zweimal die Schnellnotiz, und VoiceOver las sie statt der
+Seite.
+
+**Messung.** Das letzte Bild der Spur zeigte den Fokusring auf der Sprachauswahl oben rechts.
+
+**Ursache.** Nicht die Anwendung. Guidepup drückt vor dem Start unter NVDA einmal Tab — eine
+Umgehung für NVDA in Firefox. Auf der Startseite ist das erste Bedienelement die Sprachauswahl,
+auf dem Dashboard der Sprunglink. Auf einer Auswahlliste schaltet NVDA in den Fokusmodus, und die
+Taste für die nächste Überschrift ging an die Liste. Die Schnellnotiz kam vermutlich von der
+heissen Ecke unten rechts: Der Zeiger folgt dem VoiceOver-Cursor, und der Pausenknopf steht unten
+rechts.
+
+**Korrektur.** Der Test der Startseite prüft den Pausenknopf über den Fokus statt über Sprünge;
+die Überschriften prüft der Test der Teamansicht. Auf dem macOS-Rechner der CI sind die heissen
+Ecken abgeschaltet.
+
+**Regel.** Wer mit Screenreader-Tasten navigiert, prüft, in welchem Modus der Screenreader steht,
+bevor er einer leeren Ansage glaubt. Und Guidepup hört nur während seiner eigenen Befehle zu: Eine
+Handlung, deren Ansage geprüft wird, gehört in `capture()`.
+
+---
+
+## 31 · Die erste Anfrage war einmal eine erledigte
+
+**Symptom.** «Die Anfrage selbst sagt, wer am Zug ist» scheiterte lokal bei 1440 Pixeln, die
+übrigen Breiten waren grün. Der Test öffnete die erste Anfrage der Liste und erwartete eine
+Wartezeile.
+
+**Messung.** 18 Anfragen in der Demo, ein einziger Änderungszeitpunkt. In der Demo dieses Laufs
+stand «Schulungstermin verschieben» zuoberst, Status erledigt.
+
+**Ursache.** Eine erledigte Anfrage wartet auf niemanden und hat darum zu Recht keine Zeile. Bei
+gleichem Zeitpunkt ordnet die Liste nach der ID — fest innerhalb einer Demo, aber die IDs sind
+zufällig, also steht in jeder Demo etwas anderes oben. Warum nur eine Breite rot war, zeigt die
+Spur nicht mehr; sie wurde vom nächsten Lauf überschrieben.
+
+**Korrektur.** Der Test öffnet eine Anfrage aus der Liste «Bei uns».
+
+**Regel.** Ein Test, der «den ersten» Eintrag nimmt, prüft die Reihenfolge mit. Wer etwas anderes
+prüfen will, filtert vorher.
+
+---
+
 ## Was daraus als Werkzeug geblieben ist
 
 | Werkzeug                    | Hält fest                                                    |
@@ -662,6 +761,7 @@ Bewegung einer WebGL-Leinwand misst man an ihren Zeichenaufrufen, nicht an ihrem
 | `bun run verify`            | Format, Dateilänge, Lint samt `jsx-a11y`, Typen              |
 | `bun run test`              | 276 Unit- und Integrationstests                              |
 | `bun run test:e2e`          | 426 Prüfungen über sechs Breiten, samt axe und vier Sprachen |
+| `screenreader.yml`          | VoiceOver und NVDA: Statusmeldungen, Fokus, Dialognamen      |
 | `bun run check:font-floor`  | Keine Schrift unter 16 px, im Quelltext                      |
 | `e2e/font-size.spec.ts`     | Dasselbe im Browser, dazu kein Wort mitten im Wort gebrochen |
 | `bun run check:bundle-size` | Erstlast 142 KB, CSS 8 KB, Diagramm 115 KB, je gzip          |

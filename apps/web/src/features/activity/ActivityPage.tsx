@@ -74,7 +74,12 @@ export function ActivityPage({ workspace }: { workspace: WorkspaceSummary }) {
         </div>
       </div>
 
-      <IntegrityResult report={integrity.data} failed={integrity.isError} messages={m.integrity} />
+      <IntegrityResult
+        report={integrity.data}
+        failed={integrity.isError}
+        pending={integrity.isPending}
+        messages={m.integrity}
+      />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <SelectField

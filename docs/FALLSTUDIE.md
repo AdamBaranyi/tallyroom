@@ -208,6 +208,9 @@ Test vom echten `unzip` gegengelesen.
   serverseitig abgewiesen. Die Oberfläche zeigt ihr keine Knöpfe, die ohnehin scheitern würden.
 - **Sortierbare Listen** über die Spaltenköpfe, mit `aria-sort` und dem Zustand in der URL. Eine
   erfundene Sortierung fällt auf die Vorgabe zurück, statt eine leere Liste zu liefern.
+- **Echte Screenreader in der Pipeline.** VoiceOver auf macOS und NVDA auf Windows prüfen bei
+  jeder Änderung sieben Abläufe: ob eine Meldung angesagt wird, wohin der Fokus springt, ob ein
+  Dialog seinen Namen nennt. Sie fanden drei Fehler, die axe nicht sehen kann.
 - **Seiten zu Barrierefreiheit, Vertrauen und Status**, dazu `security.txt` nach RFC 9116. Die
   Statusseite prüft im Browser des Besuchers und sagt dazu, was nicht überwacht wird: Es gibt keine
   Dauerüberwachung von aussen. Eine grüne Anzeige ohne Messung dahinter wäre Dekoration.
@@ -221,6 +224,7 @@ Gemessen am 22.09.2026:
 | Unit- und Integrationstests            | 276 grün, gegen eine echte PostgreSQL                |
 | Playwright über sechs Breiten          | 426 grün, samt axe in hell und dunkel, vier Sprachen |
 | WebKit und Firefox, iPhone bis Desktop | 430 grün                                             |
+| Echte Screenreader                     | VoiceOver 7 von 7, NVDA 7 von 7                      |
 | Produktionsprüfung gegen den Server    | 3 von 3, null CSP-Verstösse, null Konsolenfehler     |
 | Lighthouse live                        | mobil 99 · 100 · 100 · 100, Desktop 4 × 100          |
 | Erstlast der Startseite                | 137.0 KB gzip gegen ein Budget von 142 KB            |
@@ -229,9 +233,9 @@ Alle Verfahren und die bekannten Lücken stehen in [TESTING.md](TESTING.md).
 
 ## Wo ich danebenlag
 
-[DIAGNOSTICS.md](DIAGNOSTICS.md) führt 28 Befunde, davon vier als **Fehldiagnose** gekennzeichnet —
+[DIAGNOSTICS.md](DIAGNOSTICS.md) führt 31 Befunde, davon vier als **Fehldiagnose** gekennzeichnet —
 dort war meine erste Erklärung falsch. Sie stehen bewusst mit drin, weil eine falsche Fährte teurer
-ist als der Fehler selbst. Fünf, die mich etwas gelehrt haben:
+ist als der Fehler selbst. Sechs, die mich etwas gelehrt haben:
 
 - **Ungeschichtetes CSS schlägt jede Utility.** `no-underline` stand an zwanzig Stellen und hat nie
   gewirkt. Dieselbe Falle traf Monate später den Umbruch der Schrift. Wer eine Klasse setzt und
@@ -247,6 +251,10 @@ ist als der Fehler selbst. Fünf, die mich etwas gelehrt haben:
   die Typangabe `Date` versprach. Der Typecheck war grün, und jede Statusänderung lieferte 500.
   Eine Typangabe an rohem SQL ist eine Behauptung, keine Prüfung — gefunden haben es die
   Integrationstests, nicht der Compiler.
+- **Eine Meldung, die niemand hört.** Das Ergebnis der Kettenprüfung stand sichtbar da, trug
+  `role="status"` und war für axe in Ordnung. Weder VoiceOver noch NVDA sagten es an: Die Meldung
+  kam zugleich mit ihrem Behälter ins Dokument, und eine Live-Region wird nur überwacht, wenn sie
+  vorher schon da war. Gefunden hat das erst ein echter Screenreader.
 - **Grün auf einer Breite ist nicht grün.** Zweimal lief die Anfragetabelle bei 1024 Pixeln über:
   einmal um 10 Pixel, weil die neue Wartezeile nicht umbrechen durfte, einmal um 6, weil ein
   Sortierpfeil im Textfluss stand. Lokal hatte ich nur bei 1440 geprüft. Gemeldet hat beides die

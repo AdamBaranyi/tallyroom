@@ -1,0 +1,149 @@
+name: Screenreader
+
+# Echte Screenreader, keine Simulation: VoiceOver auf macOS, NVDA auf Windows,
+# gesteuert über Guidepup. Beide brauchen einen sichtbaren Browser und laufen
+# deshalb auf eigenen Rechnern, nicht im Linux-Container der übrigen CI.
+#
+# Auf macOS und Windows gibt es bei GitHub kein Docker. Die Datenbank ist
+# darum eine PostgreSQL auf dem Rechner selbst, die Dateien liegen im Speicher
+# der API (e2e/screenreader/server.ts).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: screenreader-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  SCREENREADER_DATABASE_URL: postgresql://tallyroom:tallyroom_local@localhost:5432/tallyroom_screenreader
+
+jobs:
+  voiceover:
+    name: VoiceOver auf macOS
+    runs-on: macos-15
+    timeout-minutes: 40
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_NO_INSTALL_CLEANUP: '1'
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - run: bun install --frozen-lockfile
+
+      # Die Einstellungen, mit denen Guidepup VoiceOver steuert. Die Datei kommt
+      # aus den Releases von Guidepup und wird gegen die Prüfsumme im Manifest
+      # von @guidepup/guidepup geprüft.
+      - name: Guidepup-Dateien für VoiceOver
+        run: bunx guidepup install voiceover
+
+      # Dieselbe Hauptversion wie im Betrieb.
+      - name: PostgreSQL 18 starten
+        run: |
+          brew install postgresql@18
+          PG="$(brew --prefix postgresql@18)/bin"
+          brew services start postgresql@18
+          for i in $(seq 1 30); do "$PG/pg_isready" -h localhost -q && break; sleep 1; done
+          "$PG/psql" -h localhost -d postgres -c "CREATE ROLE tallyroom LOGIN PASSWORD 'tallyroom_local'"
+          "$PG/createdb" -h localhost -O tallyroom tallyroom_screenreader
+
+      - name: WebKit installieren
+        run: bunx playwright install webkit
+
+      # Dasselbe, was guidepup/setup-action tut, aber mit der Version aus dem
+      # Lockfile und mit Wiederholung: Einmal scheiterte der Schritt an «Nicht
+      # stören einschalten», die Läufe davor und danach nicht.
+      - name: VoiceOver für die Steuerung einrichten
+        run: |
+          "/Library/Application Support/VMware Tools/vmware-resolutionSet" 1920 1080 || true
+          for versuch in 1 2 3; do
+            bunx guidepup setup --ci && exit 0
+            echo "Versuch $versuch gescheitert, nochmals in 10 Sekunden"
+            sleep 10
+          done
+          exit 1
+
+      # Zweimal öffnete sich im ersten Test die Schnellnotiz von macOS, und
+      # VoiceOver sagte sie statt der Seite an. Vermutlich die heisse Ecke unten
+      # rechts: Der Zeiger folgt dem VoiceOver-Cursor, und der Pausenknopf steht
+      # unten rechts. Auf diesem Rechner braucht niemand die Ecke.
+      - name: Heisse Ecken abschalten
+        run: |
+          for corner in tl tr bl br; do defaults write com.apple.dock "wvous-$corner-corner" -int 1; done
+          killall Dock
+
+      - name: Prüfung mit VoiceOver
+        run: bunx playwright test -c playwright.screenreader.config.ts --project=voiceover
+
+      - name: Spuren bei Fehlschlag
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: voiceover-spuren
+          path: test-results/
+          retention-days: 7
+
+  nvda:
+    name: NVDA auf Windows
+    runs-on: windows-2025
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - run: bun install --frozen-lockfile
+
+      # NVDA selbst, als tragbare Fassung aus den Releases von Guidepup, gegen die
+      # Prüfsumme im Manifest von @guidepup/guidepup geprüft.
+      - name: NVDA laden
+        run: bunx guidepup install nvda
+
+      # Das Abbild bringt PostgreSQL 17 mit, der Dienst ist abgeschaltet. Die
+      # Migrationen brauchen nichts, was erst Version 18 kann.
+      - name: PostgreSQL starten
+        shell: pwsh
+        env:
+          PGPASSWORD: root
+        run: |
+          Set-Service -Name postgresql-x64-17 -StartupType Manual
+          Start-Service -Name postgresql-x64-17
+          & "$env:PGBIN\psql" -U postgres -h localhost -c "CREATE ROLE tallyroom LOGIN PASSWORD 'tallyroom_local'"
+          & "$env:PGBIN\createdb" -U postgres -h localhost -O tallyroom tallyroom_screenreader
+
+      - name: Firefox installieren
+        run: bunx playwright install firefox
+
+      - name: NVDA einrichten
+        shell: bash
+        run: |
+          for versuch in 1 2 3; do
+            bunx guidepup setup --ci && exit 0
+            echo "Versuch $versuch gescheitert, nochmals in 10 Sekunden"
+            sleep 10
+          done
+          exit 1
+
+      - name: Prüfung mit NVDA
+        run: bunx playwright test -c playwright.screenreader.config.ts --project=nvda
+
+      - name: Spuren bei Fehlschlag
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nvda-spuren
+          path: test-results/
+          retention-days: 7

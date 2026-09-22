@@ -19,8 +19,10 @@ const BREITEN = [320, 375, 390, 768, 1024, 1440] as const;
 
 export default defineConfig({
   testDir: './e2e',
-  // Läuft gegen den Produktionsaufbau, siehe playwright.production.config.ts.
-  testIgnore: 'production.spec.ts',
+  // Mit eigener Konfiguration: gegen den Produktionsaufbau
+  // (playwright.production.config.ts) und mit echten Screenreadern
+  // (playwright.screenreader.config.ts).
+  testIgnore: ['production.spec.ts', 'screenreader/**'],
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
