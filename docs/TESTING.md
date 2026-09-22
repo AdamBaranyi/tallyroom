@@ -207,7 +207,7 @@ ob etwas angesagt wird, wohin der Fokus geht, ob ein Dialog seinen Namen nennt:
 | Prüfung                    | Was gehört werden muss                                              |
 | -------------------------- | ------------------------------------------------------------------- |
 | Pausenknopf der Startseite | Name, Rolle und Zustand, auch beim zweiten Besuch des Knopfs        |
-| Anmeldung, leeres Formular | der Fokus springt ins Feld, der Fehler wird mitgesprochen           |
+| Anmeldung, leeres Formular | der Fokus springt ins Feld, es wird als ungültig angesagt           |
 | Anmeldung, falsche Daten   | die Meldung, ohne dass der Fokus springt                            |
 | Teamansicht                | der Sprunglink zuerst, danach die Hauptüberschrift                  |
 | Kettenprüfung              | das Ergebnis, nicht nur der Knopf                                   |
@@ -232,7 +232,9 @@ einer der Testumgebung ans Licht kamen — der Weg steht in DIAGNOSTICS Nummer 2
 einem Screenreader arbeiten; das steht auch auf der Barrierefreiheitsseite. VoiceOver läuft auf
 macOS, nicht auf iOS. In der Kommandopalette sagt VoiceOver nur, wie viele Treffer es gibt; welcher
 markiert ist, hört man erst beim Wandern mit den Pfeilen (NVDA sagt beides) — das steht auch auf
-der Barrierefreiheitsseite. Die Rollen sagen beide Screenreader in ihrer eigenen Sprache an, auf den
+der Barrierefreiheitsseite. Den Fehlertext eines Felds liest NVDA als Beschreibung jedes Mal mit,
+VoiceOver mal sofort, mal erst auf Nachfrage; geprüft wird deshalb die Verknüpfung im Markup und
+die Ansage «ungültig». Dass eine Meldung ankommt, prüft die Anmeldung mit falschen Daten. Die Rollen sagen beide Screenreader in ihrer eigenen Sprache an, auf den
 Rechnern von GitHub englisch; der Test vergleicht deshalb ohne Rücksicht auf Satzzeichen und
 Reihenfolge. Und Guidepup hört nur während seiner eigenen Befehle zu — eine Handlung, deren Ansage
 geprüft wird, gehört in `capture()`.
