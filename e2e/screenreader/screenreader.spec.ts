@@ -49,7 +49,10 @@ test.describe('Startseite', () => {
 });
 
 test.describe('Anmeldung', () => {
-  test('führt bei leerem Formular zum Feld und sagt den Fehler', async ({ page, screenReader }) => {
+  test('führt bei leerem Formular zum Feld und meldet es als ungültig', async ({
+    page,
+    screenReader,
+  }) => {
     await page.goto('/login');
     await expect(page.getByRole('heading', { name: 'Anmelden', level: 1 })).toBeVisible();
     await screenReader.navigateToWebContent();
@@ -57,8 +60,17 @@ test.describe('Anmeldung', () => {
     const senden = page.getByRole('button', { name: 'Anmelden' });
     await screenReader.capture(() => senden.click(), { capture: true });
 
-    await expect(page.getByLabel('E-Mail')).toBeFocused();
-    await expectEventuallySays(screenReader, ['E-Mail', 'invalid', 'E-Mail ist erforderlich']);
+    const feld = page.getByLabel('E-Mail');
+    await expect(feld).toBeFocused();
+    await expectEventuallySays(screenReader, ['E-Mail', 'invalid']);
+
+    /*
+     * Der Fehlertext hängt als Beschreibung am Feld. NVDA liest sie jedes Mal
+     * mit, VoiceOver mal sofort, mal erst auf Nachfrage — deshalb steht hier
+     * die Verknüpfung, nicht die Ansage. Dass eine Meldung überhaupt ankommt,
+     * prüft die Anmeldung mit falschen Daten eine Zeile weiter unten.
+     */
+    await expect(feld).toHaveAccessibleDescription('E-Mail ist erforderlich');
   });
 
   test('sagt falsche Zugangsdaten an, ohne dass der Fokus springt', async ({
