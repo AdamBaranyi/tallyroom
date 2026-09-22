@@ -253,7 +253,8 @@ because a false trail costs more than the bug itself. Five that taught me someth
 Password reset by email (not cleanly buildable without sending mail — the operator resets
 passwords with a command), payments and invoices, multi-factor authentication, public
 self-registration, other currencies, SAML SSO and SCIM. Each of these gaps is a decision with a
-reason, not an oversight.
+reason, not an oversight. The [README](../README.en.md#deliberately-left-out) gives the reasons
+in more detail, along with what is there instead.
 
 Four items from the review are open but not dropped: bulk selection with undo, in-app
 notifications, deleting a workspace and an account, and passkeys as a second way to sign in.

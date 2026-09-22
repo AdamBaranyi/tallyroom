@@ -257,7 +257,8 @@ ist als der Fehler selbst. Fünf, die mich etwas gelehrt haben:
 Passwort-Reset per E-Mail (ohne Mailversand nicht sauber baubar — der Betreiber setzt Passwörter
 mit einem Befehl neu), Zahlungen und Rechnungen, Mehrfaktor-Authentisierung, öffentliche
 Selbstregistrierung, weitere Währungen, SAML-SSO und SCIM. Jede dieser Lücken ist eine Entscheidung
-mit Begründung, keine Vergesslichkeit.
+mit Begründung, keine Vergesslichkeit. Ausführlicher begründet, samt dem, was stattdessen da ist,
+im [README](../README.md#bewusst-nicht-enthalten).
 
 Offen, aber nicht verworfen, sind vier Punkte aus der Durchsicht: Massenauswahl mit Rückgängig,
 Benachrichtigungen in der Anwendung, das Löschen von Workspace und Konto und Passkeys als zweiter
