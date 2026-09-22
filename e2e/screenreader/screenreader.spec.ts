@@ -1,6 +1,12 @@
 import { screenReaderTest as test } from '@guidepup/playwright';
 import { expect } from '@playwright/test';
-import { expectEventuallySays, expectSays, moveUntilSays, startDemo } from './helpers.ts';
+import {
+  expectEventuallySays,
+  expectSays,
+  expectSaysNot,
+  moveUntilSays,
+  startDemo,
+} from './helpers.ts';
 
 /**
  * Was ein Mensch mit Screenreader hört — mit echtem VoiceOver auf macOS und
@@ -13,27 +19,31 @@ import { expectEventuallySays, expectSays, moveUntilSays, startDemo } from './he
  */
 
 test.describe('Startseite', () => {
-  test('nennt die Hauptüberschrift und den Zustand des Pausenknopfs', async ({
-    page,
-    screenReader,
-  }) => {
+  /*
+   * Ohne Sprung über die Überschriften: Vor dem Start drückt Guidepup unter
+   * NVDA einmal Tab, und auf der Startseite ist das erste Bedienelement die
+   * Sprachauswahl. NVDA steht danach im Fokusmodus, und die Taste für die
+   * nächste Überschrift ginge an die Auswahlliste. Die Überschriften prüft der
+   * Test der Teamansicht; hier zählt der Knopf, den WCAG 2.2.2 verlangt.
+   */
+  test('nennt den Pausenknopf mit Namen, Rolle und Zustand', async ({ page, screenReader }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    const pause = page.getByRole('button', { name: 'Bewegung anhalten' });
+    await expect(pause).toBeVisible();
     await screenReader.navigateToWebContent();
 
-    await moveUntilSays(screenReader, () => screenReader.nextHeading(), [
-      'Kundenübersicht und Kundenportal für kleine Agenturen',
-      'heading',
-    ]);
+    const vorher = await screenReader.capture(() => pause.focus(), { capture: true });
+    expectSays(vorher.spokenPhrase, 'Bewegung anhalten', 'button');
 
-    const pause = page.getByRole('button', { name: 'Bewegung anhalten' });
-    const fokus = await screenReader.capture(() => pause.focus());
-    expectSays(fokus.spokenPhrase, 'Bewegung anhalten', 'button');
-
-    const gedrueckt = await screenReader.capture(() => pause.press('Space'));
+    await pause.press('Space');
     await expect(pause).toHaveAttribute('aria-pressed', 'true');
-    // «on» wäre als Variante zu kurz: es steckt schon in «button».
-    expectSays(gedrueckt.spokenPhrase, ['pressed', 'selected', 'gedrückt']);
+
+    // Den Wechsel selbst sagte VoiceOver nicht an. Geprüft wird darum, was ein
+    // Mensch hört, der wieder auf den Knopf kommt: der Zustand steht dabei.
+    await page.getByRole('button', { name: 'Demo starten' }).focus();
+    const nachher = await screenReader.capture(() => pause.focus(), { capture: true });
+    expectSays(nachher.spokenPhrase, 'Bewegung anhalten', ['pressed', 'selected']);
+    expectSaysNot(nachher.spokenPhrase, 'not pressed', 'not selected');
   });
 });
 
@@ -99,7 +109,7 @@ test.describe('Teamansicht', () => {
     await screenReader.capture(
       async () => {
         await pruefen.click();
-        await expect(page.getByText(/Kette unversehrt/)).toBeVisible();
+        await expect(page.getByRole('status')).toContainText('Kette unversehrt');
       },
       { capture: true },
     );
@@ -134,7 +144,7 @@ test.describe('Teamansicht', () => {
     expectSays(zu.spokenPhrase, 'Kunde anlegen', 'button');
   });
 
-  test('nennt das Suchfeld der Kommandopalette und den markierten Treffer', async ({
+  test('sagt die Treffer der Kommandopalette an und folgt den Pfeilen', async ({
     page,
     screenReader,
   }) => {
@@ -149,11 +159,23 @@ test.describe('Teamansicht', () => {
     });
     await expect(feld).toBeFocused();
     expectSays(offen.spokenPhrase, 'Kunde, Projekt, Vertrag oder Anfrage suchen');
+    // Die Tastenzeile mit ↑ ↓ ↵ las NVDA als Symbolnamen vor.
+    expectSaysNot(offen.spokenPhrase, 'arrow');
 
-    await feld.fill('Alpenblick');
-    await expect(page.getByRole('option').first()).toBeVisible();
+    // «Web» trifft in der Demo vier Einträge; so gibt es einen zweiten, zu dem
+    // der Pfeil wandern kann.
+    await feld.fill('Web');
+    const treffer = page.getByRole('option');
+    await expect(treffer.nth(1)).toBeVisible();
+    const [erster, zweiter] = await Promise.all([
+      treffer.nth(0).locator('span').nth(1).textContent(),
+      treffer.nth(1).locator('span').nth(1).textContent(),
+    ]);
+    await expectEventuallySays(screenReader, ['Treffer', erster ?? '']);
+
+    await screenReader.clearSpokenPhraseLog();
     await screenReader.capture(() => page.keyboard.press('ArrowDown'), { capture: true });
-
-    await expectEventuallySays(screenReader, ['Alpenblick']);
+    await expect(feld).toHaveAttribute('aria-activedescendant', 'palette-treffer-1');
+    await expectEventuallySays(screenReader, [zweiter ?? '']);
   });
 });

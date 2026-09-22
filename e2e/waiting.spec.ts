@@ -48,7 +48,10 @@ test.describe('Wer ist am Zug', () => {
 
   test('die Anfrage selbst sagt, wer am Zug ist und seit wann', async ({ page }) => {
     const workspaceId = demoWorkspaceId();
-    await page.goto(`/app/${workspaceId}/requests`);
+    // Nur offene Anfragen: eine erledigte wartet auf niemanden und hat darum
+    // keine Zeile. Ohne Filter lag mal eine offene, mal eine erledigte oben —
+    // alle Demo-Anfragen tragen denselben Änderungszeitpunkt.
+    await page.goto(`/app/${workspaceId}/requests?waitingOn=team`);
     await warteAufSchriften(page);
 
     await page.locator('a[href*="/requests/"]').filter({ visible: true }).first().click();

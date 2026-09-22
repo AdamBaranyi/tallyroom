@@ -29,6 +29,13 @@ export function expectSays(spoken: string, ...parts: (string | string[])[]) {
   expect(says(spoken, ...parts), `Angesagt wurde: «${spoken}»`).toBe(true);
 }
 
+/** Enthält die Ansage keinen der genannten Teile? */
+export function expectSaysNot(spoken: string, ...parts: string[]) {
+  const heard = normalize(spoken);
+  const found = parts.filter((part) => heard.includes(normalize(part)));
+  expect(found, `Angesagt wurde: «${spoken}»`).toEqual([]);
+}
+
 /**
  * Wartet, bis der Screenreader etwas angesagt hat, das die Teile enthält.
  *
