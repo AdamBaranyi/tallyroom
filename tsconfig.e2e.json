@@ -10,6 +10,8 @@
     "e2e/**/*.ts",
     "playwright.config.ts",
     "playwright.production.config.ts",
-    "playwright.browsers.config.ts"
+    "playwright.browsers.config.ts",
+    "playwright.screenreader.config.ts",
+    "apps/api/src/types/*.d.ts"
   ]
 }

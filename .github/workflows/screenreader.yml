@@ -1,0 +1,112 @@
+name: Screenreader
+
+# Echte Screenreader, keine Simulation: VoiceOver auf macOS, NVDA auf Windows,
+# gesteuert über Guidepup. Beide brauchen einen sichtbaren Browser und laufen
+# deshalb auf eigenen Rechnern, nicht im Linux-Container der übrigen CI.
+#
+# Auf macOS und Windows gibt es bei GitHub kein Docker. Die Datenbank ist
+# darum eine PostgreSQL auf dem Rechner selbst, die Dateien liegen im Speicher
+# der API (e2e/screenreader/server.ts).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: screenreader-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  SCREENREADER_DATABASE_URL: postgresql://tallyroom:tallyroom_local@localhost:5432/tallyroom_screenreader
+
+jobs:
+  voiceover:
+    name: VoiceOver auf macOS
+    runs-on: macos-15
+    timeout-minutes: 40
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_NO_INSTALL_CLEANUP: '1'
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - run: bun install --frozen-lockfile
+
+      # Dieselbe Hauptversion wie im Betrieb.
+      - name: PostgreSQL 18 starten
+        run: |
+          brew install postgresql@18
+          PG="$(brew --prefix postgresql@18)/bin"
+          brew services start postgresql@18
+          for i in $(seq 1 30); do "$PG/pg_isready" -h localhost -q && break; sleep 1; done
+          "$PG/psql" -h localhost -d postgres -c "CREATE ROLE tallyroom LOGIN PASSWORD 'tallyroom_local'"
+          "$PG/createdb" -h localhost -O tallyroom tallyroom_screenreader
+
+      - name: WebKit installieren
+        run: bunx playwright install webkit
+
+      - name: VoiceOver für die Steuerung einrichten
+        uses: guidepup/setup-action@acf1a64cc26292ebe0db6a28d1341bd1bae93c65 # 0.21.0
+
+      - name: Prüfung mit VoiceOver
+        run: bunx playwright test -c playwright.screenreader.config.ts --project=voiceover
+
+      - name: Spuren bei Fehlschlag
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: voiceover-spuren
+          path: test-results/
+          retention-days: 7
+
+  nvda:
+    name: NVDA auf Windows
+    runs-on: windows-2025
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - run: bun install --frozen-lockfile
+
+      # Das Abbild bringt PostgreSQL 17 mit, der Dienst ist abgeschaltet. Die
+      # Migrationen brauchen nichts, was erst Version 18 kann.
+      - name: PostgreSQL starten
+        shell: pwsh
+        env:
+          PGPASSWORD: root
+        run: |
+          Set-Service -Name postgresql-x64-17 -StartupType Manual
+          Start-Service -Name postgresql-x64-17
+          & "$env:PGBIN\psql" -U postgres -h localhost -c "CREATE ROLE tallyroom LOGIN PASSWORD 'tallyroom_local'"
+          & "$env:PGBIN\createdb" -U postgres -h localhost -O tallyroom tallyroom_screenreader
+
+      - name: Firefox installieren
+        run: bunx playwright install firefox
+
+      - name: NVDA einrichten
+        uses: guidepup/setup-action@acf1a64cc26292ebe0db6a28d1341bd1bae93c65 # 0.21.0
+
+      - name: Prüfung mit NVDA
+        run: bunx playwright test -c playwright.screenreader.config.ts --project=nvda
+
+      - name: Spuren bei Fehlschlag
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nvda-spuren
+          path: test-results/
+          retention-days: 7
