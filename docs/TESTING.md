@@ -224,9 +224,15 @@ Das Ergebnis der Kettenprüfung wurde nicht angesagt, die Kommandopalette nannte
 Treffer nicht, und die Tastenhilfe ↑ ↓ ↵ las NVDA als Zeichennamen vor. Behoben und seither
 geprüft.
 
+**Ergebnis vom 22.09.2026:** VoiceOver 7 von 7 in 4,2 Minuten, NVDA 7 von 7 in 1,6 Minuten, ohne
+Wiederholung. Bis dahin sieben Läufe, in denen drei Fehler der Anwendung, zwei der Messung und
+einer der Testumgebung ans Licht kamen — der Weg steht in DIAGNOSTICS Nummer 29 bis 31.
+
 **Grenzen.** Automatisch geprüft ist nicht dasselbe wie von Menschen geprüft, die täglich mit
 einem Screenreader arbeiten; das steht auch auf der Barrierefreiheitsseite. VoiceOver läuft auf
-macOS, nicht auf iOS. Die Rollen sagen beide Screenreader in ihrer eigenen Sprache an, auf den
+macOS, nicht auf iOS. In der Kommandopalette sagt VoiceOver nur, wie viele Treffer es gibt; welcher
+markiert ist, hört man erst beim Wandern mit den Pfeilen (NVDA sagt beides) — das steht auch auf
+der Barrierefreiheitsseite. Die Rollen sagen beide Screenreader in ihrer eigenen Sprache an, auf den
 Rechnern von GitHub englisch; der Test vergleicht deshalb ohne Rücksicht auf Satzzeichen und
 Reihenfolge. Und Guidepup hört nur während seiner eigenen Befehle zu — eine Handlung, deren Ansage
 geprüft wird, gehört in `capture()`.

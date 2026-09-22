@@ -204,6 +204,9 @@ the test reads it back with the real `unzip`.
   route that changes anything. The interface does not show it buttons that would fail anyway.
 - **Sortable lists** via the column headers, with `aria-sort` and the state kept in the URL. A
   made-up sort order falls back to the default instead of returning an empty list.
+- **Real screen readers in the pipeline.** VoiceOver on macOS and NVDA on Windows check seven
+  flows on every change: whether a message is announced, where focus lands, whether a dialog says
+  its name. They found three bugs axe cannot see.
 - **Accessibility, trust and status pages**, plus a `security.txt` following RFC 9116. The status
   page checks from the visitor's browser and says what is not monitored: there is no continuous
   monitoring from outside. A green indicator with no measurement behind it would be decoration.
@@ -217,6 +220,7 @@ Measured on 22 September 2026:
 | Unit and integration tests            | 276 passing, against a real PostgreSQL                  |
 | Playwright across six widths          | 426 passing, with axe in light and dark, four languages |
 | WebKit and Firefox, iPhone to desktop | 430 passing                                             |
+| Real screen readers                   | VoiceOver 7 of 7, NVDA 7 of 7                           |
 | Production check against the server   | 3 of 3, zero CSP violations, zero console errors        |
 | Lighthouse, live                      | mobile 99 · 100 · 100 · 100, desktop 4 × 100            |
 | Initial load of the start page        | 137.0 KB gzip against a 142 KB budget                   |
@@ -225,9 +229,9 @@ All procedures and the known gaps are in [TESTING.md](TESTING.md) (German).
 
 ## Where I was wrong
 
-[DIAGNOSTICS.md](DIAGNOSTICS.md) (German) records 28 findings, four of them marked as a
+[DIAGNOSTICS.md](DIAGNOSTICS.md) (German) records 31 findings, four of them marked as a
 **misdiagnosis** — cases where my first explanation was wrong. They are in there on purpose,
-because a false trail costs more than the bug itself. Five that taught me something:
+because a false trail costs more than the bug itself. Six that taught me something:
 
 - **Unlayered CSS beats every utility.** `no-underline` sat in twenty places and never took effect.
   The same trap later hit how text wraps. If you set a class and see no effect, check the cascade
@@ -243,6 +247,10 @@ because a false trail costs more than the bug itself. Five that taught me someth
   annotation promised a `Date`. The typecheck was green, and every status change returned a 500. A
   type annotation on raw SQL is a claim, not a check — the integration tests found it, not the
   compiler.
+- **A message nobody hears.** The chain check result was on screen, carried `role="status"` and
+  satisfied axe. Neither VoiceOver nor NVDA announced it: the message entered the document together
+  with its container, and a live region is only watched once it is already there. It took a real
+  screen reader to find that.
 - **Green at one width is not green.** Twice, the request table overflowed at 1024 pixels: once by
   10 pixels because the new waiting line was not allowed to wrap, once by 6 because a sort arrow
   sat in the text flow. Locally I had only checked at 1440. The six-width pipeline reported both

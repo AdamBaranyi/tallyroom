@@ -8,7 +8,7 @@ import { defineMessages } from '../../i18n/messages.ts';
 export const accessibilityMessages = defineMessages({
   de: {
     title: 'Barrierefreiheit',
-    updated: 'Stand 18.09.2026',
+    updated: 'Stand 22.09.2026',
     intro:
       'Diese Erklärung gilt für tallyroom.adambaranyi.xyz, die öffentlichen Seiten, die Teamansicht und das Kundenportal.',
     goal: {
@@ -24,6 +24,7 @@ export const accessibilityMessages = defineMessages({
         'Keine Schrift unter 16 Pixeln, auf keiner Seite und in keinem Bedienelement; geprüft im Quelltext und im Browser.',
         'Reduzierte Bewegung wird beachtet: die Bewegung im Startbild steht still, Übergänge verkürzen sich.',
         'Bedienelemente sind mindestens 44 Pixel hoch.',
+        'Mit echten Screenreadern: VoiceOver unter macOS und NVDA unter Windows prüfen bei jeder Änderung sieben Abläufe — ob eine Meldung angesagt wird, wohin der Fokus springt, ob ein Dialog seinen Namen nennt.',
       ],
     },
     limits: {
@@ -33,6 +34,7 @@ export const accessibilityMessages = defineMessages({
         'Das Diagramm auf dem Dashboard ist visuell; dieselben Zahlen stehen als Tabelle darunter.',
         'Geprüft wurde automatisiert und von Hand, nicht von Menschen mit Behinderung und nicht von einer externen Stelle.',
         'Französisch und Italienisch sind maschinell übersetzt und nicht muttersprachlich geprüft.',
+        'In der Kommandopalette sagt VoiceOver, wie viele Treffer es gibt; welcher markiert ist, hört man beim Wandern mit den Pfeiltasten. NVDA sagt beides.',
       ],
     },
     feedback: {
@@ -42,7 +44,7 @@ export const accessibilityMessages = defineMessages({
   },
   fr: {
     title: 'Accessibilité',
-    updated: 'État au 18.09.2026',
+    updated: 'État au 22.09.2026',
     intro:
       "Cette déclaration couvre tallyroom.adambaranyi.xyz : les pages publiques, la vue d'équipe et le portail client.",
     goal: {
@@ -58,6 +60,7 @@ export const accessibilityMessages = defineMessages({
         'Aucun texte en dessous de 16 pixels, sur aucune page ni dans aucun élément de commande ; vérifié dans le code et dans le navigateur.',
         'Le réglage « mouvement réduit » est respecté : l’animation de la page d’accueil s’arrête, les transitions raccourcissent.',
         'Les éléments de commande mesurent au moins 44 pixels de haut.',
+        'Avec de vrais lecteurs d’écran : VoiceOver sous macOS et NVDA sous Windows vérifient sept parcours à chaque modification — si un message est annoncé, où va le focus, si une boîte de dialogue dit son nom.',
       ],
     },
     limits: {
@@ -67,6 +70,7 @@ export const accessibilityMessages = defineMessages({
         'Le graphique du tableau de bord est visuel ; les mêmes chiffres figurent dans un tableau en dessous.',
         'Les tests sont automatisés et manuels, non menés par des personnes en situation de handicap ni par un organisme externe.',
         "Le français et l'italien sont traduits automatiquement, sans relecture par des locuteurs natifs.",
+        'Dans la palette de commandes, VoiceOver annonce le nombre de résultats ; lequel est sélectionné s’entend en naviguant avec les flèches. NVDA annonce les deux.',
       ],
     },
     feedback: {
@@ -76,7 +80,7 @@ export const accessibilityMessages = defineMessages({
   },
   it: {
     title: 'Accessibilità',
-    updated: 'Stato al 18.09.2026',
+    updated: 'Stato al 22.09.2026',
     intro:
       'Questa dichiarazione vale per tallyroom.adambaranyi.xyz: le pagine pubbliche, la vista del team e il portale clienti.',
     goal: {
@@ -92,6 +96,7 @@ export const accessibilityMessages = defineMessages({
         'Nessun testo sotto i 16 pixel, in nessuna pagina e in nessun comando; verificato nel codice e nel browser.',
         'L’impostazione «movimento ridotto» è rispettata: l’animazione della pagina iniziale si ferma, le transizioni si accorciano.',
         'I comandi sono alti almeno 44 pixel.',
+        'Con veri screen reader: VoiceOver su macOS e NVDA su Windows verificano sette percorsi a ogni modifica — se un messaggio viene annunciato, dove va il focus, se una finestra di dialogo dice il proprio nome.',
       ],
     },
     limits: {
@@ -101,6 +106,7 @@ export const accessibilityMessages = defineMessages({
         'Il grafico della dashboard è visivo; gli stessi numeri stanno in una tabella sotto di esso.',
         'Le verifiche sono automatiche e manuali, non svolte da persone con disabilità né da un ente esterno.',
         'Francese e italiano sono tradotti automaticamente, senza revisione madrelingua.',
+        'Nella palette dei comandi VoiceOver annuncia quanti risultati ci sono; quale è selezionato si sente spostandosi con le frecce. NVDA annuncia entrambi.',
       ],
     },
     feedback: {
@@ -110,7 +116,7 @@ export const accessibilityMessages = defineMessages({
   },
   en: {
     title: 'Accessibility',
-    updated: 'As of 18.09.2026',
+    updated: 'As of 22.09.2026',
     intro:
       'This statement covers tallyroom.adambaranyi.xyz: the public pages, the team view and the client portal.',
     goal: {
@@ -126,6 +132,7 @@ export const accessibilityMessages = defineMessages({
         'No text below 16 pixels, on any page or control; checked in the source and in the browser.',
         'Reduced motion is honoured: the movement on the start page stops, transitions shorten.',
         'Controls are at least 44 pixels high.',
+        'With real screen readers: VoiceOver on macOS and NVDA on Windows check seven flows on every change — whether a message is announced, where focus lands, whether a dialog says its name.',
       ],
     },
     limits: {
@@ -135,6 +142,7 @@ export const accessibilityMessages = defineMessages({
         'The chart on the dashboard is visual; the same figures sit in a table below it.',
         'Testing is automated and manual, not carried out by disabled people or an external body.',
         'French and Italian are machine translated and not reviewed by native speakers.',
+        'In the command palette VoiceOver says how many hits there are; which one is marked is heard when moving with the arrow keys. NVDA says both.',
       ],
     },
     feedback: {
