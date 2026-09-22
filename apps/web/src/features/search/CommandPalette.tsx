@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import type { SearchHit } from '@tallyroom/contracts';
 import { Modal } from '../../components/base/Modal.tsx';
@@ -91,6 +92,7 @@ export function CommandPalette({ workspaceId, onClose }: Props) {
           onChange={(event) => setTerm(event.target.value)}
           onKeyDown={onKeyDown}
           role="combobox"
+          aria-autocomplete="list"
           aria-expanded={hits.length > 0}
           aria-controls="palette-treffer"
           aria-activedescendant={hits.length > 0 ? `palette-treffer-${markiert}` : undefined}
@@ -102,9 +104,6 @@ export function CommandPalette({ workspaceId, onClose }: Props) {
 
         <p id="palette-hinweis" className="sr-only">
           {m.keys.describe}
-        </p>
-        <p role="status" className="sr-only">
-          {ansage}
         </p>
 
         <Ergebnisse
@@ -133,6 +132,15 @@ export function CommandPalette({ workspaceId, onClose }: Props) {
           </span>
         </p>
       </div>
+
+      {/* Die Statuszeile steht ausserhalb des Dialogs: im Dialog sagte
+          VoiceOver sie nicht an. */}
+      {createPortal(
+        <p role="status" className="sr-only">
+          {ansage}
+        </p>,
+        document.body,
+      )}
     </Modal>
   );
 }

@@ -170,7 +170,7 @@ test.describe('Teamansicht', () => {
       async () => {
         await feld.fill('Web');
         await expect(treffer.nth(1)).toBeVisible();
-        await expect(page.getByRole('dialog').getByRole('status')).toContainText('Treffer');
+        await expect(page.getByRole('status')).toContainText('Treffer');
       },
       { capture: true },
     );
