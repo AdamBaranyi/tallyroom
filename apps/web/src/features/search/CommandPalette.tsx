@@ -234,22 +234,20 @@ function useAnsage(term: string, hits: SearchHit[], laedt: boolean): string {
 }
 
 /**
- * Dieselbe Ansage, einen Moment später.
+ * Dieselbe Ansage, einen Moment später — damit die Zeile schweigt, solange
+ * jemand zügig weitertippt, und nur den Stand meldet, der stehen bleibt.
  *
- * Erscheint die Liste, redet VoiceOver über sie («expanded list, 4 items») und
- * überspricht dabei die Statuszeile. Kommt ihr Text erst danach, ist die
- * Meldung eine eigene Änderung und wird gesprochen. Nebenbei schweigt die
- * Zeile, solange jemand zügig weitertippt.
+ * VoiceOver hilft die Verzögerung nicht: Er redet beim Erscheinen der Liste
+ * über seine eigene Auswahl und sagt die Zeile auch danach nicht an. NVDA
+ * liest sie. Beide Messungen stehen in DIAGNOSTICS Nummer 29.
  */
 function useSpaeteAnsage(text: string, ms = 400): string {
   const [spaet, setSpaet] = useState('');
 
   useEffect(() => {
-    if (text === '') {
-      setSpaet('');
-      return undefined;
-    }
-    const timer = setTimeout(() => setSpaet(text), ms);
+    // Auch das Leeren läuft über den Zeitgeber: setState direkt im Effekt wäre
+    // ein zusätzlicher Durchlauf, und die Lint-Regel von React verbietet es.
+    const timer = setTimeout(() => setSpaet(text), text === '' ? 0 : ms);
     return () => clearTimeout(timer);
   }, [text, ms]);
 

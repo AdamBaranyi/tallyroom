@@ -179,11 +179,14 @@ test.describe('Teamansicht', () => {
       },
       { capture: true },
     );
-    const [erster, zweiter] = await Promise.all([
-      treffer.nth(0).locator('span').nth(1).textContent(),
-      treffer.nth(1).locator('span').nth(1).textContent(),
-    ]);
-    expectSays(gesucht.spokenPhrase, 'Treffer', erster ?? '');
+    const anzahl = await treffer.count();
+    const zweiter = await treffer.nth(1).locator('span').nth(1).textContent();
+
+    // Dass es Treffer gibt, sagen beide — NVDA über die Statuszeile («4 Treffer,
+    // markiert: …»), VoiceOver über seine eigene Liste («expanded list Treffer
+    // 4 items»). Welcher markiert ist, sagt VoiceOver dabei nicht; das ist seine
+    // Grenze, nicht die des Markups (DIAGNOSTICS Nummer 29).
+    expectSays(gesucht.spokenPhrase, [`${anzahl} Treffer`, `${anzahl} items`]);
 
     const pfeil = await screenReader.capture(
       async () => {
@@ -192,6 +195,7 @@ test.describe('Teamansicht', () => {
       },
       { capture: true },
     );
+    // Beim Wandern müssen es beide sagen: Sonst wüsste niemand, wo er steht.
     expectSays(pfeil.spokenPhrase, zweiter ?? '');
   });
 });

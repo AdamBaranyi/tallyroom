@@ -692,9 +692,18 @@ Pfeilen sagt der Screenreader weiter über `aria-activedescendant` selbst an. Di
 für Hilfsmittel verborgen; derselbe Hinweis steht als Satz in der Beschreibung des Suchfelds, in
 allen vier Sprachen.
 
+**Was VoiceOver trotzdem nicht sagt.** Die Statuszeile der Palette liest NVDA zuverlässig,
+VoiceOver nicht: Er redet im selben Moment über seine eigene Auswahl («expanded list Treffer 4
+items completion selected») und sagt die Zeile auch dann nicht an, wenn sie ausserhalb des Dialogs
+steht, das Feld `aria-autocomplete="list"` trägt und der Text erst 400 Millisekunden später kommt.
+Drei Versuche, drei Messungen, gleiches Ergebnis. Wer mit VoiceOver sucht, hört also, **wie viele**
+Treffer es gibt, und erfährt beim Wandern mit den Pfeilen, **welcher** — das sagen beide an.
+
 **Regel.** Eine Statusmeldung braucht einen Behälter, der schon da ist, bevor sich sein Inhalt
 ändert. `role="status"` an einem Element, das bedingt erscheint, ist eine Meldung, die niemand
-hört — und keine automatische Prüfung merkt es, nur ein Screenreader.
+hört — und keine automatische Prüfung merkt es, nur ein Screenreader. Und: Richtiges Markup heisst
+nicht, dass jeder Screenreader es vorliest. Was der eine sagt und der andere nicht, gehört
+gemessen und aufgeschrieben, nicht behauptet.
 
 ---
 
