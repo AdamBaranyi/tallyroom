@@ -61,8 +61,18 @@ jobs:
       - name: WebKit installieren
         run: bunx playwright install webkit
 
+      # Dasselbe, was guidepup/setup-action tut, aber mit der Version aus dem
+      # Lockfile und mit Wiederholung: Einmal scheiterte der Schritt an «Nicht
+      # stören einschalten», die Läufe davor und danach nicht.
       - name: VoiceOver für die Steuerung einrichten
-        uses: guidepup/setup-action@acf1a64cc26292ebe0db6a28d1341bd1bae93c65 # 0.21.0
+        run: |
+          "/Library/Application Support/VMware Tools/vmware-resolutionSet" 1920 1080 || true
+          for versuch in 1 2 3; do
+            bunx guidepup setup --ci && exit 0
+            echo "Versuch $versuch gescheitert, nochmals in 10 Sekunden"
+            sleep 10
+          done
+          exit 1
 
       # Zweimal öffnete sich im ersten Test die Schnellnotiz von macOS, und
       # VoiceOver sagte sie statt der Seite an. Vermutlich die heisse Ecke unten
@@ -118,7 +128,14 @@ jobs:
         run: bunx playwright install firefox
 
       - name: NVDA einrichten
-        uses: guidepup/setup-action@acf1a64cc26292ebe0db6a28d1341bd1bae93c65 # 0.21.0
+        shell: bash
+        run: |
+          for versuch in 1 2 3; do
+            bunx guidepup setup --ci && exit 0
+            echo "Versuch $versuch gescheitert, nochmals in 10 Sekunden"
+            sleep 10
+          done
+          exit 1
 
       - name: Prüfung mit NVDA
         run: bunx playwright test -c playwright.screenreader.config.ts --project=nvda

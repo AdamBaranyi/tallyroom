@@ -49,8 +49,9 @@ test.describe('Wer ist am Zug', () => {
   test('die Anfrage selbst sagt, wer am Zug ist und seit wann', async ({ page }) => {
     const workspaceId = demoWorkspaceId();
     // Nur offene Anfragen: eine erledigte wartet auf niemanden und hat darum
-    // keine Zeile. Ohne Filter lag mal eine offene, mal eine erledigte oben —
-    // alle Demo-Anfragen tragen denselben Änderungszeitpunkt.
+    // keine Zeile. Ohne Filter entschied der Zufall, was oben steht — alle
+    // Demo-Anfragen tragen denselben Änderungszeitpunkt, bei Gleichstand
+    // ordnet die ID, und die ist in jeder Demo eine andere.
     await page.goto(`/app/${workspaceId}/requests?waitingOn=team`);
     await warteAufSchriften(page);
 
