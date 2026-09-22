@@ -125,6 +125,11 @@ bun run test:e2e:browsers # dieselben Prüfungen in Safaris und Firefox' Engine
 Die Integrationstests brauchen die laufende Testdatenbank und `TEST_DATABASE_URL` aus der `.env`.
 `bun run test` liest die Datei nicht selbst, deshalb lokal: `bun --env-file=.env run vitest run`.
 
+Dazu prüfen echtes VoiceOver und echtes NVDA sieben Abläufe — nur in der CI
+(`.github/workflows/screenreader.yml`), weil VoiceOver sich erst fernsteuern lässt, wenn die
+Systemeinstellungen dafür geöffnet sind. Was dabei gehört werden muss, steht in
+[docs/TESTING.md](docs/TESTING.md).
+
 Stand 22.09.2026: 276 Unit- und Integrationstests, 426 Playwright-Prüfungen über sechs Breiten
 (samt axe, allen vier Sprachen und dem Rundgang), 430 in den Engines von Safari und Firefox und eine
 Produktionsprüfung gegen den Liveserver mit 3 von 3. Einzelheiten in [docs/TESTING.md](docs/TESTING.md).

@@ -37,7 +37,7 @@ export function CommandPalette({ workspaceId, onClose }: Props) {
 
   const query = useSearch(workspaceId, term);
   const hits = useMemo(() => query.data?.hits ?? [], [query.data]);
-  const ansage = useAnsage(term, hits, query.isFetching);
+  const ansage = useSpaeteAnsage(useAnsage(term, hits, query.isFetching));
 
   /*
    * Eine neue Trefferliste beginnt wieder oben, sonst zeigt die Markierung auf
@@ -231,4 +231,27 @@ function useAnsage(term: string, hits: SearchHit[], laedt: boolean): string {
   if (term.trim().length < MIN_TERM_LENGTH) return '';
   if (erster) return m.announce(hits.length, `${m.kind[erster.kind]} ${erster.title}`);
   return laedt ? '' : m.noResults(term.trim());
+}
+
+/**
+ * Dieselbe Ansage, einen Moment später.
+ *
+ * Erscheint die Liste, redet VoiceOver über sie («expanded list, 4 items») und
+ * überspricht dabei die Statuszeile. Kommt ihr Text erst danach, ist die
+ * Meldung eine eigene Änderung und wird gesprochen. Nebenbei schweigt die
+ * Zeile, solange jemand zügig weitertippt.
+ */
+function useSpaeteAnsage(text: string, ms = 400): string {
+  const [spaet, setSpaet] = useState('');
+
+  useEffect(() => {
+    if (text === '') {
+      setSpaet('');
+      return undefined;
+    }
+    const timer = setTimeout(() => setSpaet(text), ms);
+    return () => clearTimeout(timer);
+  }, [text, ms]);
+
+  return spaet;
 }

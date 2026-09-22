@@ -124,6 +124,11 @@ The integration tests need the test database running and `TEST_DATABASE_URL` fro
 `bun run test` does not read that file itself, so run them locally with
 `bun --env-file=.env run vitest run`.
 
+On top of that, real VoiceOver and real NVDA run seven checks — in CI only
+(`.github/workflows/screenreader.yml`), because VoiceOver can only be driven once the operating
+system has been configured for it. What has to be heard is listed in
+[docs/TESTING.md](docs/TESTING.md) (German).
+
 As of 22.09.2026: 276 unit and integration tests, 426 Playwright checks across six widths
 (including axe, all four languages and the tour), 430 in the Safari and Firefox engines and a
 production check against the live server, 3 of 3 passing. Details in
