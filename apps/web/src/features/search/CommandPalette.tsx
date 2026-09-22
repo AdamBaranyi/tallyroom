@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import type { SearchHit } from '@tallyroom/contracts';
 import { Modal } from '../../components/base/Modal.tsx';
@@ -37,7 +36,7 @@ export function CommandPalette({ workspaceId, onClose }: Props) {
 
   const query = useSearch(workspaceId, term);
   const hits = useMemo(() => query.data?.hits ?? [], [query.data]);
-  const ansage = useSpaeteAnsage(useAnsage(term, hits, query.isFetching));
+  const ansage = useAnsage(term, hits, query.isFetching);
 
   /*
    * Eine neue Trefferliste beginnt wieder oben, sonst zeigt die Markierung auf
@@ -105,6 +104,10 @@ export function CommandPalette({ workspaceId, onClose }: Props) {
         <p id="palette-hinweis" className="sr-only">
           {m.keys.describe}
         </p>
+        {/* Immer im Dokument, sonst hört die Meldung niemand — Diagnose 29. */}
+        <p role="status" className="sr-only">
+          {ansage}
+        </p>
 
         <Ergebnisse
           hits={hits}
@@ -132,15 +135,6 @@ export function CommandPalette({ workspaceId, onClose }: Props) {
           </span>
         </p>
       </div>
-
-      {/* Die Statuszeile steht ausserhalb des Dialogs: im Dialog sagte
-          VoiceOver sie nicht an. */}
-      {createPortal(
-        <p role="status" className="sr-only">
-          {ansage}
-        </p>,
-        document.body,
-      )}
     </Modal>
   );
 }
@@ -231,25 +225,4 @@ function useAnsage(term: string, hits: SearchHit[], laedt: boolean): string {
   if (term.trim().length < MIN_TERM_LENGTH) return '';
   if (erster) return m.announce(hits.length, `${m.kind[erster.kind]} ${erster.title}`);
   return laedt ? '' : m.noResults(term.trim());
-}
-
-/**
- * Dieselbe Ansage, einen Moment später — damit die Zeile schweigt, solange
- * jemand zügig weitertippt, und nur den Stand meldet, der stehen bleibt.
- *
- * VoiceOver hilft die Verzögerung nicht: Er redet beim Erscheinen der Liste
- * über seine eigene Auswahl und sagt die Zeile auch danach nicht an. NVDA
- * liest sie. Beide Messungen stehen in DIAGNOSTICS Nummer 29.
- */
-function useSpaeteAnsage(text: string, ms = 400): string {
-  const [spaet, setSpaet] = useState('');
-
-  useEffect(() => {
-    // Auch das Leeren läuft über den Zeitgeber: setState direkt im Effekt wäre
-    // ein zusätzlicher Durchlauf, und die Lint-Regel von React verbietet es.
-    const timer = setTimeout(() => setSpaet(text), text === '' ? 0 : ms);
-    return () => clearTimeout(timer);
-  }, [text, ms]);
-
-  return spaet;
 }

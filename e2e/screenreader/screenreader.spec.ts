@@ -5,6 +5,7 @@ import {
   expectSays,
   expectSaysNot,
   moveUntilSays,
+  says,
   startDemo,
 } from './helpers.ts';
 
@@ -175,7 +176,7 @@ test.describe('Teamansicht', () => {
       async () => {
         await feld.fill('Web');
         await expect(treffer.nth(1)).toBeVisible();
-        await expect(page.getByRole('status')).toContainText('Treffer');
+        await expect(page.getByRole('dialog').getByRole('status')).toContainText('Treffer');
       },
       { capture: true },
     );
@@ -196,6 +197,10 @@ test.describe('Teamansicht', () => {
       { capture: true },
     );
     // Beim Wandern müssen es beide sagen: Sonst wüsste niemand, wo er steht.
-    expectSays(pfeil.spokenPhrase, zweiter ?? '');
+    // Geprüft wird auch danach noch: Einmal sagte NVDA im Fenster der Aufnahme
+    // erst den vorher markierten Treffer an und den neuen kurz darauf.
+    if (!says(pfeil.spokenPhrase, zweiter ?? '')) {
+      await expectEventuallySays(screenReader, [zweiter ?? '']);
+    }
   });
 });
