@@ -20,6 +20,12 @@ interface Props {
  * Fokus in die Liste zu bewegen wäre einfacher zu schreiben und für
  * Screenreader schlechter — der eingegebene Text wäre dann nicht mehr das,
  * was vorgelesen wird.
+ *
+ * Was die Suche ergeben hat, sagt eine eigene Statuszeile an, die immer im
+ * Dokument steht. Ohne sie hörten VoiceOver und NVDA nie, welcher Treffer
+ * markiert ist: Die Markierung steht schon beim Erscheinen der Liste auf dem
+ * ersten Eintrag, und bei nur einem Treffer ändert auch der Pfeil nichts
+ * (DIAGNOSTICS Nummer 29).
  */
 export function CommandPalette({ workspaceId, onClose }: Props) {
   const navigate = useNavigate();
@@ -30,6 +36,7 @@ export function CommandPalette({ workspaceId, onClose }: Props) {
 
   const query = useSearch(workspaceId, term);
   const hits = useMemo(() => query.data?.hits ?? [], [query.data]);
+  const ansage = useAnsage(term, hits, query.isFetching);
 
   /*
    * Eine neue Trefferliste beginnt wieder oben, sonst zeigt die Markierung auf
@@ -88,9 +95,17 @@ export function CommandPalette({ workspaceId, onClose }: Props) {
           aria-controls="palette-treffer"
           aria-activedescendant={hits.length > 0 ? `palette-treffer-${markiert}` : undefined}
           aria-label={m.inputLabel}
+          aria-describedby="palette-hinweis"
           placeholder={m.placeholder}
           className="text-body min-h-12 border-b border-line bg-transparent px-4 text-ink"
         />
+
+        <p id="palette-hinweis" className="sr-only">
+          {m.keys.describe}
+        </p>
+        <p role="status" className="sr-only">
+          {ansage}
+        </p>
 
         <Ergebnisse
           hits={hits}
@@ -101,7 +116,12 @@ export function CommandPalette({ workspaceId, onClose }: Props) {
           onHover={setMarkiert}
         />
 
-        <p className="text-body flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line px-4 py-2 text-muted">
+        {/* Die Zeichen ↑ ↓ ↵ lasen Screenreader als Symbolnamen vor; für sie steht
+            derselbe Hinweis als Satz in der Beschreibung des Eingabefelds. */}
+        <p
+          aria-hidden="true"
+          className="text-body flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line px-4 py-2 text-muted"
+        >
           <span>
             <Taste>↑</Taste> <Taste>↓</Taste> {m.keys.select}
           </span>
@@ -142,7 +162,7 @@ function Ergebnisse({ hits, markiert, term, laedt, onSelect, onHover }: Ergebnis
 
   if (hits.length === 0) {
     return (
-      <p className="text-body px-4 py-6 text-muted" role="status">
+      <p className="text-body px-4 py-6 text-muted">
         {laedt ? m.searching : m.noResults(term.trim())}
       </p>
     );
@@ -187,4 +207,20 @@ function Ergebnisse({ hits, markiert, term, laedt, onSelect, onHover }: Ergebnis
       ))}
     </ul>
   );
+}
+
+/**
+ * Der Satz für die Statuszeile. Leer, solange es nichts zu melden gibt: zu
+ * kurz eingegeben oder noch am Suchen — sonst redete die Zeile bei jedem
+ * Tastendruck dazwischen. Er ändert sich nur mit der Trefferliste; das
+ * Wandern mit den Pfeilen sagt der Screenreader über `aria-activedescendant`
+ * selbst an.
+ */
+function useAnsage(term: string, hits: SearchHit[], laedt: boolean): string {
+  const m = useMessages(searchMessages);
+  const erster = hits[0];
+
+  if (term.trim().length < MIN_TERM_LENGTH) return '';
+  if (erster) return m.announce(hits.length, `${m.kind[erster.kind]} ${erster.title}`);
+  return laedt ? '' : m.noResults(term.trim());
 }
