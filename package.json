@@ -39,6 +39,7 @@
     "@eslint/js": "10.0.1",
     "@guidepup/guidepup": "0.34.0",
     "@guidepup/playwright": "0.19.1",
+    "@guidepup/setup": "0.25.3",
     "@playwright/test": "1.63.0",
     "@tallyroom/contracts": "workspace:*",
     "@tallyroom/db": "workspace:*",

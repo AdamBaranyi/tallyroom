@@ -42,6 +42,12 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
+      # Die Einstellungen, mit denen Guidepup VoiceOver steuert. Die Datei kommt
+      # aus den Releases von Guidepup und wird gegen die Prüfsumme im Manifest
+      # von @guidepup/guidepup geprüft.
+      - name: Guidepup-Dateien für VoiceOver
+        run: bunx guidepup install voiceover
+
       # Dieselbe Hauptversion wie im Betrieb.
       - name: PostgreSQL 18 starten
         run: |
@@ -81,6 +87,11 @@ jobs:
           bun-version: 1.3.14
 
       - run: bun install --frozen-lockfile
+
+      # NVDA selbst, als tragbare Fassung aus den Releases von Guidepup, gegen die
+      # Prüfsumme im Manifest von @guidepup/guidepup geprüft.
+      - name: NVDA laden
+        run: bunx guidepup install nvda
 
       # Das Abbild bringt PostgreSQL 17 mit, der Dienst ist abgeschaltet. Die
       # Migrationen brauchen nichts, was erst Version 18 kann.
