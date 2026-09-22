@@ -171,7 +171,9 @@ test.describe('Teamansicht', () => {
     // «Web» trifft in der Demo vier Einträge; so gibt es einen zweiten, zu dem
     // der Pfeil wandern kann. Die Eingabe steht in `capture`: Guidepup hört nur
     // während seiner eigenen Befehle zu, eine Statusmeldung danach ginge verloren.
-    const treffer = page.getByRole('option');
+    // An den Dialog gebunden: In Safaris Engine zählt `getByRole('option')` auch
+    // die Einträge der Sprachauswahl im Seitenkopf mit.
+    const treffer = page.getByRole('dialog').getByRole('option');
     const gesucht = await screenReader.capture(
       async () => {
         await feld.fill('Web');
@@ -181,7 +183,9 @@ test.describe('Teamansicht', () => {
       { capture: true },
     );
     const anzahl = await treffer.count();
-    const zweiter = await treffer.nth(1).locator('span').nth(1).textContent();
+    expect(anzahl).toBe(4);
+    const zweiter = (await treffer.nth(1).locator('span').nth(1).textContent()) ?? '';
+    expect(zweiter).not.toBe('');
 
     // Dass es Treffer gibt, sagen beide — NVDA über die Statuszeile («4 Treffer,
     // markiert: …»), VoiceOver über seine eigene Liste («expanded list Treffer
@@ -199,8 +203,8 @@ test.describe('Teamansicht', () => {
     // Beim Wandern müssen es beide sagen: Sonst wüsste niemand, wo er steht.
     // Geprüft wird auch danach noch: Einmal sagte NVDA im Fenster der Aufnahme
     // erst den vorher markierten Treffer an und den neuen kurz darauf.
-    if (!says(pfeil.spokenPhrase, zweiter ?? '')) {
-      await expectEventuallySays(screenReader, [zweiter ?? '']);
+    if (!says(pfeil.spokenPhrase, zweiter)) {
+      await expectEventuallySays(screenReader, [zweiter]);
     }
   });
 });
