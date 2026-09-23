@@ -43,6 +43,9 @@ services:
     cap_add: [NET_BIND_SERVICE]
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:?SITE_ADDRESS fehlt}
+      # Zweite Adresse auf demselben Server, siehe Caddyfile. Ohne Wert
+      # bedient Caddy nur Tallyroom.
+      EVIDARIUM_SITE_ADDRESS: ${EVIDARIUM_SITE_ADDRESS:-evidarium.localhost}
     ports:
       - '${HTTP_PORT:-80}:80'
       - '${HTTPS_PORT:-443}:443'
@@ -50,6 +53,9 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
+      # Zugriffsprotokolle mit zeitlicher Grenze; die Anwendungen versprechen
+      # in ihren Datenschutzerklärungen eine Aufbewahrung nach Tagen.
+      - caddy_logs:/var/log/caddy
     depends_on:
       api:
         condition: service_healthy
@@ -157,6 +163,7 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  caddy_logs:
   postgres_data:
   garage_meta:
   garage_data:
