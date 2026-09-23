@@ -57,3 +57,43 @@
 		file_server
 	}
 }
+
+# Evidarium läuft als eigenes Projekt auf demselben Server, mit eigenem
+# Compose und eigener Datenbank. Die Ports 80 und 443 besitzt aber dieser
+# Caddy, darum bedient er auch dessen Adresse und reicht sie weiter. Erreichbar
+# ist Evidarium, weil sein Webdienst zusätzlich in diesem Netz hängt (dort
+# `proxy`, extern); umgekehrt ändert sich hier nichts, wenn Evidarium steht.
+#
+# Ohne gesetzte Adresse gilt ein lokaler Name: In der Entwicklung soll Caddy
+# kein Zertifikat für eine fremde Domain holen.
+{$EVIDARIUM_SITE_ADDRESS:evidarium.localhost} {
+	encode zstd gzip
+
+	# Zweite Schranke vor der Anwendung; Evidarium prüft die Grösse selbst.
+	request_body {
+		max_size 3MB
+	}
+
+	# Der Antwortstrom darf nicht gepuffert werden: Evidariums Schrittanzeige
+	# lebt davon, dass jede Zeile sofort ankommt.
+	reverse_proxy evidarium-web:3100 {
+		flush_interval -1
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+		-Via
+		defer
+	}
+
+	# Nach Zeit löschen, nicht nur nach Grösse: Evidariums
+	# Datenschutzerklärung nennt 14 Tage für Serverprotokolle.
+	log {
+		output file /var/log/caddy/evidarium.log {
+			roll_size 10MiB
+			roll_keep 5
+			roll_keep_for 336h
+		}
+	}
+}
