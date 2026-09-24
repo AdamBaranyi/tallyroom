@@ -61,6 +61,13 @@ jobs:
       - name: WebKit installieren
         run: bunx playwright install webkit
 
+      # Guidepups Fehlerausgabe braucht `Error.isError` (Node 24). Mit dem
+      # Node 22 des Abbilds stürzt sie selbst ab und verschluckt den Grund,
+      # wie am 24.09.2026 geschehen.
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
       # Dasselbe, was guidepup/setup-action tut, aber mit der Version aus dem
       # Lockfile.
       #
@@ -71,20 +78,15 @@ jobs:
       # steuerbar macht, läuft davor oder danach unabhängig davon; nur mit
       # `--ci` wird «Nicht stören» überhaupt versucht. Also: zweimal
       # vollständig, danach ohne `--ci`.
-      #
-      # Unter Bun statt Node, weil Guidepups Fehlerausgabe sonst selbst
-      # abstürzt (`Error.isError` gibt es erst ab Node 24, der Rechner fährt
-      # Node 22) und den Grund verschluckt.
       - name: VoiceOver für die Steuerung einrichten
         run: |
-          "/Library/Application Support/VMware Tools/vmware-resolutionSet" 1920 1080 || true
           for versuch in 1 2; do
-            bunx --bun guidepup setup --ci && exit 0
+            bunx guidepup setup --ci && exit 0
             echo "Versuch $versuch mit «Nicht stören» gescheitert"
             sleep 10
           done
           echo "Weiter ohne «Nicht stören» — Mitteilungen könnten dazwischenreden."
-          bunx --bun guidepup setup
+          bunx guidepup setup
 
       # Zweimal öffnete sich im ersten Test die Schnellnotiz von macOS, und
       # VoiceOver sagte sie statt der Seite an. Vermutlich die heisse Ecke unten
