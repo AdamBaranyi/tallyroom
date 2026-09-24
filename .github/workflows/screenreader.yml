@@ -62,17 +62,29 @@ jobs:
         run: bunx playwright install webkit
 
       # Dasselbe, was guidepup/setup-action tut, aber mit der Version aus dem
-      # Lockfile und mit Wiederholung: Einmal scheiterte der Schritt an «Nicht
-      # stören einschalten», die Läufe davor und danach nicht.
+      # Lockfile.
+      #
+      # Der Schritt «Nicht stören» klickt über das Kontrollzentrum, und an
+      # welcher Stelle dort das Kästchen sitzt, steht in Guidepup fest je
+      # macOS-Version. Ändert Apple das Abbild, scheitert er — am 24.09.2026
+      # zum ersten Mal, bei unverändertem Workflow. Alles, was VoiceOver
+      # steuerbar macht, läuft davor oder danach unabhängig davon; nur mit
+      # `--ci` wird «Nicht stören» überhaupt versucht. Also: zweimal
+      # vollständig, danach ohne `--ci`.
+      #
+      # Unter Bun statt Node, weil Guidepups Fehlerausgabe sonst selbst
+      # abstürzt (`Error.isError` gibt es erst ab Node 24, der Rechner fährt
+      # Node 22) und den Grund verschluckt.
       - name: VoiceOver für die Steuerung einrichten
         run: |
           "/Library/Application Support/VMware Tools/vmware-resolutionSet" 1920 1080 || true
-          for versuch in 1 2 3; do
-            bunx guidepup setup --ci && exit 0
-            echo "Versuch $versuch gescheitert, nochmals in 10 Sekunden"
+          for versuch in 1 2; do
+            bunx --bun guidepup setup --ci && exit 0
+            echo "Versuch $versuch mit «Nicht stören» gescheitert"
             sleep 10
           done
-          exit 1
+          echo "Weiter ohne «Nicht stören» — Mitteilungen könnten dazwischenreden."
+          bunx --bun guidepup setup
 
       # Zweimal öffnete sich im ersten Test die Schnellnotiz von macOS, und
       # VoiceOver sagte sie statt der Seite an. Vermutlich die heisse Ecke unten
