@@ -237,6 +237,10 @@ off, and the demo area then does not exist.
   [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (German).
 - **Usable from 320 CSS pixels.** Tested at 320, 375, 390, 768, 1024 and 1440 pixels. Results in
   [docs/TESTING.md](docs/TESTING.md) (German).
+- **No font below 16 px.** On no page and no width, including header and footer, charts, badges and
+  dialogs. Differences come from cut, small caps, weight and colour, not from smaller sizes. Checked
+  by `bun run check:font-floor` in the source and by `e2e/font-size.spec.ts` in the browser; either
+  one fails CI.
 - **Appearance:** Device, Light or Dark. The default is Device, which follows
   `prefers-color-scheme` without a reload.
 

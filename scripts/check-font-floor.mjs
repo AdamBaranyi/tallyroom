@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Projektregel: keine Schrift unter 16 px (CLAUDE.md, Regel 8).
+ * Projektregel: keine Schrift unter 16 px (README.md, Projektregeln).
  *
  * Sucht im Quelltext der Oberfläche alles, was eine kleinere Schrift setzen
  * würde: Tailwinds text-xs und text-sm, Grössen in eckigen Klammern,
@@ -132,7 +132,9 @@ function main() {
   }
 
   if (count > 0) {
-    console.error('\nKeine Schrift unter 16 px, auf keiner Breite. Siehe CLAUDE.md, Regel 8.');
+    console.error(
+      '\nKeine Schrift unter 16 px, auf keiner Breite. Siehe README.md, Projektregeln.',
+    );
     process.exit(1);
   }
 

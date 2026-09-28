@@ -10,7 +10,7 @@ import { TOUR_KEY } from './paths.ts';
 
 /**
  * Keine Schrift unter 16 px, auf jeder Seite und jeder der sechs Breiten
- * (CLAUDE.md, Regel 8). Grössere Schrift braucht Platz, deshalb prüft jede
+ * (Projektregeln im README). Grössere Schrift braucht Platz, deshalb prüft jede
  * Station dasselbe mit: nichts läuft seitlich, kein Wort bricht mitten im
  * Wort um, jedes Formularfeld hat eine id oder einen name.
  *

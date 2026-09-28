@@ -68,7 +68,7 @@ export async function warteAufSchriften(page: Page): Promise<void> {
   await page.evaluate(() => document.fonts.ready);
 }
 
-/** Die Untergrenze aus CLAUDE.md, Regel 8. */
+/** Die Untergrenze aus den Projektregeln im README. */
 const MIN_FONT_PX = 16;
 
 /**

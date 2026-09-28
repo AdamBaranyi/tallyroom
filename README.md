@@ -240,6 +240,10 @@ sich das Ganze über `DEMO_ENABLED=false`; dann existiert der Bereich nicht.
   [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - **Bedienbar ab 320 CSS-Pixeln.** Geprüft bei 320, 375, 390, 768, 1024 und 1440 Pixeln.
   Ergebnisse in [docs/TESTING.md](docs/TESTING.md).
+- **Keine Schrift unter 16 px.** Auf keiner Seite und keiner Breite, auch nicht in Kopf- und
+  Fusszeile, Diagrammen, Badges oder Dialogen. Unterschiede entstehen über Schnitt, Versalien,
+  Gewicht und Farbe, nicht über kleinere Grössen. Geprüft von `bun run check:font-floor` im
+  Quelltext und von `e2e/font-size.spec.ts` im Browser; beides bricht die CI.
 - **Erscheinungsbild:** Gerät, Hell oder Dunkel. Voreinstellung ist Gerät und folgt
   `prefers-color-scheme` ohne Neuladen.
 

@@ -11,7 +11,7 @@ import { STATE_FILE } from './e2e/paths.ts';
  * ein `ResizeObserver`, und Bauteile, die sich selbst messen, bleiben auf der
  * alten Grösse stehen. Wer zieht statt neu zu laden, prüft ein Artefakt.
  *
- * 320 ist die untere Grenze aus CLAUDE.md, 640 und 1024 sind die beiden
+ * 320 ist die untere Grenze der Projektregeln, 640 und 1024 sind die beiden
  * Umbruchpunkte des Entwurfs, und beide werden von je einer Breite darunter
  * und darüber eingeklammert.
  */
