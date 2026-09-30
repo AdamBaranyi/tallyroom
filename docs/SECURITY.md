@@ -203,6 +203,27 @@ Wartezeit gilt ausdrücklich **nicht** für Security-Updates — die kommen ohne
 Nicht erfasst: die Images in `infra/compose.prod.yml` (postgres, garage). Sie gehören in die
 monatliche Routine von Hand auf dem Server.
 
+### Rechte der Workflows
+
+Jeder Workflow schreibt seine Rechte selbst fest, statt sich auf die Einstellung des Repositorys zu
+verlassen. Die steht auf «nur lesen» (geprüft am 30.09.2026); `ci.yml` hatte bis dahin als
+einziger keinen eigenen Block und lief still mit diesem Standard.
+
+| Workflow                       | Rechte                         | Wozu                                                   |
+| ------------------------------ | ------------------------------ | ------------------------------------------------------ |
+| `ci.yml`                       | `contents: read`               | Prüfen, bauen, testen                                  |
+| `screenreader.yml`             | `contents: read`               | VoiceOver und NVDA                                     |
+| `sicherheit-taeglich.yml`      | `contents: read`               | Secret-Scan und Abhängigkeiten                         |
+| `erinnerung-woechentlich.yml`  | `issues: write`, sonst lesen   | Issue, wenn Update-PRs liegen bleiben                  |
+| `erinnerung-monatlich.yml`     | `issues: write`, sonst lesen   | Issue mit den Handgriffen auf dem Server               |
+| `screenreader-wiederholen.yml` | `actions: write`, nichts sonst | startet einen VoiceOver-Job auf gesperrtem Rechner neu |
+
+`screenreader-wiederholen.yml` läuft über `workflow_run` und damit immer in der Fassung von `main`,
+auch wenn der auslösende Lauf aus einem Pull Request kam. Er holt keinen Code, führt nichts aus dem
+Pull Request aus und reicht Werte aus dem Ereignis nur über Umgebungsvariablen an die Shell, nie
+direkt in den Befehl. Was er darf, ist genau eines: einen gescheiterten Job neu starten — und das
+nur nach einem Einrichtungsfehler, einmal, für den neusten Lauf des Zweigs (DIAGNOSTICS Nummer 32).
+
 ### Secret-Scan
 
 | Punkt         | Stand                                                                                |
