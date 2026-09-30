@@ -239,6 +239,13 @@ Rechnern von GitHub englisch; der Test vergleicht deshalb ohne Rücksicht auf Sa
 Reihenfolge. Und Guidepup hört nur während seiner eigenen Befehle zu — eine Handlung, deren Ansage
 geprüft wird, gehört in `capture()`.
 
+**Rechner ohne AppleScript.** Einzelne macOS-Rechner von GitHub verweigern die Steuerung per
+AppleScript. Vom 22. bis 28.09.2026 scheiterte daran die Einrichtung in drei von zwölf Läufen,
+beim selben Abbild wie in den grünen (DIAGNOSTICS Nummer 32). Der Job endet dann beim Einrichten
+und hält fest, was TCC dazu sagt; `screenreader-wiederholen.yml` startet ihn einmal auf einem
+neuen Rechner. Der Neustart gilt nur diesem Fall: Scheitert eine Prüfung auch in ihren zwei
+Wiederholungen, bleibt der Lauf rot.
+
 ### Sicherung und Wiederherstellung
 
 `apps/api/src/backup/archive.test.ts`, 9 Tests: das Dokumentarchiv spielt Byte für Byte samt

@@ -10,6 +10,12 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Der Lauf liest nur. Bis zum 30.09.2026 galt hier still der Standard des
+# Repositorys, der ebenfalls nur Lesen erlaubt; festgeschrieben, damit eine
+# Änderung an dieser Einstellung den Lauf nicht mit aufweicht.
+permissions:
+  contents: read
+
 env:
   TEST_DATABASE_URL: postgresql://tallyroom:tallyroom_local@localhost:5432/tallyroom_test
 
