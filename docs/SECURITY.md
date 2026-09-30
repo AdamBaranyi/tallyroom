@@ -169,9 +169,13 @@ nicht als bestanden.
 ### Täglicher Lauf
 
 Ein Push prüft den Stand von heute. Eine Meldung zu einem Paket entsteht aber auch dann, wenn
-niemand etwas ändert. Darum läuft dieselbe Prüfung jeden Morgen um 06:17 UTC von selbst, schmal
-gehalten auf Secret-Scan und Abhängigkeiten — ein täglicher Lauf über zwanzig Minuten wird
-abgeschaltet, einer über zwei Minuten bleibt.
+niemand etwas ändert. Darum läuft dieselbe Prüfung jeden Tag von selbst, schmal gehalten auf
+Secret-Scan und Abhängigkeiten — ein täglicher Lauf über zwanzig Minuten wird abgeschaltet, einer
+über zwei Minuten bleibt.
+
+Angesetzt ist der Lauf auf 06:17 UTC. GitHub startet geplante Läufe aber verspätet: Vom 17. bis
+30.09.2026 begannen alle vierzehn zwischen 11:07 und 14:05 UTC, also am Mittag in Zürich. Eine
+Meldung wird damit am selben Tag bemerkt, nicht am frühen Morgen.
 
 | Punkt       | Stand                                                                                       |
 | ----------- | ------------------------------------------------------------------------------------------- |
@@ -199,6 +203,14 @@ am Tag ihrer Veröffentlichung hier landet; dieselbe Frist gilt lokal über `min
 
 Jeder dieser Pull Requests löst den vollen CI-Lauf aus; gemergt wird nur, was grün ist. Die
 Wartezeit gilt ausdrücklich **nicht** für Security-Updates — die kommen ohne Frist.
+
+**Aber nur für direkte Abhängigkeiten.** GitHubs Abhängigkeitsgraph liest die `package.json`-Dateien,
+nicht `bun.lock`. Geprüft am 30.09.2026: 59 Pakete im Graphen, kein einziges aus zweiter Hand, und
+`bun.lock` fehlt unter den erkannten Manifesten, obwohl Alarme und automatische Security-Updates
+eingeschaltet sind. Eine Meldung zu einem Paket, das nur über ein anderes hereinkommt, erzeugt
+deshalb weder einen Alarm noch einen Pull Request. Solche Meldungen fängt allein der tägliche Lauf
+mit `bun audit`, der das Lockfile liest — so geschehen am 30.09.2026, siehe
+[Abhängigkeitsscan](#abhängigkeitsscan).
 
 Nicht erfasst: die Images in `infra/compose.prod.yml` (postgres, garage). Sie gehören in die
 monatliche Routine von Hand auf dem Server.
@@ -234,7 +246,7 @@ Nächste Prüfung dieser Ausnahmen: mit dem nächsten Meilenstein, spätestens a
 | Werkzeug    | `bun audit` aus Bun 1.3.14, gegen die Advisory-Datenbank der npm-Registry                                                                                                    |
 | Umfang      | alle Pakete aus `bun.lock`, auch reine Entwicklungswerkzeuge                                                                                                                 |
 | Blockierend | im Push-Lauf ab „hoch" (`--audit-level=high`), im täglichen Lauf ab „moderat"; ein zweiter Schritt schreibt alle Befunde in die Laufzusammenfassung, ohne den Lauf zu färben |
-| Ergebnis    | 12.09.2026 erneut geprüft: kein hoher und kein kritischer Befund, ein moderater                                                                                              |
+| Ergebnis    | 30.09.2026 nach der Behebung unten erneut geprüft: kein hoher und kein kritischer Befund, ein moderater                                                                      |
 
 Der moderate Befund, einzeln bewertet:
 
@@ -257,6 +269,25 @@ Der moderate Befund, einzeln bewertet:
   Im täglichen Lauf steht diese Nummer in `--ignore`, damit der Lauf nicht jeden Morgen rot ist
   und die Meldung dadurch ihre Wirkung verliert. Sichtbar bleibt der Befund trotzdem: Der Schritt
   „Alle Befunde zur Ansicht" zeigt ihn ungefiltert in der Laufzusammenfassung.
+
+Behoben am 30.09.2026, gemeldet vom täglichen Lauf:
+
+- **GHSA-qhr7-859c-m2p7 und GHSA-6j4f-fj2g-mc7p (hoch), GHSA-q2hr-2g5m-vwhr (moderat),
+  brace-expansion.** Veröffentlicht am 29.09.2026, am Tag darauf vom täglichen Lauf gemeldet; er
+  endete rot, wie vorgesehen. Präparierte Muster mit verschachtelten oder unausgeglichenen
+  geschweiften Klammern treiben das Aufklappen in eine Rekursion bis zum Stapelüberlauf oder in
+  quadratische Laufzeit. Das Paket kommt nur über ESLint herein, als Unterbau von `minimatch` in
+  `eslint`, `typescript-eslint` und `eslint-plugin-jsx-a11y`, und zwar in zwei Linien: 5.0.9 und
+  1.1.18. Keine Produktivabhängigkeit, und laut `Dockerfile` in keinem ausgelieferten Image: Das
+  API-Image installiert mit `--production` nur die Laufzeitpakete der API, das Web-Image enthält
+  nur die statischen Dateien des Builds. Die Muster, die ESLint aufklappt, stammen aus der eigenen
+  Konfiguration. **Praktisch nicht ausnutzbar, trotzdem behoben**, weil es einen Fix gibt: Im
+  Lockfile stehen jetzt 5.0.12 und 1.1.21, die ersten Fassungen, die alle drei Meldungen schliessen.
+  Beide sind vom 14.09.2026 und damit älter als die sieben Tage Wartezeit. Geändert sind nur diese
+  zwei Einträge; alles Übrige bleibt beim Sammel-PR von Dependabot.
+
+  Einen Dependabot-Alarm gab es dazu nicht, siehe
+  [Updates von Abhängigkeiten](#updates-von-abhängigkeiten).
 
 ## Offene Grenzen
 
@@ -282,6 +313,7 @@ Ehrlich benannt, weil sie zu späteren Meilensteinen gehören:
 | 09.09.2026 | Meilenstein 4: Kundenansicht, Uploads, Einladungen, Idempotenz               | 141 Tests grün |
 | 11.09.2026 | Produktionsaufbau lokal: Header, CSP, Demo-Durchgang, Download, Garage       | 2 von 2 grün   |
 | 11.09.2026 | Secret-Scan über 83 Commits, Abhängigkeitsscan über `bun.lock`               | siehe oben     |
+| 30.09.2026 | Täglicher Lauf rot: drei neue Meldungen zu brace-expansion (ESLint-Kette)    | behoben, oben  |
 
 Drei Befunde aus Meilenstein 4, alle behoben:
 
