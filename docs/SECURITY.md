@@ -201,16 +201,16 @@ Wartezeit nach der Veröffentlichung (`cooldown`), damit eine kaputte oder gekap
 am Tag ihrer Veröffentlichung hier landet; dieselbe Frist gilt lokal über `minimumReleaseAge` in
 `bunfig.toml`. Vorabversionen schlägt Dependabot nicht vor, solange keine eingesetzt wird.
 
-Jeder dieser Pull Requests löst den vollen CI-Lauf aus; gemergt wird nur, was grün ist. Die
-Wartezeit gilt ausdrücklich **nicht** für Security-Updates — die kommen ohne Frist.
+Jeder dieser Pull Requests löst den vollen CI-Lauf aus; gemergt wird nur, was grün ist.
 
-**Aber nur für direkte Abhängigkeiten.** GitHubs Abhängigkeitsgraph liest die `package.json`-Dateien,
-nicht `bun.lock`. Geprüft am 30.09.2026: 59 Pakete im Graphen, kein einziges aus zweiter Hand, und
-`bun.lock` fehlt unter den erkannten Manifesten, obwohl Alarme und automatische Security-Updates
-eingeschaltet sind. Eine Meldung zu einem Paket, das nur über ein anderes hereinkommt, erzeugt
-deshalb weder einen Alarm noch einen Pull Request. Solche Meldungen fängt allein der tägliche Lauf
-mit `bun audit`, der das Lockfile liest — so geschehen am 30.09.2026, siehe
-[Abhängigkeitsscan](#abhängigkeitsscan).
+**Security-Updates von Dependabot gibt es hier nur für GitHub Actions.** Für Bun und für Docker
+kennt Dependabot nur Version-Updates (GitHub-Dokumentation, geprüft am 30.09.2026), auch wenn im
+Repository automatische Security-Updates eingeschaltet sind. Dazu liest GitHubs Abhängigkeitsgraph
+nur die `package.json`-Dateien, nicht `bun.lock`: 59 Pakete im Graphen, kein einziges aus zweiter
+Hand, `bun.lock` nicht unter den erkannten Manifesten. Eine Meldung zu einem Paket, das nur über ein
+anderes hereinkommt, erzeugt deshalb weder einen Alarm noch einen Pull Request. Solche Meldungen
+fängt allein der tägliche Lauf mit `bun audit`, der das Lockfile liest — so geschehen am
+30.09.2026, siehe [Abhängigkeitsscan](#abhängigkeitsscan).
 
 Nicht erfasst: die Images in `infra/compose.prod.yml` (postgres, garage). Sie gehören in die
 monatliche Routine von Hand auf dem Server.
