@@ -64,7 +64,7 @@ jobs:
       # Guidepups Fehlerausgabe braucht `Error.isError` (Node 24). Mit dem
       # Node 22 des Abbilds stürzt sie selbst ab und verschluckt den Grund,
       # wie am 24.09.2026 geschehen.
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
 
