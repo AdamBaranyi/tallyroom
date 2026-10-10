@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+# Attrappe für gh in den Tests von scripts/sicherheits-meldung.sh.
+#
+# Führt Issues als Dateien in $ATTRAPPE_DIR/issues/<nummer>/, wertet --jq mit
+# echtem jq aus (sonst bliebe ein Fehler im Ausdruck ungeprüft) und verlangt wie
+# gh ein bestehendes Label beim Anlegen. Jeder Aufruf steht in aufrufe.log. Was
+# die Attrappe nicht kennt, landet in unbekannt.log und endet mit 1 — sonst
+# liefen Skript und Attrappe still auseinander.
+#
+# Steht in $ATTRAPPE_DIR/fehler_bei ein Befehl wie «issue view», scheitert er.
+set -euo pipefail
+dir="${ATTRAPPE_DIR:?ATTRAPPE_DIR fehlt}"
+mkdir -p "$dir/issues"
+touch "$dir/labels.txt"
+
+befehl="${1-} ${2-}"
+shift 2 || true
+# Nur der Befehl, nicht die Argumente: Ein mehrzeiliger Issue-Text im Protokoll
+# liesse eine Prüfung auf «issue edit» sonst am Text statt am Aufruf anschlagen.
+printf '%s\n' "$befehl" >>"$dir/aufrufe.log"
+if [ -f "$dir/fehler_bei" ] && [ "$befehl" = "$(cat "$dir/fehler_bei")" ]; then
+  echo "Attrappe: «$befehl» scheitert wie verlangt." >&2
+  exit 1
+fi
+
+declare -A opt=()
+pos=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+  --*)
+    opt["${1#--}"]="${2-}"
+    shift 2
+    ;;
+  *)
+    pos+=("$1")
+    shift
+    ;;
+  esac
+done
+
+# Gibt JSON von stdin aus, mit --jq gefiltert wie bei gh.
+ausgabe() {
+  if [ -n "${opt[jq]-}" ]; then jq -r "${opt[jq]}"; else cat; fi
+}
+
+issue_dir() {
+  local n="${pos[0]-}"
+  if [ ! -d "$dir/issues/$n" ]; then
+    echo "Attrappe: kein Issue «$n»." >&2
+    exit 1
+  fi
+  printf '%s' "$dir/issues/$n"
+}
+
+case "$befehl" in
+"issue list")
+  liste='[]'
+  for f in "$dir"/issues/*/; do
+    [ -d "$f" ] || continue
+    [ "$(cat "$f/state")" = "${opt[state]:-open}" ] || continue
+    grep -qxF "${opt[label]-}" "$f/labels" || continue
+    liste=$(jq --argjson n "$(basename "$f")" --rawfile t "$f/title" \
+      '. + [{number: $n, title: $t}]' <<<"$liste")
+  done
+  ausgabe <<<"$liste"
+  ;;
+"issue create")
+  if ! grep -qxF "${opt[label]-}" "$dir/labels.txt"; then
+    echo "could not add label: '${opt[label]-}' not found" >&2
+    exit 1
+  fi
+  n=$(($(find "$dir/issues" -mindepth 1 -maxdepth 1 -type d | wc -l) + 1))
+  mkdir "$dir/issues/$n"
+  printf '%s' "${opt[title]}" >"$dir/issues/$n/title"
+  printf '%s\n' "${opt[label]}" >"$dir/issues/$n/labels"
+  printf '%s' "${opt[assignee]-}" >"$dir/issues/$n/assignee"
+  printf '%s' "${opt[body]}" >"$dir/issues/$n/body"
+  printf 'open' >"$dir/issues/$n/state"
+  : >"$dir/issues/$n/comments"
+  echo "https://github.com/${GH_REPO:-attrappe/repo}/issues/$n"
+  ;;
+"issue view")
+  jq -n --rawfile b "$(issue_dir)/body" '{body: $b}' | ausgabe
+  ;;
+"issue edit")
+  printf '%s' "${opt[body]}" >"$(issue_dir)/body"
+  ;;
+"issue comment")
+  printf '%s\n---\n' "${opt[body]}" >>"$(issue_dir)/comments"
+  ;;
+"issue close")
+  f=$(issue_dir)
+  printf 'closed' >"$f/state"
+  printf '%s\n---\n' "${opt[comment]-}" >>"$f/comments"
+  ;;
+"label create")
+  if grep -qxF "${pos[0]-}" "$dir/labels.txt"; then
+    echo "label with name \"${pos[0]-}\" already exists" >&2
+    exit 1
+  fi
+  printf '%s\n' "${pos[0]-}" >>"$dir/labels.txt"
+  ;;
+*)
+  printf '%s\n' "$befehl $*" >>"$dir/unbekannt.log"
+  exit 1
+  ;;
+esac
