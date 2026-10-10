@@ -8,6 +8,11 @@
 # liefen Skript und Attrappe still auseinander.
 #
 # Steht in $ATTRAPPE_DIR/fehler_bei ein Befehl wie «issue view», scheitert er.
+#
+# «issue list» mit --label oder --search geht bei gh über den Suchindex von
+# GitHub, der nachhinkt («query IssueSearch»). Die Attrappe spielt das schärfste
+# Ende davon: Der Index kennt keines der Issues, die im Test entstehen. Nur die
+# Liste ohne Filter liest direkt («query IssueList») und sieht alles.
 set -euo pipefail
 dir="${ATTRAPPE_DIR:?ATTRAPPE_DIR fehlt}"
 mkdir -p "$dir/issues"
@@ -55,10 +60,14 @@ issue_dir() {
 case "$befehl" in
 "issue list")
   liste='[]'
+  if [ -n "${opt[label]-}" ] || [ -n "${opt[search]-}" ]; then
+    # Suchindex: kennt die frischen Issues noch nicht.
+    ausgabe <<<"$liste"
+    exit 0
+  fi
   for f in "$dir"/issues/*/; do
     [ -d "$f" ] || continue
     [ "$(cat "$f/state")" = "${opt[state]:-open}" ] || continue
-    grep -qxF "${opt[label]-}" "$f/labels" || continue
     liste=$(jq --argjson n "$(basename "$f")" --rawfile t "$f/title" \
       '. + [{number: $n, title: $t}]' <<<"$liste")
   done
