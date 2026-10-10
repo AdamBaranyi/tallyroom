@@ -5,6 +5,15 @@ name: Sicherheit täglich
 # und ein Geheimnis in einem alten Commit bleibt unbemerkt, solange niemand
 # etwas schiebt. Darum läuft diese Prüfung jeden Tag von selbst.
 #
+# Seit dem 10.10.2026 meldet der Lauf, statt zu blockieren. Rot wird er nur bei
+# einem Geheimnis oder wenn die Prüfung selbst nicht stattfand. Befunde in den
+# Abhängigkeiten landen in einem einzigen Issue «Sicherheitsmeldungen», das bei
+# jeder Änderung der Kennungen ergänzt und bei sauberem Stand geschlossen wird.
+# Grund: Ein geplanter Lauf hängt sein rotes Kreuz an den letzten Commit auf
+# main und schickt jeden Tag eine E-Mail. Nach drei Wochen liest die niemand
+# mehr, und die echte Meldung geht unter. Geurteilt wird in ci.yml auf Push und
+# Pull Request, ab high.
+#
 # Sie ist bewusst schmal — nur Secret-Scan und Abhängigkeiten, keine Builds,
 # keine Browser-Tests. Ein täglicher Lauf, der zwanzig Minuten braucht, wird
 # abgeschaltet; einer, der zwei Minuten braucht, bleibt.
@@ -25,9 +34,10 @@ on:
     - cron: '17 6 * * *'
   workflow_dispatch:
 
-# Der Lauf liest nur. Keine Schreibrechte, auch nicht auf Umwegen.
+# Lesen, und Issues schreiben für die eine Meldung. Sonst nichts.
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: sicherheit-taeglich
@@ -61,6 +71,7 @@ jobs:
           tar -xzf gitleaks.tar.gz gitleaks
 
       # Ausnahmen stehen einzeln in .gitleaksignore, begründet in docs/SECURITY.md.
+      # Ein Fund hier ist ein Notfall und bleibt rot.
       - name: Secret-Scan über alle Commits
         run: ./gitleaks git . --no-banner --redact --gitleaks-ignore-path .gitleaksignore
 
@@ -70,22 +81,35 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      # Strenger als ci.yml: der tägliche Lauf blockiert schon ab "moderat".
-      # Hier geht es nicht darum, einen Commit durchzulassen, sondern darum,
-      # eine neue Meldung überhaupt zu bemerken.
-      #
-      # Ausgenommen ist genau eine Nummer, nicht eine ganze Stufe:
-      # GHSA-67mh-4wv8-2f99 (esbuild ≤ 0.24.2 über drizzle-kit) ist in
-      # docs/SECURITY.md als nicht anwendbar bewertet und lässt sich mangels
-      # Update nicht beheben. Ohne diese Ausnahme wäre der Lauf ab dem ersten
-      # Tag rot, und ein täglich rotes Auge sieht die echte Meldung nicht mehr.
-      # Fällt der Befund weg, fällt auch das --ignore weg.
-      - name: Bekannte Schwachstellen, blockierend ab moderat
-        run: bun audit --audit-level=moderate --ignore GHSA-67mh-4wv8-2f99
+      # Befunde sammeln, nicht urteilen. Stufe und Ausnahmen stehen an einer
+      # Stelle, in scripts/audit.sh. Der Exit-Code geht an den nächsten Schritt:
+      # Nur er unterscheidet «sauber» von «Prüfung fand nicht statt» — ohne Netz
+      # endet bun audit mit 1 und einem Text ohne Kennung.
+      - name: Befunde sammeln, ab moderat
+        id: audit
+        run: |
+          status=0
+          bash scripts/audit.sh moderate > audit.txt 2>&1 || status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          {
+            echo '### bun audit, ab moderat, mit Ausnahmen'
+            echo ''
+            echo "Exit-Code: $status"
+            echo ''
+            echo '```'
+            cat audit.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
-      # Zur Ansicht in der Laufzusammenfassung, auch die ausgenommene Nummer
-      # und alles Niedrige. Der Exit-Code fällt hier bewusst weg; geurteilt
-      # wird im Schritt darüber.
+      - name: Meldung als Issue, nur bei Änderung
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          STATUS: ${{ steps.audit.outputs.status }}
+        run: bash scripts/sicherheits-meldung.sh audit.txt "$STATUS"
+
+      # Zur Ansicht in der Laufzusammenfassung, auch die ausgenommenen Nummern
+      # und alles Niedrige. Der Exit-Code fällt hier bewusst weg.
       - name: Alle Befunde zur Ansicht
         if: always()
         run: |

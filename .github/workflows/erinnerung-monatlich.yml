@@ -54,8 +54,10 @@ jobs:
                 sie in öffentlichen Repositories nach 60 Tagen ohne Aktivität ab.
           - [ ] **Serverupdates** — `ssh vps1 'apt list --upgradable'`. Liegt etwas länger als
                 ein paar Tage, nachfassen statt auf unattended-upgrades warten.
-          - [ ] **Ausnahmen nachprüfen** — steht in `docs/SECURITY.md` noch ein `--ignore`, das
-                inzwischen wegfallen könnte?
+          - [ ] **Ausnahmen nachprüfen** — jede Ausnahme in `scripts/audit.sh` trägt ein
+                «prüfen bis». Abgelaufene nur mit neuem Grund verlängern (höchstens einen
+                Monat, Tabelle in `docs/SECURITY.md`), sonst entfernen. Dazu das offene Issue
+                «Sicherheitsmeldungen», falls es eines gibt.
 
           Alle drei Monate zusätzlich:
 
