@@ -30,9 +30,11 @@ if [ "$status" != 0 ] && [ -z "$ids" ]; then
   exit 1
 fi
 
-# Ohne --search: Die Suche von GitHub zieht mit Verzögerung nach, zwei Läufe kurz
-# hintereinander legten sonst zwei Issues an.
-nummer=$(gh issue list --label "$label" --state open --json number,title \
+# Ohne --search und ohne --label: Beide gehen über den Suchindex von GitHub
+# («query IssueSearch», sichtbar mit GH_DEBUG=api), der mit Verzögerung nachzieht;
+# zwei Läufe kurz hintereinander legten sonst zwei Issues an. Die blosse Liste
+# liest direkt («query IssueList»), der Titel wird hier verglichen.
+nummer=$(gh issue list --state open --limit 200 --json number,title \
   --jq "[.[] | select(.title == \"$titel\")][0].number // empty")
 
 if [ "$status" = 0 ]; then

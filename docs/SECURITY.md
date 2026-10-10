@@ -192,6 +192,14 @@ die Liste der Kennungen ändert, von selbst geschlossen, sobald alles sauber ist
 Registry). Eine Fassung, die nur nach Kennungen sucht, schlösse dann das Issue mit «keine Befunde
 mehr». So aber bleibt das Issue stehen, und der Lauf endet rot.
 
+Das bestehende Issue findet das Skript über die blosse Liste der offenen Issues, nicht über
+`--label` oder `--search`: Beide gehen bei gh über den Suchindex von GitHub (`query IssueSearch`,
+sichtbar mit `GH_DEBUG=api`, geprüft am 10.10.2026), der mit Verzögerung nachzieht. Zwei Läufe kurz
+hintereinander legten sonst zwei Issues an. Und der Lauf installiert keine Pakete: `bun audit` liest
+`package.json` und `bun.lock`, ohne `node_modules` (in einem frischen Checkout geprüft), und der
+Checkout legt das Token nicht in `.git/config` ab. In einem Job, der Issues schreiben darf, läuft so
+kein Installationscode fremder Pakete.
+
 Angesetzt ist der Lauf auf 06:17 UTC. GitHub startet geplante Läufe aber verspätet: Vom 17. bis
 30.09.2026 begannen alle vierzehn zwischen 11:07 und 14:05 UTC, also am Mittag in Zürich. Eine
 Meldung wird damit am selben Tag bemerkt, nicht am frühen Morgen.

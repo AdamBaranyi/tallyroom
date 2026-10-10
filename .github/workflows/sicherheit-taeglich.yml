@@ -50,9 +50,12 @@ jobs:
     steps:
       # Die ganze Historie, nicht nur der letzte Stand: ein Geheimnis, das in
       # einem alten Commit steht, ist im öffentlichen Repository weiter lesbar.
+      # Das Token bleibt nicht in .git/config liegen: Dieser Job darf Issues
+      # schreiben, und kein späterer Schritt soll es dort finden.
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       # Hält fest, dass wirklich die ganze Historie da ist. Ein flacher Checkout
       # hätte genau einen Commit, und der Scan sähe grün aus, ohne es zu sein.
@@ -75,11 +78,13 @@ jobs:
       - name: Secret-Scan über alle Commits
         run: ./gitleaks git . --no-banner --redact --gitleaks-ignore-path .gitleaksignore
 
+      # Nur bun selbst, kein «bun install»: bun audit liest package.json und
+      # bun.lock und braucht kein node_modules (geprüft am 10.10.2026 in einem
+      # frischen Checkout). So läuft in einem Job, der Issues schreiben darf,
+      # kein Installationscode fremder Pakete.
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
-
-      - run: bun install --frozen-lockfile
 
       # Befunde sammeln, nicht urteilen. Stufe und Ausnahmen stehen an einer
       # Stelle, in scripts/audit.sh. Der Exit-Code geht an den nächsten Schritt:
