@@ -166,6 +166,12 @@ Beide laufen bei jedem Push im Job `sicherheit` und zusätzlich jeden Tag ohne C
 `sicherheit-taeglich.yml`. Ein Fehler des Scanners oder ein fehlendes Netz endet rot und zählt
 nicht als bestanden.
 
+**Regel seit dem 10.10.2026: Rot heisst handeln, alles andere ist eine Meldung.** Push und Pull
+Request blockieren ab „hoch". Der tägliche Lauf wird wegen einer Abhängigkeit nie rot, sondern
+führt ein einziges Issue «Sicherheitsmeldungen». Rot bleibt er bei einem Geheimnis und wenn die
+Prüfung selbst nicht stattfand. Stufe und Ausnahmen stehen an einer Stelle, in `scripts/audit.sh`,
+das beide Läufe aufrufen.
+
 ### Täglicher Lauf
 
 Ein Push prüft den Stand von heute. Eine Meldung zu einem Paket entsteht aber auch dann, wenn
@@ -173,23 +179,38 @@ niemand etwas ändert. Darum läuft dieselbe Prüfung jeden Tag von selbst, schm
 Secret-Scan und Abhängigkeiten — ein täglicher Lauf über zwanzig Minuten wird abgeschaltet, einer
 über zwei Minuten bleibt.
 
+Bis zum 10.10.2026 blockierte er schon ab „moderat". Dann machte eine Welle neuer Meldungen den Lauf
+in sieben eigenen Repositories gleichzeitig rot. Ein roter geplanter Lauf schickt jeden Tag eine
+E-Mail und hängt ein rotes Kreuz an den letzten Commit auf `main` — wer das Repository ansieht,
+sieht das Kreuz, nicht den Grund. Seither sammelt er die Befunde ab „moderat" und meldet sie über
+`scripts/sicherheits-meldung.sh` in einem Issue: angelegt beim ersten Fund, ergänzt nur, wenn sich
+die Liste der Kennungen ändert, von selbst geschlossen, sobald alles sauber ist. Eine E-Mail je
+Änderung statt einer je Tag.
+
+«Sauber» heisst dabei Exit-Code 0 von `bun audit`, nicht «keine Kennung im Bericht»: Ohne Netz endet
+`bun audit` mit 1 und einem Text ohne Kennung (geprüft am 10.10.2026 mit einer unerreichbaren
+Registry). Eine Fassung, die nur nach Kennungen sucht, schlösse dann das Issue mit «keine Befunde
+mehr». So aber bleibt das Issue stehen, und der Lauf endet rot.
+
 Angesetzt ist der Lauf auf 06:17 UTC. GitHub startet geplante Läufe aber verspätet: Vom 17. bis
 30.09.2026 begannen alle vierzehn zwischen 11:07 und 14:05 UTC, also am Mittag in Zürich. Eine
 Meldung wird damit am selben Tag bemerkt, nicht am frühen Morgen.
 
-| Punkt       | Stand                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------- |
-| Datei       | `.github/workflows/sicherheit-taeglich.yml`, dazu `workflow_dispatch` für den Lauf von Hand |
-| Blockierend | gitleaks wie im Push-Lauf; `bun audit` hier schon ab „moderat" statt ab „hoch"              |
-| Ausnahme    | genau die Nummer GHSA-67mh-4wv8-2f99, unten einzeln bewertet — keine ganze Stufe            |
-| Meldung     | ein roter Lauf meldet sich bei der Person, die die `cron`-Zeile zuletzt geändert hat        |
-| Rechte      | `permissions: contents: read`, der Lauf schreibt nichts                                     |
+| Punkt          | Stand                                                                                                                               |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Datei          | `.github/workflows/sicherheit-taeglich.yml`, dazu `workflow_dispatch` für den Lauf von Hand                                         |
+| Rot            | gitleaks findet ein Geheimnis, oder `bun audit` endet ohne Kennung (Prüfung fand nicht statt)                                       |
+| Abhängigkeiten | ab „moderat" mit den Ausnahmen aus `scripts/audit.sh`, gemeldet im Issue «Sicherheitsmeldungen»                                     |
+| Ausnahmen      | namentlich, befristet, begründet — Tabelle unter [Abhängigkeitsscan](#abhängigkeitsscan)                                            |
+| Meldung        | Issue mit Label `sicherheit`, Adam zugewiesen; ein roter Lauf meldet sich bei der Person, die die `cron`-Zeile zuletzt geändert hat |
+| Rechte         | `contents: read` und `issues: write`, für genau dieses eine Issue                                                                   |
+| Geprüft        | `scripts/sicherheit.test.mjs`: beide Skripte im Ablauf, mit `gh` und `bun` als Attrappen                                            |
 
 Zwei Stolperfallen, die hier bewusst behandelt sind:
 
-- **Ein täglich rotes Auge sieht nichts mehr.** Darum ist der bekannte, nicht anwendbare Befund
-  namentlich ausgenommen statt über die Stufe weggeschaltet. Jede _neue_ moderate Meldung färbt
-  den Lauf rot. Fällt der alte Befund weg, fällt auch das `--ignore` weg.
+- **Ein täglich rotes Auge sieht nichts mehr.** Darum meldet der Lauf, statt rot zu werden, und
+  bekannte Befunde ohne Fix sind namentlich ausgenommen statt über die Stufe weggeschaltet. Fällt
+  ein Befund weg, fällt seine Ausnahme weg.
 - **GitHub schaltet geplante Läufe in öffentlichen Repositories nach 60 Tagen ohne Aktivität ab.**
   Die wöchentlich gemergten Update-PRs halten den Zeitplan am Leben.
 
@@ -202,6 +223,12 @@ am Tag ihrer Veröffentlichung hier landet; dieselbe Frist gilt lokal über `min
 `bunfig.toml`. Vorabversionen schlägt Dependabot nicht vor, solange keine eingesetzt wird.
 
 Jeder dieser Pull Requests löst den vollen CI-Lauf aus; gemergt wird nur, was grün ist.
+
+**Ausnahme von der Wartezeit** nur für einen Sicherheitsfix in einem Laufzeitpaket, das erreichbar
+ist (API, ausgelieferte Oberfläche): dann sofort, befristet in `minimumReleaseAgeExcludes` und hier
+mit Datum. Werkzeuge für Build, Lint und Test warten auf den regulären Update-PR. Liegt die behobene
+Fassung im erlaubten Bereich, genügt der Eintrag im Lockfile; sonst ein `overrides` auf genau diese
+Fassung.
 
 **Security-Updates von Dependabot gibt es hier nur für GitHub Actions.** Für Bun und für Docker
 kennt Dependabot nur Version-Updates (GitHub-Dokumentation, geprüft am 30.09.2026), auch wenn im
@@ -221,14 +248,14 @@ Jeder Workflow schreibt seine Rechte selbst fest, statt sich auf die Einstellung
 verlassen. Die steht auf «nur lesen» (geprüft am 30.09.2026); `ci.yml` hatte bis dahin als
 einziger keinen eigenen Block und lief still mit diesem Standard.
 
-| Workflow                       | Rechte                         | Wozu                                                   |
-| ------------------------------ | ------------------------------ | ------------------------------------------------------ |
-| `ci.yml`                       | `contents: read`               | Prüfen, bauen, testen                                  |
-| `screenreader.yml`             | `contents: read`               | VoiceOver und NVDA                                     |
-| `sicherheit-taeglich.yml`      | `contents: read`               | Secret-Scan und Abhängigkeiten                         |
-| `erinnerung-woechentlich.yml`  | `issues: write`, sonst lesen   | Issue, wenn Update-PRs liegen bleiben                  |
-| `erinnerung-monatlich.yml`     | `issues: write`, sonst lesen   | Issue mit den Handgriffen auf dem Server               |
-| `screenreader-wiederholen.yml` | `actions: write`, nichts sonst | startet einen VoiceOver-Job auf gesperrtem Rechner neu |
+| Workflow                       | Rechte                         | Wozu                                                      |
+| ------------------------------ | ------------------------------ | --------------------------------------------------------- |
+| `ci.yml`                       | `contents: read`               | Prüfen, bauen, testen                                     |
+| `screenreader.yml`             | `contents: read`               | VoiceOver und NVDA                                        |
+| `sicherheit-taeglich.yml`      | `issues: write`, sonst lesen   | Secret-Scan, Abhängigkeiten, Issue «Sicherheitsmeldungen» |
+| `erinnerung-woechentlich.yml`  | `issues: write`, sonst lesen   | Issue, wenn Update-PRs liegen bleiben                     |
+| `erinnerung-monatlich.yml`     | `issues: write`, sonst lesen   | Issue mit den Handgriffen auf dem Server                  |
+| `screenreader-wiederholen.yml` | `actions: write`, nichts sonst | startet einen VoiceOver-Job auf gesperrtem Rechner neu    |
 
 `screenreader-wiederholen.yml` läuft über `workflow_run` und damit immer in der Fassung von `main`,
 auch wenn der auslösende Lauf aus einem Pull Request kam. Er holt keinen Code, führt nichts aus dem
@@ -262,14 +289,22 @@ Nächste Prüfung dieser Ausnahmen: mit dem nächsten Meilenstein, spätestens a
 
 ### Abhängigkeitsscan
 
-| Punkt       | Stand                                                                                                                                                                        |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Werkzeug    | `bun audit` aus Bun 1.3.14, gegen die Advisory-Datenbank der npm-Registry                                                                                                    |
-| Umfang      | alle Pakete aus `bun.lock`, auch reine Entwicklungswerkzeuge                                                                                                                 |
-| Blockierend | im Push-Lauf ab „hoch" (`--audit-level=high`), im täglichen Lauf ab „moderat"; ein zweiter Schritt schreibt alle Befunde in die Laufzusammenfassung, ohne den Lauf zu färben |
-| Ergebnis    | 30.09.2026 nach der Behebung unten erneut geprüft: kein hoher und kein kritischer Befund, ein moderater                                                                      |
+| Punkt       | Stand                                                                                                                                                                                                        |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Werkzeug    | `bun audit` aus Bun 1.3.14, gegen die Advisory-Datenbank der npm-Registry                                                                                                                                    |
+| Umfang      | alle Pakete aus `bun.lock`, auch reine Entwicklungswerkzeuge                                                                                                                                                 |
+| Blockierend | im Push-Lauf ab „hoch" (`bash scripts/audit.sh high`); der tägliche Lauf blockiert nicht, er meldet ab „moderat" im Issue; ein weiterer Schritt schreibt alle Befunde ungefiltert in die Laufzusammenfassung |
+| Ergebnis    | 10.10.2026 nach der Behebung unten erneut geprüft: kein hoher und kein kritischer Befund, ein moderater, ausgenommen                                                                                         |
 
-Der moderate Befund, einzeln bewertet:
+**Ausnahmen.** Jede steht mit ihrer Kennung in `scripts/audit.sh`, mit demselben «prüfen bis» wie
+hier — `scripts/sicherheit.test.mjs` hält beides zusammen. Höchstens einen Monat; danach verlängern
+nur mit neuem Grund, sonst entfernen. Die monatliche Erinnerung fragt danach.
+
+| Kennung               | Paket                             | Stufe   | Art                           | Grund                                                                | seit       | prüfen bis |
+| --------------------- | --------------------------------- | ------- | ----------------------------- | -------------------------------------------------------------------- | ---------- | ---------- |
+| `GHSA-67mh-4wv8-2f99` | esbuild ≤ 0.24.2 über drizzle-kit | moderat | Werkzeug, nur für Migrationen | kein Update; betrifft `serve`, das hier nie startet; in keinem Image | 12.09.2026 | 10.11.2026 |
+
+Die Ausnahme, einzeln bewertet:
 
 - **GHSA-67mh-4wv8-2f99, esbuild ≤ 0.24.2.** Betrifft den eingebauten Entwicklungsserver von
   esbuild (`serve`), über den fremde Seiten Anfragen stellen und Antworten lesen können. Die
@@ -280,16 +315,41 @@ Der moderate Befund, einzeln bewertet:
   das Web-Image enthält nur die 15 statischen Dateien des Builds. Vite bringt eigenes esbuild in
   Fassung 0.28 mit und ist nicht betroffen.
 
-  Keine erzwungene Aktualisierung, und zwar mangels Alternative: Ein Update gibt es nicht — die
-  neuste Fassung von `drizzle-kit` ist mit 0.31.10 genau die eingesetzte und hängt weiterhin an
-  demselben eingestellten Paket (geprüft am 12.09.2026). Eine Überschreibung würde totes Paket auf
-  ein sieben Hauptversionen neueres esbuild zwingen, ohne dass hier je ein `serve` startet. Der
-  Befund fällt von selbst weg, sobald `drizzle-kit` das Paket loswird; bis dahin Neubewertung mit
-  jedem `drizzle-kit`-Update, spätestens am 11.12.2026.
+  Keine erzwungene Aktualisierung, und zwar mangels Alternative: Ein Update ohne das Paket gibt es
+  nicht. Am 12.09.2026 war 0.31.10 die neuste Fassung von `drizzle-kit`; am 10.10.2026 ist es
+  0.31.11 vom 21.09., und sie hängt weiterhin an `@esbuild-kit/esm-loader`. Eine Überschreibung
+  würde ein totes Paket auf ein sieben Hauptversionen neueres esbuild zwingen, ohne dass hier je
+  ein `serve` startet. Der Befund fällt von selbst weg, sobald `drizzle-kit` das Paket loswird; bis
+  dahin Neubewertung mit jedem `drizzle-kit`-Update, spätestens am 10.11.2026.
 
-  Im täglichen Lauf steht diese Nummer in `--ignore`, damit der Lauf nicht jeden Morgen rot ist
-  und die Meldung dadurch ihre Wirkung verliert. Sichtbar bleibt der Befund trotzdem: Der Schritt
-  „Alle Befunde zur Ansicht" zeigt ihn ungefiltert in der Laufzusammenfassung.
+  Die Nummer steht in `scripts/audit.sh` und gilt damit für den Push-Lauf und den täglichen Lauf
+  gleich. Sichtbar bleibt der Befund trotzdem: Der Schritt „Alle Befunde zur Ansicht" zeigt ihn
+  ungefiltert in der Laufzusammenfassung.
+
+Behoben am 10.10.2026, in der Sicherheitsrunde nach der neuen Regel:
+
+- **GHSA-jqcg-44mw-7w3h (kritisch), proxy-addr bis 2.0.7.** Veröffentlicht am 05.10.2026. Ein
+  Vertrauens-Subnetz in IPv4-gemappter IPv6-Schreibweise mit kurzem Präfix, etwa
+  `::ffff:10.0.0.0/8`, passt auf jede IPv4-Adresse; Express glaubt dann jedem Absender sein
+  `X-Forwarded-For`, und `req.ip` lässt sich fälschen — damit auch Rate-Limits. Laufzeitpaket, bei
+  jeder Anfrage an die API im Spiel. **Hier nicht ausnutzbar:** Tallyroom setzt `trust proxy` als
+  Zahl von Hops (`TRUST_PROXY_HOPS`, in Produktion 1, laut Zod nur 0 bis 5 einstellbar). Express
+  zählt dann Hops und wertet kein Subnetz aus, und die Konfiguration lässt eine Subnetz-Angabe gar
+  nicht zu. Nachgestellt am 10.10.2026 mit dem installierten Express und einer Anfrage mit
+  gefälschtem `X-Forwarded-For: 6.6.6.6, 7.7.7.7`: Mit 2.0.7 und `::ffff:10.0.0.0/8` lieferte
+  `req.ip` die gefälschte `6.6.6.6`, mit 2.0.8 die echte Adresse; die Hop-Zählung von Tallyroom
+  ergab mit beiden Fassungen dasselbe. **Trotzdem sofort behoben**, weil Laufzeit: Im Lockfile
+  steht jetzt 2.0.8, im Bereich `^2.0.7` von Express, ohne Override. 2.0.8 ist vom 15.09.2026, also
+  älter als die Meldung und älter als sieben Tage — eine Ausnahme von der Wartezeit war nicht nötig.
+- **GHSA-68fv-2mgg-jv7q (hoch), source-map-js bis 1.2.1.** Eine präparierte indizierte Source Map
+  mit unpassenden Abschnittsversätzen blockiert die Ereignisschleife. Werkzeug: Vite, Tailwind und PostCSS
+  lesen damit beim Bauen Source Maps aus dem eigenen Quelltext; in keinem Image. Behoben, weil es
+  einen Fix gibt und der Push-Lauf ab „hoch" blockiert: Im Lockfile steht 1.2.2 vom 30.09.2026, im
+  Bereich `^1.2.1`, ohne Override.
+
+Geändert sind nur diese zwei Einträge im Lockfile. Gegenprobe: `bun install --frozen-lockfile`
+nimmt den Stand ohne Änderung an, und nach `--force` lädt die API-Kopie von Express proxy-addr 2.0.8,
+Tailwind und PostCSS laden source-map-js 1.2.2.
 
 Behoben am 30.09.2026, gemeldet vom täglichen Lauf:
 
@@ -328,13 +388,15 @@ Ehrlich benannt, weil sie zu späteren Meilensteinen gehören:
 
 ## Prüfprotokoll
 
-| Datum      | Umfang                                                                       | Ergebnis       |
-| ---------- | ---------------------------------------------------------------------------- | -------------- |
-| 09.09.2026 | Meilenstein 1: Mandantentrennung, Sitzung, CSRF, Fehlerantworten, Rate-Limit | 28 Tests grün  |
-| 09.09.2026 | Meilenstein 4: Kundenansicht, Uploads, Einladungen, Idempotenz               | 141 Tests grün |
-| 11.09.2026 | Produktionsaufbau lokal: Header, CSP, Demo-Durchgang, Download, Garage       | 2 von 2 grün   |
-| 11.09.2026 | Secret-Scan über 83 Commits, Abhängigkeitsscan über `bun.lock`               | siehe oben     |
-| 30.09.2026 | Täglicher Lauf rot: drei neue Meldungen zu brace-expansion (ESLint-Kette)    | behoben, oben  |
+| Datum      | Umfang                                                                                 | Ergebnis       |
+| ---------- | -------------------------------------------------------------------------------------- | -------------- |
+| 09.09.2026 | Meilenstein 1: Mandantentrennung, Sitzung, CSRF, Fehlerantworten, Rate-Limit           | 28 Tests grün  |
+| 09.09.2026 | Meilenstein 4: Kundenansicht, Uploads, Einladungen, Idempotenz                         | 141 Tests grün |
+| 11.09.2026 | Produktionsaufbau lokal: Header, CSP, Demo-Durchgang, Download, Garage                 | 2 von 2 grün   |
+| 11.09.2026 | Secret-Scan über 83 Commits, Abhängigkeitsscan über `bun.lock`                         | siehe oben     |
+| 30.09.2026 | Täglicher Lauf rot: drei neue Meldungen zu brace-expansion (ESLint-Kette)              | behoben, oben  |
+| 10.10.2026 | proxy-addr (kritisch, Laufzeit, hier nicht ausnutzbar), source-map-js (hoch, Werkzeug) | behoben, oben  |
+| 10.10.2026 | Täglicher Lauf meldet per Issue statt rot; Skripte im Ablauf geprüft                   | 13 Tests grün  |
 
 Drei Befunde aus Meilenstein 4, alle behoben:
 

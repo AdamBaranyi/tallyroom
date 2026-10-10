@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Attrappe für bun in den Tests von scripts/audit.sh: schreibt die Argumente auf
+# und endet mit dem Code aus $ATTRAPPE_DIR/exit (ohne Datei: 0).
+set -euo pipefail
+dir="${ATTRAPPE_DIR:?ATTRAPPE_DIR fehlt}"
+printf '%s\n' "$*" >>"$dir/bun-aufrufe.log"
+if [ -f "$dir/exit" ]; then exit "$(cat "$dir/exit")"; fi
