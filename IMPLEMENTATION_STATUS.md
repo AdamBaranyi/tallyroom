@@ -599,6 +599,17 @@ im Kopf.
 - Gemessene Grenze, die bleibt: VoiceOver sagt in der Palette die Zahl der Treffer, den Namen erst
   beim Wandern mit den Pfeilen. NVDA sagt beides. Steht auf der Barrierefreiheitsseite.
 
+## Offen — Erstlast nach React 19.3 (10.10.2026)
+
+Dependabot-PR #26 hob React auf 19.3 und die Erstlast der Startseite von 137.0 auf 147.4 KB gzip,
+über die Grenze von 142 KB. Gemessen über die Source Map des Einstiegs: react-dom +28.9 KB roh
+(`<ViewTransition />`, Fragment Refs und Trusted Types im Browser-Teil), zod +3.1 KB,
+react-hook-form +1.7 KB. Die Grenze steht seither mit dieser Begründung auf 150 KB.
+
+| Punkt                        | Warum er noch fehlt                                                                                                                                                           |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Erstlast wieder unter 142 KB | zod (97 KB roh) und die Vertragsmodule der Teamansicht stecken im Einstieg, weil API-Client, Sitzung und Startseite sie brauchen; ein Umbau mit offenem Ertrag, zuerst messen |
+
 ## Bewusst zurückgestellt
 
 | Punkt                                   | Warum                                                                 | Wann                           |

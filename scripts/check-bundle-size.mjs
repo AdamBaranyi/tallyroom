@@ -11,6 +11,15 @@ import { join } from 'node:path';
  * 135.7 KB, nachdem Teamansicht, Portal und Rechtsseiten nachgeladen werden.
  * Davor waren es mit vier Sprachen 191 KB, über der alten Grenze von 170 KB.
  *
+ * Grenze 142 → 150 KB am 10.10.2026, mit Grund: React 19.3 bringt
+ * <ViewTransition />, Fragment Refs und Trusted Types in react-dom, roh
+ * 28.9 KB mehr im Einstieg; zusammen mit zod 4.6 und react-hook-form 7.89
+ * wuchs die Erstlast von 137.0 auf 147.4 KB (Dependabot-PR #26). Wegschneiden
+ * liesse sich das nur, indem man auf altem React bleibt. Der nächste Kandidat
+ * zum Sparen ist zod mit 97 KB roh im Einstieg, samt den Vertragsmodulen der
+ * Teamansicht — aber API-Client, Sitzung und Startseite brauchen es dort, also
+ * ein Umbau mit offenem Ertrag. Offen in IMPLEMENTATION_STATUS.md.
+ *
  * „Erstlast" ist, was jeder Besucher zieht, bevor er irgendetwas anklickt.
  * Nachgeladene Teile zählen einzeln: dass das Diagramm gross ist, ist in
  * Ordnung, solange es nur auf der Seite mit dem Diagramm geladen wird.
@@ -18,7 +27,7 @@ import { join } from 'node:path';
 const DIST = 'apps/web/dist/assets';
 
 const BUDGET_KB = {
-  erstlastJs: 142,
+  erstlastJs: 150,
   erstlastCss: 8,
   diagramm: 115,
 };

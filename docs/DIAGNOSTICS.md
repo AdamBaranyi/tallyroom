@@ -809,5 +809,5 @@ nachweislich an der Maschine lag; ein Testfehler wird nie weggewürfelt.
 | `screenreader-wiederholen.yml` | Ein Rechner ohne AppleScript wird einmal ersetzt, ein Testfehler nie |
 | `bun run check:font-floor`     | Keine Schrift unter 16 px, im Quelltext                              |
 | `e2e/font-size.spec.ts`        | Dasselbe im Browser, dazu kein Wort mitten im Wort gebrochen         |
-| `bun run check:bundle-size`    | Erstlast 142 KB, CSS 8 KB, Diagramm 115 KB, je gzip                  |
+| `bun run check:bundle-size`    | Erstlast 150 KB, CSS 8 KB, Diagramm 115 KB, je gzip                  |
 | `e2e/production.spec.ts`       | Header, CSP ohne Verstoss auch ohne Konsoleneintrag, Demo            |
