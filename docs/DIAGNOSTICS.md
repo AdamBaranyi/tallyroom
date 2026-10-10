@@ -754,15 +754,60 @@ prüfen will, filtert vorher.
 
 ---
 
+## 32 · VoiceOver-Rechner, die AppleScript verweigern
+
+**Symptom.** Der VoiceOver-Job war dreimal rot, ohne dass sich an Anwendung oder Tests etwas
+geändert hatte: am 24.09.2026 beim Einrichten, am 28.09.2026 zweimal mit allen sieben Prüfungen.
+NVDA war in denselben Läufen grün. Zweimal war derselbe Stand, Datei für Datei, kurz zuvor im Pull
+Request grün gelaufen.
+
+**Messung.** Zwölf Läufe vom 22.09. abends bis 28.09.2026, alle auf demselben Abbild
+(`macos-15-arm64` 20260907.0337.1, macOS 15.7.9, Rechenzentrum westus): drei rot, neun grün. In
+allen drei roten scheiterte «Nicht stören», in keinem grünen. Die beiden vom 28.09. zeigen den
+Grund: «Not authorized to send Apple events to System Events» (-1743), danach in jeder Prüfung
+dieselbe Sperre gegen VoiceOver und Playwright. Beim 24.09. stürzte Guidepups Fehlerausgabe unter
+Node 22 selbst ab, der Grund ist dort nicht lesbar. Die roten Jobs liefen 27,6 und 27,9 Minuten:
+zwei Einrichtungsversuche zu je 3½ Minuten, danach 19 Minuten Prüfungen, die nicht bestehen
+konnten. Ein grüner Job braucht 5,5 Minuten.
+
+**Ursache.** macOS verweigert auf einzelnen Rechnern die Steuerung per AppleScript, beim selben
+Abbild wie auf den übrigen. Guidepup trägt die Freigaben selbst in die TCC-Datenbank ein, mit
+`INSERT OR IGNORE` — ein schon vorhandener Eintrag bliebe stehen. Ob es daran liegt oder daran,
+welchen Prozess TCC als Absender ansieht, ist nicht belegt: Nachsehen lässt es sich nur auf einem
+gesperrten Rechner, und keiner war mehr da. Belegt ist, dass es der Rechner ist, nicht das Abbild
+und nicht die Anwendung.
+
+Zwei Fehler kamen aus der eigenen Korrektur vom 24.09. Der Kommentar im Workflow behauptete, Apple
+habe das Abbild geändert — rote und grüne Läufe hatten dasselbe. Und das Netz von damals, «weiter
+ohne Nicht stören», nahm an, der Rest der Einrichtung gelinge ohne diesen Schritt. Auf einem
+gesperrten Rechner gelingt aber nichts: Es liess sieben Prüfungen laufen, die nicht bestehen
+konnten, und begrub die Ursache unter Dutzenden Folgefehlern.
+
+**Korrektur.** Kein zweiter Versuch und kein Weitermachen ohne `--ci`: Scheitert die Einrichtung,
+endet der Job dort. Ein Schritt «Freigabe untersuchen» hält dann fest, was System Events antwortet,
+welche Einträge in der TCC-Datenbank stehen, welche Prozesskette TCC sieht und was TCC dazu
+protokolliert — beim nächsten gesperrten Rechner ist die Ursache belegt statt vermutet.
+`screenreader-wiederholen.yml` startet den Job danach einmal neu, auf einem anderen Rechner: nur
+nach einem Einrichtungsfehler, nur beim ersten Versuch, nur für den neusten Lauf des Zweigs. Die
+Entscheidung gegen echte Läufe durchgespielt: Der alte Einrichtungsfehler vom 24.09. würde nicht
+wiederholt, weil es neuere Läufe gibt, und ein Lauf, der in den Prüfungen scheiterte, bliebe rot.
+
+**Regel.** Ein Netz, das einen Schritt überspringt, braucht einen Beleg, dass der Rest ohne ihn
+gelingen kann. Sonst verschiebt es den Fehler nur nach hinten. Und wiederholt wird nur, was
+nachweislich an der Maschine lag; ein Testfehler wird nie weggewürfelt.
+
+---
+
 ## Was daraus als Werkzeug geblieben ist
 
-| Werkzeug                    | Hält fest                                                    |
-| --------------------------- | ------------------------------------------------------------ |
-| `bun run verify`            | Format, Dateilänge, Lint samt `jsx-a11y`, Typen              |
-| `bun run test`              | 276 Unit- und Integrationstests                              |
-| `bun run test:e2e`          | 426 Prüfungen über sechs Breiten, samt axe und vier Sprachen |
-| `screenreader.yml`          | VoiceOver und NVDA: Statusmeldungen, Fokus, Dialognamen      |
-| `bun run check:font-floor`  | Keine Schrift unter 16 px, im Quelltext                      |
-| `e2e/font-size.spec.ts`     | Dasselbe im Browser, dazu kein Wort mitten im Wort gebrochen |
-| `bun run check:bundle-size` | Erstlast 142 KB, CSS 8 KB, Diagramm 115 KB, je gzip          |
-| `e2e/production.spec.ts`    | Header, CSP ohne Verstoss auch ohne Konsoleneintrag, Demo    |
+| Werkzeug                       | Hält fest                                                            |
+| ------------------------------ | -------------------------------------------------------------------- |
+| `bun run verify`               | Format, Dateilänge, Lint samt `jsx-a11y`, Typen                      |
+| `bun run test`                 | 276 Unit- und Integrationstests                                      |
+| `bun run test:e2e`             | 426 Prüfungen über sechs Breiten, samt axe und vier Sprachen         |
+| `screenreader.yml`             | VoiceOver und NVDA: Statusmeldungen, Fokus, Dialognamen              |
+| `screenreader-wiederholen.yml` | Ein Rechner ohne AppleScript wird einmal ersetzt, ein Testfehler nie |
+| `bun run check:font-floor`     | Keine Schrift unter 16 px, im Quelltext                              |
+| `e2e/font-size.spec.ts`        | Dasselbe im Browser, dazu kein Wort mitten im Wort gebrochen         |
+| `bun run check:bundle-size`    | Erstlast 142 KB, CSS 8 KB, Diagramm 115 KB, je gzip                  |
+| `e2e/production.spec.ts`       | Header, CSP ohne Verstoss auch ohne Konsoleneintrag, Demo            |

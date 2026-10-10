@@ -1,0 +1,58 @@
+name: Screenreader wiederholen
+
+# Manche macOS-Rechner von GitHub verweigern AppleScript (DIAGNOSTICS
+# Nummer 32). Auf so einem Rechner scheitert der VoiceOver-Job schon beim
+# Einrichten — an der Maschine, nicht an der Anwendung. Dieser Workflow
+# startet ihn dann genau einmal neu, auf einem anderen Rechner.
+#
+# Drei Grenzen, jede mit Grund:
+# - Nur wenn die Einrichtung scheiterte. Scheitert eine Prüfung, bleibt der
+#   Lauf rot; ein Testfehler wird nie weggewürfelt.
+# - Nur beim ersten Versuch, damit nichts im Kreis läuft.
+# - Nur für den neusten Lauf seines Zweigs. Ein wiederholter alter Lauf
+#   landete in derselben `concurrency`-Gruppe und bräche den neueren ab.
+
+on:
+  workflow_run:
+    workflows: [Screenreader]
+    types: [completed]
+
+# Nur das Recht, einen Lauf neu zu starten. Kein Checkout und kein Code aus
+# dem Pull Request: `workflow_run` läuft immer in der Fassung von main.
+permissions:
+  actions: write
+
+jobs:
+  wiederholen:
+    name: VoiceOver auf neuem Rechner
+    if: github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Einmal neu starten, wenn die Einrichtung scheiterte
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LAUF: ${{ github.event.workflow_run.id }}
+          ZWEIG: ${{ github.event.workflow_run.head_branch }}
+          ANLASS: ${{ github.event.workflow_run.event }}
+        run: |
+          schritt=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$LAUF/jobs" \
+            --jq '[.jobs[] | select(.name == "VoiceOver auf macOS") | .steps[] | select(.conclusion == "failure") | .name][0] // ""')
+          echo "Gescheiterter Schritt im VoiceOver-Job: ${schritt:-keiner}"
+          if [ "$schritt" != "VoiceOver für die Steuerung einrichten" ]; then
+            echo "Kein Einrichtungsfehler, der Lauf bleibt, wie er ist."
+            exit 0
+          fi
+
+          neuster=$(gh api -X GET "repos/$GITHUB_REPOSITORY/actions/workflows/screenreader.yml/runs" \
+            -f branch="$ZWEIG" -f event="$ANLASS" -F per_page=1 --jq '.workflow_runs[0].id')
+          if [ "$neuster" != "$LAUF" ]; then
+            echo "Es gibt schon einen neueren Lauf ($neuster), nichts zu tun."
+            exit 0
+          fi
+
+          if gh run rerun "$LAUF" --failed --repo "$GITHUB_REPOSITORY"; then
+            echo "VoiceOver-Job von Lauf $LAUF neu gestartet."
+          else
+            echo "::warning title=Neustart abgelehnt::Von Hand neu starten: gh run rerun $LAUF --failed"
+          fi
