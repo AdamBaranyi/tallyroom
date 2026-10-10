@@ -599,12 +599,35 @@ im Kopf.
 - Gemessene Grenze, die bleibt: VoiceOver sagt in der Palette die Zahl der Treffer, den Namen erst
   beim Wandern mit den Pfeilen. NVDA sagt beides. Steht auf der Barrierefreiheitsseite.
 
+## Erledigt — Sicherheitsrunde Oktober (10.10.2026)
+
+Nach einer gemeinsamen Vorlage für alle eigenen Repositories. Tallyroom ist das Referenz-Repo für
+den neuen täglichen Lauf; Einzelheiten in `docs/SECURITY.md`.
+
+- **Abhängigkeiten (PR #27):** proxy-addr 2.0.8 (kritisch, Laufzeit; hier nicht ausnutzbar, weil
+  `trust proxy` eine Hop-Zahl ist, lokal nachgestellt) und source-map-js 1.2.2 (hoch, Werkzeug),
+  beide nur im Lockfile. Die esbuild-Ausnahme ist neu geprüft und läuft bis 10.11.2026.
+- **Täglicher Lauf meldet, statt zu blockieren (PR #27, #30):** `scripts/audit.sh` hält Stufe und
+  Ausnahmen, `scripts/sicherheits-meldung.sh` ein einziges Issue «Sicherheitsmeldungen»; `ci.yml`
+  blockiert ab high. Rot nur bei einem Geheimnis oder wenn die Prüfung nicht stattfand. Der Lauf
+  installiert keine Pakete und legt das Token nicht in `.git/config` ab. 13 Tests mit Attrappen für
+  `gh` und `bun`, 18 Sabotagen.
+- **Updates:** setup-node 7 (PR #24); Dependabot-Sammel-PR #29 mit React 19.3, nachdem die Grenze
+  der Erstlast mit Begründung auf 150 KB gestiegen war (PR #28, offener Punkt unten).
+- **Nachweis:** Nach den Merges von #27 und #30 lief der tägliche Lauf je von Hand grün durch:
+  Exit 0, kein Issue, keine roten Check-Runs auf `main`, die zweite Fassung ohne `bun install`.
+- **Live seit 11.10.2026** (`9cc9323`, Deploy durch Adam): Im API-Container liegen proxy-addr
+  2.0.8, pg 8.23.1 und pino 10.4.0, die Startseite liefert React 19.3.0 aus. Die Produktionsprüfung
+  gegen den Server lief 3 von 3: Sicherheitsheader, Impressum, Demo-Durchgang ohne CSP-Verstoss und
+  ohne Konsolenfehler.
+
 ## Offen — Erstlast nach React 19.3 (10.10.2026)
 
 Dependabot-PR #26 hob React auf 19.3 und die Erstlast der Startseite von 137.0 auf 147.4 KB gzip,
 über die Grenze von 142 KB. Gemessen über die Source Map des Einstiegs: react-dom +28.9 KB roh
 (`<ViewTransition />`, Fragment Refs und Trusted Types im Browser-Teil), zod +3.1 KB,
-react-hook-form +1.7 KB. Die Grenze steht seither mit dieser Begründung auf 150 KB.
+react-hook-form +1.7 KB. Die Grenze steht seither mit dieser Begründung auf 150 KB. Dependabot
+ersetzte #26 durch #29 mit 25 Updates; seit dessen Merge sind es 147.5 KB.
 
 | Punkt                        | Warum er noch fehlt                                                                                                                                                           |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

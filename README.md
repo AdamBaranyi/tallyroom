@@ -152,7 +152,7 @@ stehen in [docs/TESTING.md](docs/TESTING.md).
 Gegen die Live-Seite am 22.09.2026, je zwei Läufe: mobil Leistung 99, Barrierefreiheit, Best
 Practices und SEO je 100; Desktop in allen vier Kategorien 100.
 
-Die Startseite lädt 137.0 KB JavaScript (gzip) gegen ein Budget von 150 KB. Teamansicht,
+Die Startseite lädt 147.5 KB JavaScript (gzip) gegen ein Budget von 150 KB, seit React 19.3. Teamansicht,
 Kundenportal und Rechtsseiten werden erst beim Aufruf nachgeladen.
 
 ## Auf einem eigenen Server

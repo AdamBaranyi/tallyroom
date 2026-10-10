@@ -152,7 +152,7 @@ are in [docs/TESTING.md](docs/TESTING.md) (German).
 Against the live site on 22.09.2026, two runs each: on mobile, 99 for performance and 100 each
 for accessibility, best practices and SEO; on desktop, 100 in all four categories.
 
-The start page loads 137.0 KB of JavaScript (gzip) against a 150 KB budget. The team view, client
+The start page loads 147.5 KB of JavaScript (gzip) against a 150 KB budget, since React 19.3. The team view, client
 portal and legal pages are loaded on demand.
 
 ## On your own server
