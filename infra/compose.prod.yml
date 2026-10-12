@@ -46,6 +46,7 @@ services:
       # Zweite Adresse auf demselben Server, siehe Caddyfile. Ohne Wert
       # bedient Caddy nur Tallyroom.
       EVIDARIUM_SITE_ADDRESS: ${EVIDARIUM_SITE_ADDRESS:-evidarium.localhost}
+      KI_INVENTAR_SITE_ADDRESS: ${KI_INVENTAR_SITE_ADDRESS:-ki-inventar.localhost}
     ports:
       - '${HTTP_PORT:-80}:80'
       - '${HTTPS_PORT:-443}:443'

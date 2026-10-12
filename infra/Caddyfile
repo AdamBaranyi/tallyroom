@@ -97,3 +97,29 @@
 		}
 	}
 }
+
+# KI-Inventar läuft wie Evidarium als eigenes Projekt (statische App, eigenes
+# Compose). Sein Webdienst setzt die Sicherheitsheader und die Cache-Regeln
+# selbst und hängt als `ki-inventar-web` in diesem Netz; hier kommen nur TLS,
+# HSTS und das Protokoll dazu. Ohne gesetzte Adresse gilt ein lokaler Name.
+{$KI_INVENTAR_SITE_ADDRESS:ki-inventar.localhost} {
+	encode zstd gzip
+
+	reverse_proxy ki-inventar-web:8080
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+		-Via
+		defer
+	}
+
+	# Die Datenschutzerklärung des KI-Inventars nennt 14 Tage für Serverprotokolle.
+	log {
+		output file /var/log/caddy/ki-inventar.log {
+			roll_size 10MiB
+			roll_keep 5
+			roll_keep_for 336h
+		}
+	}
+}

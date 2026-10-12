@@ -6,18 +6,18 @@ das Passwort dafür kennt niemand sonst.
 Der Server hält die Anwendung in `/opt/tallyroom`, einem Checkout des Repositorys auf dem gerade
 laufenden Stand. Geheimnisse liegen nur dort, in `infra/.env.production`, lesbar nur für root.
 
-## Zweite Anwendung auf demselben Server
+## Weitere Anwendungen auf demselben Server
 
 Caddy besitzt hier die Ports 80 und 443 und bedient darum auch
-`evidarium.adambaranyi.xyz` (eigenes Projekt, eigenes Compose, eigene
-Datenbank). Der Adressblock steht in `infra/Caddyfile`, die Adresse selbst in
-`EVIDARIUM_SITE_ADDRESS` in `infra/.env.production`; ohne diesen Wert bedient
-Caddy nur Tallyroom.
+`evidarium.adambaranyi.xyz` und `ki-inventar.adambaranyi.xyz` (je eigenes
+Projekt mit eigenem Compose). Die Adressblöcke stehen in `infra/Caddyfile`, die
+Adressen selbst in `EVIDARIUM_SITE_ADDRESS` und `KI_INVENTAR_SITE_ADDRESS` in
+`infra/.env.production`; ohne Wert bedient Caddy nur Tallyroom.
 
-Erreichbar ist die andere Anwendung, weil **ihr** Webdienst zusätzlich in
-diesem Compose-Netz hängt und dort `evidarium-web` heisst. Umgekehrt hängt
-hier nichts an ihr: Fällt sie aus, antwortet ihre Adresse mit 502, Tallyroom
-bleibt unberührt.
+Erreichbar sind die anderen Anwendungen, weil **ihr** Webdienst zusätzlich in
+diesem Compose-Netz hängt und dort `evidarium-web` beziehungsweise
+`ki-inventar-web` heisst. Umgekehrt hängt hier nichts an ihnen: Fällt eine aus,
+antwortet ihre Adresse mit 502, Tallyroom bleibt unberührt.
 
 ## Sicherung
 
