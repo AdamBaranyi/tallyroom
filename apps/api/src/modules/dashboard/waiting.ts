@@ -1,6 +1,6 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
-import { serviceRequests, type Database } from '@tallyroom/db';
-import { OPEN_REQUEST_STATUS } from '@tallyroom/contracts';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
+import { customers, serviceRequests, type Database } from '@tallyroom/db';
+import { OPEN_REQUEST_STATUS, waitingSideOf, type OldestOpenRequest } from '@tallyroom/contracts';
 import {
   statusChangedAt,
   WAITING_ON_CLIENT_STATUS,
@@ -52,4 +52,56 @@ export async function waitingBalance(db: Database, workspaceId: string): Promise
     client: row?.client ?? 0,
     longestDays: row?.longestDays ?? null,
   };
+}
+
+/** So viele Anfragen nennt das Dashboard unter «Am längsten offen». */
+const OLDEST_OPEN_LIMIT = 5;
+
+/**
+ * Die offenen Anfragen, die am längsten liegen, älteste zuerst.
+ *
+ * Dieselbe Grundmenge und derselbe Zeitpunkt wie in `waitingBalance`: offene
+ * Status, letzter Statuswechsel, sonst das Anlegen. Darum steht zuoberst
+ * genau der Vorgang, dessen Alter darüber als «Ältester Vorgang» steht. Bei
+ * gleichem Zeitpunkt entscheidet die ID, nicht der Zufall der Abfrage.
+ */
+export async function oldestOpenRequests(
+  db: Database,
+  workspaceId: string,
+): Promise<OldestOpenRequest[]> {
+  const waitingSince = sql<string>`coalesce(${statusChangedAt}, ${serviceRequests.createdAt})`;
+  const rows = await db
+    .select({
+      id: serviceRequests.id,
+      subject: serviceRequests.subject,
+      customerName: customers.name,
+      status: serviceRequests.status,
+      waitingSince,
+    })
+    .from(serviceRequests)
+    .innerJoin(customers, eq(customers.id, serviceRequests.customerId))
+    .where(
+      and(
+        eq(serviceRequests.workspaceId, workspaceId),
+        inArray(serviceRequests.status, [...OPEN_REQUEST_STATUS]),
+      ),
+    )
+    .orderBy(asc(waitingSince), asc(serviceRequests.id))
+    .limit(OLDEST_OPEN_LIMIT);
+
+  return rows.flatMap((row) => {
+    const waitingOn = waitingSideOf(row.status);
+    // Ein offener Status hat immer eine Seite; die Prüfung dient dem Typ.
+    if (!waitingOn) return [];
+    return [
+      {
+        id: row.id,
+        subject: row.subject,
+        customerName: row.customerName,
+        waitingOn,
+        // Rohes SQL liefert eine Zeichenkette, siehe `statusChangedAt`.
+        waitingSince: new Date(row.waitingSince).toISOString(),
+      },
+    ];
+  });
 }

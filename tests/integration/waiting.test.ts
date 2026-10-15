@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { Customer, Dashboard, ListResponse, ServiceRequest } from '@tallyroom/contracts';
 import { seedWorkspaceWithOwner, type SeededWorkspace } from '../helpers/fixtures.ts';
+import { login, post as postAs } from '../helpers/scenario.ts';
 import { startTestServer, type TestClient, type TestServer } from '../helpers/test-server.ts';
 
 let server: TestServer;
@@ -134,5 +135,91 @@ describe('Wer hält auf', () => {
     expect(dashboard.requestsWaitingOnTeam).toBe(0);
     expect(dashboard.requestsWaitingOnClient).toBe(0);
     expect(dashboard.longestWaitDays).toBeNull();
+    expect(dashboard.oldestOpenRequests).toEqual([]);
+  });
+});
+
+async function oldestOpen(): Promise<Dashboard['oldestOpenRequests']> {
+  const response = await team.request(`/api/v1/workspaces/${agency.workspaceId}/dashboard`);
+  expect(response.status).toBe(200);
+  const dashboard = (await response.json()) as Dashboard;
+  return dashboard.oldestOpenRequests;
+}
+
+describe('Am längsten offen', () => {
+  it('ordnet nach dem letzten Statuswechsel, nicht nach dem Anlegen', async () => {
+    const erste = await createRequest('Zuerst angelegt, später abgegeben');
+    const zweite = await createRequest('Als zweite angelegt');
+    await createRequest('Als dritte angelegt');
+    const abgegeben = await setStatus(erste, 'waiting_customer');
+
+    const liste = await oldestOpen();
+
+    expect(liste.map((entry) => [entry.subject, entry.waitingOn])).toEqual([
+      ['Als zweite angelegt', 'team'],
+      ['Als dritte angelegt', 'team'],
+      ['Zuerst angelegt, später abgegeben', 'client'],
+    ]);
+    expect(liste[0]).toEqual({
+      id: zweite.id,
+      subject: 'Als zweite angelegt',
+      customerName: 'Seeblick GmbH',
+      waitingOn: 'team',
+      waitingSince: zweite.waitingSince,
+    });
+    // Dieselbe Wartezeit wie an der Anfrage selbst, keine zweite Rechnung.
+    expect(liste[2]?.waitingSince).toBe(abgegeben.waitingSince);
+  });
+
+  it('lässt erledigte Anfragen weg, auch ältere', async () => {
+    // Fünf erledigte, älter als die offene: zählten sie mit, füllten sie die
+    // fünf Plätze, und die offene fiele heraus.
+    for (const nummer of [1, 2, 3, 4, 5]) {
+      await setStatus(await createRequest(`Erledigt ${nummer}`), 'resolved');
+    }
+    await createRequest('Noch offen');
+
+    const liste = await oldestOpen();
+
+    expect(liste.map((entry) => entry.subject)).toEqual(['Noch offen']);
+  });
+
+  it('nennt höchstens fünf, und zwar die ältesten', async () => {
+    for (const nummer of [1, 2, 3, 4, 5, 6, 7]) {
+      await createRequest(`Anfrage ${nummer}`);
+    }
+
+    const liste = await oldestOpen();
+
+    expect(liste.map((entry) => entry.subject)).toEqual([
+      'Anfrage 1',
+      'Anfrage 2',
+      'Anfrage 3',
+      'Anfrage 4',
+      'Anfrage 5',
+    ]);
+  });
+
+  it('zeigt keine Anfrage aus einem fremden Workspace', async () => {
+    const fremd = await seedWorkspaceWithOwner(server.db, {
+      workspaceName: 'Nordlicht Architektur',
+      email: 'owner@nordlicht.test',
+    });
+    const fremdesTeam = await login(server, fremd);
+    const fremdeApi = `/api/v1/workspaces/${fremd.workspaceId}`;
+    const fremderKunde = await postAs<Customer>(fremdesTeam, `${fremdeApi}/customers`, {
+      name: 'Fremdkunde AG',
+    });
+    // Älter als alles im eigenen Workspace: ohne Grenze stünde sie zuoberst.
+    await postAs<ServiceRequest>(fremdesTeam, `${fremdeApi}/requests`, {
+      customerId: fremderKunde.id,
+      subject: 'Fremde Anfrage',
+      body: 'Gehört nach Nordlicht.',
+    });
+    await createRequest('Eigene Anfrage');
+
+    const liste = await oldestOpen();
+
+    expect(liste.map((entry) => entry.subject)).toEqual(['Eigene Anfrage']);
   });
 });

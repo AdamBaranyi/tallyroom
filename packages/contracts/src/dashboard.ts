@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { localized } from './i18n.ts';
+import { WAITING_SIDES } from './service-request.ts';
 import { VALIDATION } from './validation-messages.ts';
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, localized(VALIDATION.isoDate));
@@ -21,6 +22,18 @@ export const monthlyValuePointSchema = z.object({
 });
 
 export type MonthlyValuePoint = z.infer<typeof monthlyValuePointSchema>;
+
+/** Eine Zeile unter «Am längsten offen»: nur, was die Zeile zeigt. */
+export const oldestOpenRequestSchema = z.object({
+  id: z.uuid(),
+  subject: z.string(),
+  customerName: z.string(),
+  waitingOn: z.enum(WAITING_SIDES),
+  /** Wie an der Anfrage selbst: der letzte Statuswechsel, sonst das Anlegen. */
+  waitingSince: z.string(),
+});
+
+export type OldestOpenRequest = z.infer<typeof oldestOpenRequestSchema>;
 
 export const dashboardSchema = z.object({
   /**
@@ -45,6 +58,12 @@ export const dashboardSchema = z.object({
   requestsWaitingOnClient: z.number().int(),
   /** Tage, die der am längsten offene Vorgang schon liegt; null ohne offene. */
   longestWaitDays: z.number().int().nullable(),
+  /**
+   * Die offenen Anfragen, die am längsten liegen, älteste zuerst, höchstens
+   * fünf. Gerechnet wie die Zahlen darüber: Die erste ist der Vorgang, dessen
+   * Alter als `longestWaitDays` dasteht.
+   */
+  oldestOpenRequests: z.array(oldestOpenRequestSchema),
 });
 
 export type Dashboard = z.infer<typeof dashboardSchema>;

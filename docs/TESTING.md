@@ -30,7 +30,7 @@ bun run verify   # Format, Dateilänge, Schriftgrösse, Lint, Typen
 bun run test     # Unit- und Integrationstests
 ```
 
-Ergebnis vom 22.09.2026: **276 Tests grün**, Lint ohne Fehler und ohne Warnungen, Typecheck in
+Ergebnis vom 15.10.2026: **293 Tests grün**, Lint ohne Fehler und ohne Warnungen, Typecheck in
 allen vier Paketen sauber, alle Code-Dateien unter der 400-Zeilen-Grenze (längste: 383 Zeilen).
 
 Die Integrationstests brauchen die Testdatenbank und die Umgebungsdatei:
@@ -50,9 +50,9 @@ bun run test:e2e        # alle sechs Breiten
 bun run test:e2e:ui     # zum Nachsehen, wenn etwas rot ist
 ```
 
-**426 Prüfungen im Lauf, gut drei Minuten** (19.09.2026). Dazu kommen 78 übersprungene,
-alle mit Absicht: Die drei Messungen gegen Lastdaten und die sechs Sprachprüfungen laufen nur bei
-1440 Pixeln, die drei Breitenprüfungen der Übersetzungen nur bei 320, und die Navigation hinter
+**441 Prüfungen im Lauf, gut drei Minuten** (15.10.2026). Dazu kommen 93 übersprungene,
+alle mit Absicht: Die drei Messungen gegen Lastdaten, die sechs Sprachprüfungen und die drei
+Sprachen der Liste «Am längsten offen» laufen nur bei 1440 Pixeln, die drei Breitenprüfungen der Übersetzungen nur bei 320, und die Navigation hinter
 dem Hamburger nur unter 1024. Sechsmal dieselbe Zahl wäre keine zusätzliche Erkenntnis.
 
 Sechs Projekte, eines je Prüfbreite. **Es wird nie mitten im Test die Fenstergrösse verändert.**
@@ -105,6 +105,13 @@ bleibt nach dem Neuladen, und die Meldungen der API und der gemeinsamen Schemas 
 Übersetzung der Rechtsseiten sagt, dass die deutsche Fassung gilt. Bei 320 Pixeln läuft in
 Französisch, Italienisch und Englisch keine von zehn Seiten seitlich — die Übersetzungen sind oft
 ein Drittel länger als das Deutsche.
+
+**Was das Dashboard über Anfragen sagt** (`e2e/waiting.spec.ts`, alle sechs Breiten): Der Text
+darf den Zahlen nicht widersprechen. Solange «Wer ist am Zug» offene Anfragen zählt, steht nirgends
+«Keine offene Anfrage» oder der frühere Platzhalter; die Karte «Am längsten offen» zeigt so viele
+Einträge wie offene Anfragen, höchstens fünf, und der erste ist genau so alt wie «Ältester
+Vorgang». Ein Eintrag öffnet seine Anfrage. Entstanden aus dem Befund vom 13.10.2026, gegen den
+alten Stand rot gesehen (DIAGNOSTICS Nummer 33).
 
 **Rundgang** (`e2e/tour.spec.ts`, alle sechs Breiten): Er öffnet sich einmal, führt durch alle
 sechs Schritte, die Karte steht dabei ganz im Bild, der ausgesparte Rahmen liegt über Kennzahlen
@@ -353,6 +360,14 @@ gleichem Inhalt liefert dieselbe Anfrage, mit anderem Inhalt einen Konflikt; das
 im Portal. Statusübergänge, erneutes Öffnen, Versionskonflikt, und eine Projektzuordnung zu einem
 fremden Kunden wird abgewiesen.
 
+**Wer am Zug ist** (`tests/integration/waiting.test.ts`) — der Ball liegt beim Team, solange eine
+Anfrage offen ist, geht mit «wartet auf Kunde» zum Kunden und zurück; eine erledigte wartet auf
+niemanden; die Wartezeit zählt ab dem Statuswechsel; die Liste filtert nach der Seite, das
+Dashboard teilt auf. Seit dem 15.10.2026 auch «Am längsten offen»: Reihenfolge nach dem letzten
+Statuswechsel statt nach dem Anlegen, dieselbe Wartezeit wie an der Anfrage, erledigte bleiben weg
+auch dann, wenn fünf ältere die Plätze füllen würden, höchstens fünf, nie eine Anfrage aus einem
+fremden Workspace.
+
 **Demo** (`tests/integration/demo.test.ts`) — jede Demo bekommt eine eigene Datenkopie; eine
 Änderung in der einen erscheint in der anderen nicht, und ein fremder Demo-Workspace liefert 404.
 Der Rollenwechsel wirkt nur innerhalb der eigenen Demo: eine Identität aus einer fremden Demo wird
@@ -433,6 +448,21 @@ Preisversionen, 10'000 Anfragen — alle in einem Workspace.
 
 Alle Abfragen bleiben im 95. Perzentil unter 500 ms; das Dashboard braucht sieben Kennzahlabfragen
 und liegt bei 9 ms. Es wurde nichts optimiert — die Messung gab dazu keinen Anlass.
+
+**Nachmessung 15.10.2026, Dashboard mit «Am längsten offen».** Datenbestand wie oben, davon 7'489
+Anfragen offen, derselbe Rechner unter der Last paralleler Arbeit. Die neue Abfrage braucht laut
+`EXPLAIN ANALYZE` 11 ms: eine Top-N-Sortierung und je offene Anfrage ein Zugriff über
+`activity_entity_idx`. Der ganze Endpunkt über den Entwicklungsserver, im Wechsel mit und ohne
+Liste, je 5 Aufwärm- und 30 gemessene Aufrufe:
+
+| Fassung             |            p50 | p95 höchstens |
+| ------------------- | -------------: | ------------: |
+| mit Liste, 3 Läufe  | 12.8 – 14.0 ms |       16.0 ms |
+| ohne Liste, 2 Läufe | 13.2 – 15.9 ms |       22.7 ms |
+
+Kein messbarer Unterschied; die Abfrage läuft parallel zu den übrigen. `bun run measure` lief
+dafür nicht, weil das Skript keine S3-Angaben übergibt und abbricht (offen in
+`IMPLEMENTATION_STATUS.md`).
 
 **Was diese Zahlen nicht sagen:** Sie gelten für diese Maschine ohne Netzwerkweg und ohne
 gleichzeitige Nutzer. Auf dem späteren Server werden sie anders ausfallen und dort neu gemessen.

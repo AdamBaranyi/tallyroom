@@ -17,6 +17,7 @@ const ContractValueChart = lazy(() =>
   import('./ContractValueChart.tsx').then((modul) => ({ default: modul.ContractValueChart })),
 );
 import { MetricBand } from './MetricBand.tsx';
+import { OldestRequests } from './OldestRequests.tsx';
 import { WaitingSplit } from './WaitingSplit.tsx';
 import { dashboardMessages } from './messages.ts';
 
@@ -117,7 +118,7 @@ export function DashboardPage({ workspace }: { workspace: WorkspaceSummary }) {
         )}
       </Card>
 
-      <p className="text-body text-muted">{m.requestsHint}</p>
+      <OldestRequests requests={data.oldestOpenRequests} base={base} />
     </div>
   );
 }

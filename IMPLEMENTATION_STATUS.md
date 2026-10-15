@@ -1,11 +1,11 @@
 # Umsetzungsstand
 
-Stand: 22.09.2026 · Meilensteine 1–7 abgeschlossen, Meilenstein 7 seit dem 19.09.2026 live unter
+Stand: 15.10.2026 · Meilensteine 1–7 abgeschlossen, Meilenstein 7 seit dem 19.09.2026 live unter
 <https://tallyroom.adambaranyi.xyz>
 
-276 Unit- und Integrationstests · 426 End-to-End-Prüfungen über sechs Breiten · 430 in WebKit und
-Firefox · 7 Abläufe mit echtem VoiceOver und echtem NVDA · Lint ohne Fehler und ohne Warnungen · Typecheck in allen vier Paketen sauber · keine
-Anfrage an Dritte.
+293 Unit- und Integrationstests · 441 End-to-End-Prüfungen über sechs Breiten · am 22.09.2026 430
+in WebKit und Firefox · 7 Abläufe mit echtem VoiceOver und echtem NVDA · Lint ohne Fehler und ohne
+Warnungen · Typecheck in allen vier Paketen sauber · keine Anfrage an Dritte.
 
 ## Erledigt — Meilenstein 1: Fundament und Pipeline
 
@@ -620,6 +620,40 @@ den neuen täglichen Lauf; Einzelheiten in `docs/SECURITY.md`.
   2.0.8, pg 8.23.1 und pino 10.4.0, die Startseite liefert React 19.3.0 aus. Die Produktionsprüfung
   gegen den Server lief 3 von 3: Sicherheitsheader, Impressum, Demo-Durchgang ohne CSP-Verstoss und
   ohne Konsolenfehler.
+
+## Erledigt — Dashboard nennt die ältesten offenen Anfragen (15.10.2026)
+
+Befund vom 13.10.2026 in der Live-Demo: Unten im Dashboard stand «Offene Anfragen erscheinen hier,
+sobald es Anfragen gibt.», während «Wer ist am Zug» darüber 9 offene Anfragen bei uns und 3 beim
+Kunden zählte. Der Satz stammte aus Meilenstein 3 (`f21eada`, 09.09.2026), als es noch keine
+Anfragen gab, und hing an keiner Bedingung (DIAGNOSTICS Nummer 33).
+
+- **An seiner Stelle die Karte «Am längsten offen»:** höchstens fünf offene Anfragen, älteste
+  zuerst, je mit Kunde und «Bei uns seit …» oder «Beim Kunden seit …». Der Betreff öffnet die
+  Anfrage, «Alle Anfragen» die Liste. Ohne offene Anfrage steht dort «Keine offene Anfrage». In
+  allen vier Sprachen.
+- **Eine Rechnung für Zahlen und Liste:** Die Dashboard-Antwort trägt `oldestOpenRequests`, gerechnet
+  in `apps/api/src/modules/dashboard/waiting.ts` mit derselben Grundmenge und demselben Zeitpunkt
+  wie die Zahlen darüber — offene Status, letzter Statuswechsel aus dem Protokoll, sonst das
+  Anlegen. Zuoberst steht darum der Vorgang, dessen Alter «Ältester Vorgang» nennt. Kein neuer
+  Endpunkt, die Seite braucht weiter eine Abfrage.
+- **Tests:** vier neue Integrationstests (Reihenfolge nach dem Statuswechsel, erledigte bleiben weg
+  auch wenn sie älter sind, höchstens fünf, nie ein fremder Workspace) und ein Playwright-Test über
+  sechs Breiten, der den Text des Dashboards gegen seine Zahlen liest. Dazu der Sprung in die
+  Anfrage und die Liste auf Französisch, Italienisch und Englisch.
+- **Sabotage-Proben,** je von Hand eingesetzt und wieder entfernt, alle rot: Reihenfolge nach dem
+  Anlegen, Richtung umgedreht (im Browser «38 erwartet, 0 erhalten»), Statusfilter weg,
+  Workspace-Filter weg, Grenze 10 statt 5, Wartezeit ab dem Anlegen, alter Satz zurück neben der
+  Liste. «Statusfilter weg» blieb zuerst grün; der Test legt seither fünf ältere erledigte an.
+- **Messung** gegen den Lastdaten-Workspace (10'000 Anfragen, 7'489 offen): die neue Abfrage 11 ms
+  laut `EXPLAIN ANALYZE`; der ganze Endpunkt im Wechsel mit und ohne Liste ohne messbaren
+  Unterschied (Zahlen in `docs/TESTING.md`, Abschnitt Performance).
+- **Nachweise (15.10.2026):** 293 Unit- und Integrationstests, 441 End-to-End-Prüfungen über sechs
+  Breiten (93 mit Absicht übersprungen), `bun run verify` ohne Befund, längste Datei 383 Zeilen.
+
+| Offen                       | Warum                                                                                                      |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `bun run measure` bricht ab | `scripts/measure-performance.ts` übergibt keine S3-Angaben («S3_ENDPOINT muss eine vollständige URL sein») |
 
 ## Offen — Erstlast nach React 19.3 (10.10.2026)
 

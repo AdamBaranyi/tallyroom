@@ -3,7 +3,7 @@ import { customers, projects, type Database } from '@tallyroom/db';
 import type { Dashboard, MonthlyValuePoint } from '@tallyroom/contracts';
 import { monthEndPoints, todayInTimezone } from '../../lib/workspace-date.ts';
 import { monthlyContractValueMinor } from '../contracts/metrics.ts';
-import { waitingBalance } from './waiting.ts';
+import { oldestOpenRequests, waitingBalance } from './waiting.ts';
 
 const HISTORY_MONTHS = 6;
 
@@ -18,22 +18,24 @@ export function createDashboardService(db: Database) {
       const today = todayInTimezone(timezone);
       const onDate = contractDate ?? today;
 
-      const [customerRows, activeRows, pausedRows, contractValue, waiting] = await Promise.all([
-        db
-          .select({ value: count() })
-          .from(customers)
-          .where(and(eq(customers.workspaceId, workspaceId), isNull(customers.archivedAt))),
-        db
-          .select({ value: count() })
-          .from(projects)
-          .where(and(eq(projects.workspaceId, workspaceId), eq(projects.status, 'active'))),
-        db
-          .select({ value: count() })
-          .from(projects)
-          .where(and(eq(projects.workspaceId, workspaceId), eq(projects.status, 'paused'))),
-        monthlyContractValueMinor(db, workspaceId, onDate),
-        waitingBalance(db, workspaceId),
-      ]);
+      const [customerRows, activeRows, pausedRows, contractValue, waiting, oldest] =
+        await Promise.all([
+          db
+            .select({ value: count() })
+            .from(customers)
+            .where(and(eq(customers.workspaceId, workspaceId), isNull(customers.archivedAt))),
+          db
+            .select({ value: count() })
+            .from(projects)
+            .where(and(eq(projects.workspaceId, workspaceId), eq(projects.status, 'active'))),
+          db
+            .select({ value: count() })
+            .from(projects)
+            .where(and(eq(projects.workspaceId, workspaceId), eq(projects.status, 'paused'))),
+          monthlyContractValueMinor(db, workspaceId, onDate),
+          waitingBalance(db, workspaceId),
+          oldestOpenRequests(db, workspaceId),
+        ]);
 
       const points = monthEndPoints(today, HISTORY_MONTHS);
       const history: MonthlyValuePoint[] = await Promise.all(
@@ -56,6 +58,7 @@ export function createDashboardService(db: Database) {
         requestsWaitingOnTeam: waiting.team,
         requestsWaitingOnClient: waiting.client,
         longestWaitDays: waiting.longestDays,
+        oldestOpenRequests: oldest,
       };
     },
   };
