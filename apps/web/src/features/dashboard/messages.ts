@@ -1,6 +1,6 @@
 import { defineMessages } from '../../i18n/messages.ts';
 
-/** Texte des Dashboards: Kennzahlband, Verlauf des Vertragswerts, Aufmerksamkeitsliste. */
+/** Texte des Dashboards: Kennzahlband, Verlauf, Aufmerksamkeitsliste, älteste Anfragen. */
 export const dashboardMessages = defineMessages({
   de: {
     title: 'Dashboard',
@@ -27,7 +27,10 @@ export const dashboardMessages = defineMessages({
       loading: 'Wird geladen …',
       none: 'Kein Projekt hat überfällige Meilensteine. Nichts liegen geblieben.',
     },
-    requestsHint: 'Offene Anfragen erscheinen hier, sobald es Anfragen gibt.',
+    oldest: {
+      title: 'Am längsten offen',
+      allRequests: 'Alle Anfragen',
+    },
     waiting: {
       label: 'Wer ist am Zug',
       team: 'Bei uns',
@@ -76,7 +79,10 @@ export const dashboardMessages = defineMessages({
       loading: 'Chargement …',
       none: "Aucun projet n'a de jalons en retard. Rien n'est resté en suspens.",
     },
-    requestsHint: "Les demandes ouvertes apparaîtront ici dès qu'il y en aura.",
+    oldest: {
+      title: 'Ouvertes depuis le plus longtemps',
+      allRequests: 'Toutes les demandes',
+    },
     waiting: {
       label: 'Qui doit agir',
       team: 'Chez nous',
@@ -125,7 +131,10 @@ export const dashboardMessages = defineMessages({
       loading: 'Caricamento …',
       none: 'Nessun progetto ha traguardi in ritardo. Nulla è rimasto in sospeso.',
     },
-    requestsHint: 'Le richieste aperte compariranno qui non appena ce ne saranno.',
+    oldest: {
+      title: 'Aperte da più tempo',
+      allRequests: 'Tutte le richieste',
+    },
     waiting: {
       label: 'Chi deve agire',
       team: 'Da noi',
@@ -174,7 +183,10 @@ export const dashboardMessages = defineMessages({
       loading: 'Loading …',
       none: 'No project has overdue milestones. Nothing has slipped.',
     },
-    requestsHint: 'Open requests will appear here once there are any.',
+    oldest: {
+      title: 'Longest open',
+      allRequests: 'All requests',
+    },
     waiting: {
       label: 'Whose turn it is',
       team: 'With us',
