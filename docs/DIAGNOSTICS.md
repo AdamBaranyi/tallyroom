@@ -798,13 +798,44 @@ nachweislich an der Maschine lag; ein Testfehler wird nie weggewürfelt.
 
 ---
 
+## 33 · Ein Platzhalter widersprach den Zahlen darüber
+
+**Symptom.** In der Live-Demo stand unten im Dashboard «Offene Anfragen erscheinen hier, sobald es
+Anfragen gibt.» Darüber zählte «Wer ist am Zug» 9 offene Anfragen bei uns und 3 beim Kunden.
+Gemeldet am 13.10.2026, vor einer Vorführung.
+
+**Messung.** Der Satz stand ohne Bedingung in `DashboardPage.tsx`, in allen vier Sprachen. Die
+Dashboard-Antwort lieferte nur Zahlen, keine Liste, an die er hätte gebunden sein können.
+
+**Ursache.** Er kam mit dem ersten echten Dashboard am 09.09.2026 (`f21eada`, Meilenstein 3), als
+es noch keine Anfragen gab; die kamen mit Meilenstein 4. Ein Platzhalter für einen künftigen
+Zustand, den niemand zurücknahm, als der Zustand eintrat. Kein Test las den Text des Dashboards
+gegen seine Zahlen — axe, Breiten und Schriftgrösse prüfen, wie ein Satz aussieht, nicht ob er
+stimmt.
+
+**Korrektur.** Statt des Satzes die Karte «Am längsten offen», gerechnet wie die Zahlen darüber.
+Ein Playwright-Test liest die Zahlen aus «Wer ist am Zug» und verlangt, dass kein Text das
+Gegenteil sagt und dass die Liste dazu passt; gegen den alten Stand rot.
+
+Nebenbefund aus den Sabotage-Proben: Ohne Statusfilter in der Abfrage blieben alle Tests grün. Die
+Abbildung warf erledigte Zeilen still hinaus, weil sie keine wartende Seite haben — ein Wächter,
+der nur dem Typ dienen sollte, verdeckte den fehlenden Filter. Offene wären erst herausgefallen,
+wenn fünf ältere erledigte die Plätze gefüllt hätten. Genau das legt der Test jetzt an.
+
+**Regel.** Ein Satz, der einen Zustand behauptet, braucht eine Bedingung aus den Daten, sonst
+gehört er nicht auf die Seite. Und ein Test für einen Filter legt so viele Gegenbeispiele an, dass
+sie die Grenze füllen; sonst räumt ein späterer Schritt sie still weg, und der Filter bleibt
+ungeprüft.
+
+---
+
 ## Was daraus als Werkzeug geblieben ist
 
 | Werkzeug                       | Hält fest                                                            |
 | ------------------------------ | -------------------------------------------------------------------- |
 | `bun run verify`               | Format, Dateilänge, Lint samt `jsx-a11y`, Typen                      |
-| `bun run test`                 | 276 Unit- und Integrationstests                                      |
-| `bun run test:e2e`             | 426 Prüfungen über sechs Breiten, samt axe und vier Sprachen         |
+| `bun run test`                 | 293 Unit- und Integrationstests                                      |
+| `bun run test:e2e`             | 441 Prüfungen über sechs Breiten, samt axe und vier Sprachen         |
 | `screenreader.yml`             | VoiceOver und NVDA: Statusmeldungen, Fokus, Dialognamen              |
 | `screenreader-wiederholen.yml` | Ein Rechner ohne AppleScript wird einmal ersetzt, ein Testfehler nie |
 | `bun run check:font-floor`     | Keine Schrift unter 16 px, im Quelltext                              |
