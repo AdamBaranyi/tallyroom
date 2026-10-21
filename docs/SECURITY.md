@@ -200,6 +200,19 @@ hintereinander legten sonst zwei Issues an. Und der Lauf installiert keine Paket
 Checkout legt das Token nicht in `.git/config` ab. In einem Job, der Issues schreiben darf, läuft so
 kein Installationscode fremder Pakete.
 
+**Nur das eigene Issue zählt (seit 21.10.2026).** Bis dahin nahm das Skript das neueste offene
+Issue mit dem Titel «Sicherheitsmeldungen». Im öffentlichen Repository kann jedes Konto ein solches
+Issue eröffnen und seinen Text mit der Markierung des aktuellen Stands füllen; die Markierung ist
+ein Hash der öffentlichen Kennungen und lässt sich nachrechnen. Der Lauf hätte dann jede neue Meldung
+für bekannt gehalten und geschwiegen — und er ist der einzige Alarm für die Bun-Abhängigkeiten. Die
+Lücke kam mit PR #30, der den Label-Filter entfernte, um den Suchindex zu umgehen. Gezählt wird jetzt
+nur ein Issue, das der Bot dieses Workflows angelegt hat (`app/github-actions`, so meldet gh ihn, an
+den echten Issues dieses Repositorys nachgesehen) **und** das das Label `sicherheit` trägt. Labels
+setzen Konten ohne Rechte im Repository nicht, eine Issue-Vorlage, die es setzen könnte, gibt es nicht,
+und kein Workflow legt Issues mit fremd bestimmtem Titel an. Gefiltert wird weiterhin erst nach dem
+Lesen, ohne Suchindex. Fünf Tests mit fremden Issues halten das fest; ohne die Prüfung des Autors
+oder des Labels wird je einer rot, mit der alten Suche nur nach dem Titel alle fünf.
+
 Angesetzt ist der Lauf auf 06:17 UTC. GitHub startet geplante Läufe aber verspätet: Vom 17. bis
 30.09.2026 begannen alle vierzehn zwischen 11:07 und 14:05 UTC, also am Mittag in Zürich. Eine
 Meldung wird damit am selben Tag bemerkt, nicht am frühen Morgen.
@@ -396,15 +409,16 @@ Ehrlich benannt, weil sie zu späteren Meilensteinen gehören:
 
 ## Prüfprotokoll
 
-| Datum      | Umfang                                                                                 | Ergebnis       |
-| ---------- | -------------------------------------------------------------------------------------- | -------------- |
-| 09.09.2026 | Meilenstein 1: Mandantentrennung, Sitzung, CSRF, Fehlerantworten, Rate-Limit           | 28 Tests grün  |
-| 09.09.2026 | Meilenstein 4: Kundenansicht, Uploads, Einladungen, Idempotenz                         | 141 Tests grün |
-| 11.09.2026 | Produktionsaufbau lokal: Header, CSP, Demo-Durchgang, Download, Garage                 | 2 von 2 grün   |
-| 11.09.2026 | Secret-Scan über 83 Commits, Abhängigkeitsscan über `bun.lock`                         | siehe oben     |
-| 30.09.2026 | Täglicher Lauf rot: drei neue Meldungen zu brace-expansion (ESLint-Kette)              | behoben, oben  |
-| 10.10.2026 | proxy-addr (kritisch, Laufzeit, hier nicht ausnutzbar), source-map-js (hoch, Werkzeug) | behoben, oben  |
-| 10.10.2026 | Täglicher Lauf meldet per Issue statt rot; Skripte im Ablauf geprüft                   | 13 Tests grün  |
+| Datum      | Umfang                                                                                     | Ergebnis               |
+| ---------- | ------------------------------------------------------------------------------------------ | ---------------------- |
+| 09.09.2026 | Meilenstein 1: Mandantentrennung, Sitzung, CSRF, Fehlerantworten, Rate-Limit               | 28 Tests grün          |
+| 09.09.2026 | Meilenstein 4: Kundenansicht, Uploads, Einladungen, Idempotenz                             | 141 Tests grün         |
+| 11.09.2026 | Produktionsaufbau lokal: Header, CSP, Demo-Durchgang, Download, Garage                     | 2 von 2 grün           |
+| 11.09.2026 | Secret-Scan über 83 Commits, Abhängigkeitsscan über `bun.lock`                             | siehe oben             |
+| 30.09.2026 | Täglicher Lauf rot: drei neue Meldungen zu brace-expansion (ESLint-Kette)                  | behoben, oben          |
+| 10.10.2026 | proxy-addr (kritisch, Laufzeit, hier nicht ausnutzbar), source-map-js (hoch, Werkzeug)     | behoben, oben          |
+| 10.10.2026 | Täglicher Lauf meldet per Issue statt rot; Skripte im Ablauf geprüft                       | 13 Tests grün          |
+| 21.10.2026 | Lockvogel-Issue konnte den täglichen Alarm stumm schalten (Prüfung nach security-guidance) | behoben, 18 Tests grün |
 
 Drei Befunde aus Meilenstein 4, alle behoben:
 
