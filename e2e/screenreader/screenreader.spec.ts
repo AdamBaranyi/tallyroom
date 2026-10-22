@@ -87,6 +87,12 @@ test.describe('Anmeldung', () => {
       capture: true,
     });
 
+    /*
+     * Dass der Fokus auf dem Knopf bleibt, prüft e2e/focus.spec.ts in allen drei
+     * Engines; hier zählt die Ansage. War der Knopf während der Prüfung
+     * `disabled`, sagte NVDA unter Firefox 157 statt der Meldung das Dokument an
+     * (DIAGNOSTICS Nummer 34).
+     */
     await expect(page.getByRole('alert')).toHaveText('E-Mail oder Passwort ist falsch.');
     await expectEventuallySays(screenReader, ['E-Mail oder Passwort ist falsch']);
   });

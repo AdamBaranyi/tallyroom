@@ -53,15 +53,22 @@ export function LoginPage() {
             className="mt-6 flex flex-col gap-4"
             onSubmit={form.handleSubmit((values) => login.mutate(values))}
           >
-            {/* Eine allgemeine Meldung — sie verrät nicht, ob die E-Mail existiert. */}
-            {message && (
-              <p
-                role="alert"
-                className="rounded-sm border border-line bg-raised px-3 py-2.5 text-body text-danger"
-              >
-                {message}
-              </p>
-            )}
+            {/*
+              Eine allgemeine Meldung — sie verrät nicht, ob die E-Mail existiert.
+              Der Bereich steht auch leer im Dokument: Eine Meldung, die mit ihrem
+              Behälter erscheint, sagt ein Screenreader nicht zuverlässig an
+              (DIAGNOSTICS Nummer 29 und 34).
+            */}
+            <p
+              role="alert"
+              className={
+                message
+                  ? 'rounded-sm border border-line bg-raised px-3 py-2.5 text-body text-danger'
+                  : 'sr-only'
+              }
+            >
+              {message}
+            </p>
 
             <Field
               label={m.email}
@@ -78,7 +85,7 @@ export function LoginPage() {
               registration={form.register('password')}
             />
 
-            <Button type="submit" variant="primary" disabled={login.isPending}>
+            <Button type="submit" variant="primary" pending={login.isPending}>
               {login.isPending ? m.checking : m.submit}
             </Button>
           </form>
