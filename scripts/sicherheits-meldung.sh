@@ -33,9 +33,17 @@ fi
 # Ohne --search und ohne --label: Beide gehen über den Suchindex von GitHub
 # («query IssueSearch», sichtbar mit GH_DEBUG=api), der mit Verzögerung nachzieht;
 # zwei Läufe kurz hintereinander legten sonst zwei Issues an. Die blosse Liste
-# liest direkt («query IssueList»), der Titel wird hier verglichen.
-nummer=$(gh issue list --state open --limit 200 --json number,title \
-  --jq "[.[] | select(.title == \"$titel\")][0].number // empty")
+# liest direkt («query IssueList»), gefiltert wird erst hier.
+#
+# Und nicht nur nach dem Titel: Im öffentlichen Repo kann jedes Konto ein Issue
+# «Sicherheitsmeldungen» eröffnen und seinen Text mit der Markierung des
+# aktuellen Stands füllen — sie lässt sich aus den öffentlichen Kennungen
+# nachrechnen. Der Lauf hielte dann jede neue Meldung für bekannt und bliebe
+# stumm, und er ist der einzige Alarm für die Bun-Abhängigkeiten. Gezählt wird
+# nur ein Issue, das der Bot dieses Workflows angelegt hat und das das Label
+# trägt; Labels setzen Konten ohne Rechte im Repo nicht.
+nummer=$(gh issue list --state open --limit 200 --json number,title,author,labels \
+  --jq "[.[] | select(.title == \"$titel\" and .author.login == \"app/github-actions\" and any(.labels[]; .name == \"$label\"))][0].number // empty")
 
 if [ "$status" = 0 ]; then
   if [ -n "$nummer" ]; then

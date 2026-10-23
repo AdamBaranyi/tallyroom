@@ -13,6 +13,12 @@
 # GitHub, der nachhinkt («query IssueSearch»). Die Attrappe spielt das schärfste
 # Ende davon: Der Index kennt keines der Issues, die im Test entstehen. Nur die
 # Liste ohne Filter liest direkt («query IssueList») und sieht alles.
+#
+# Wie gh liefert die Liste Autor und Labels und das neueste Issue zuerst. Was
+# «issue create» anlegt, stammt vom Bot des Workflows (`app/github-actions`, so
+# meldet gh ihn); fremde Issues legen die Tests selbst als Ordner an, mit eigenem
+# Autor und ohne oder mit Label. Ohne die Reihenfolge fiele ein Lockvogel, der
+# neuer ist als das eigene Issue, gar nicht auf.
 set -euo pipefail
 dir="${ATTRAPPE_DIR:?ATTRAPPE_DIR fehlt}"
 mkdir -p "$dir/issues"
@@ -65,11 +71,12 @@ case "$befehl" in
     ausgabe <<<"$liste"
     exit 0
   fi
-  for f in "$dir"/issues/*/; do
-    [ -d "$f" ] || continue
+  for n in $(find "$dir/issues" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort -rn); do
+    f="$dir/issues/$n"
     [ "$(cat "$f/state")" = "${opt[state]:-open}" ] || continue
-    liste=$(jq --argjson n "$(basename "$f")" --rawfile t "$f/title" \
-      '. + [{number: $n, title: $t}]' <<<"$liste")
+    liste=$(jq --argjson n "$n" --rawfile t "$f/title" --rawfile a "$f/author" --rawfile l "$f/labels" \
+      '. + [{number: $n, title: $t, author: {login: $a},
+             labels: ($l | split("\n") | map(select(. != "")) | map({name: .}))}]' <<<"$liste")
   done
   ausgabe <<<"$liste"
   ;;
@@ -78,9 +85,13 @@ case "$befehl" in
     echo "could not add label: '${opt[label]-}' not found" >&2
     exit 1
   fi
-  n=$(($(find "$dir/issues" -mindepth 1 -maxdepth 1 -type d | wc -l) + 1))
+  # Nächste Nummer nach der höchsten, wie bei GitHub; ein Lockvogel aus dem Test
+  # kann eine höhere tragen als die Zahl der Issues.
+  letzte=$(find "$dir/issues" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort -rn | head -1)
+  n=$((${letzte:-0} + 1))
   mkdir "$dir/issues/$n"
   printf '%s' "${opt[title]}" >"$dir/issues/$n/title"
+  printf 'app/github-actions' >"$dir/issues/$n/author"
   printf '%s\n' "${opt[label]}" >"$dir/issues/$n/labels"
   printf '%s' "${opt[assignee]-}" >"$dir/issues/$n/assignee"
   printf '%s' "${opt[body]}" >"$dir/issues/$n/body"

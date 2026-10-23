@@ -1,5 +1,14 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -85,6 +94,7 @@ function issues() {
       return {
         nummer,
         titel: lies('title'),
+        autor: lies('author'),
         zustand: lies('state'),
         label: lies('labels').trim(),
         zuweisung: lies('assignee'),
@@ -99,6 +109,32 @@ function aufrufe() {
   const log = join(dir, 'aufrufe.log');
   return existsSync(log) ? readFileSync(log, 'utf8').trim().split('\n') : [];
 }
+
+/**
+ * Ein Lockvogel: Im öffentlichen Repo kann jedes Konto ein Issue mit demselben
+ * Titel eröffnen und dessen Text jederzeit ändern, auch mit der Markierung des
+ * aktuellen Stands. Labels setzen kann es nicht, und es ist nicht der Bot.
+ * @param {number} nummer
+ * @param {string} text
+ * @param {{ autor?: string, labels?: string[] }} [herkunft]
+ */
+function lockvogel(nummer, text, { autor = 'angreifer', labels = [] } = {}) {
+  const ordner = join(dir, 'issues', String(nummer));
+  mkdirSync(ordner, { recursive: true });
+  writeFileSync(join(ordner, 'title'), 'Sicherheitsmeldungen');
+  writeFileSync(join(ordner, 'author'), autor);
+  writeFileSync(join(ordner, 'labels'), labels.map((label) => `${label}\n`).join(''));
+  writeFileSync(join(ordner, 'assignee'), '');
+  writeFileSync(join(ordner, 'body'), text);
+  writeFileSync(join(ordner, 'state'), 'open');
+  writeFileSync(join(ordner, 'comments'), '');
+}
+
+/** Die Markierung zu EIN_BEFUND, so wie sie jeder aus der öffentlichen Kennung nachrechnet. */
+const STAND_PROXY_ADDR = createHash('sha256')
+  .update('GHSA-jqcg-44mw-7w3h')
+  .digest('hex')
+  .slice(0, 12);
 
 describe('sicherheits-meldung.sh', () => {
   it('legt beim ersten Fund ein Issue an, mit Label, Zuweisung und Kennung', () => {
@@ -193,6 +229,80 @@ describe('sicherheits-meldung.sh', () => {
 
     expect(ergebnis.status).toBe(2);
     expect(aufrufe()).toEqual([]);
+  });
+
+  it('übergeht ein fremdes Issue mit gleichem Titel und passender Markierung', () => {
+    const markierung = `<!-- stand:${STAND_PROXY_ADDR} -->`;
+    lockvogel(9, markierung);
+
+    const ergebnis = melde(EIN_BEFUND, 1);
+
+    expect(ergebnis.status, ergebnis.stderr).toBe(0);
+    const eigenes = issues().find((issue) => issue.nummer !== 9);
+    // Sonst prüfte der Fall nichts: Der Lockvogel trägt genau die Markierung des Skripts.
+    expect(eigenes?.text).toContain(markierung);
+    expect(eigenes).toMatchObject({ autor: 'app/github-actions', label: 'sicherheit' });
+    expect(issues().find((issue) => issue.nummer === 9)).toMatchObject({
+      text: markierung,
+      kommentare: '',
+      zustand: 'open',
+    });
+  });
+
+  it('bleibt neben einem neueren fremden Issue beim eigenen', () => {
+    melde(EIN_BEFUND, 1);
+    lockvogel(2, 'Alles in Ordnung, hier nichts melden.');
+
+    const ergebnis = melde(ZWEI_BEFUNDE, 1);
+
+    expect(ergebnis.status, ergebnis.stderr).toBe(0);
+    const [eigenes, fremdes] = issues();
+    expect(eigenes?.text).toContain('GHSA-68fv-2mgg-jv7q');
+    expect(eigenes?.kommentare).toContain('Geänderte Befunde');
+    expect(fremdes).toMatchObject({
+      text: 'Alles in Ordnung, hier nichts melden.',
+      kommentare: '',
+      zustand: 'open',
+    });
+  });
+
+  it('lässt ein fremdes Issue in Ruhe, wenn der Lauf sauber ist', () => {
+    lockvogel(4, 'irgendein Text');
+
+    const ergebnis = melde(SAUBER, 0);
+
+    expect(ergebnis.status, ergebnis.stderr).toBe(0);
+    expect(issues()).toEqual([
+      expect.objectContaining({ nummer: 4, zustand: 'open', kommentare: '' }),
+    ]);
+    expect(aufrufe()).toEqual(['issue list']);
+  });
+
+  /*
+   * Jede der beiden Prüfungen hält einen Fremden schon allein ab. Die zwei Fälle
+   * hier fängt nur je eine: ein Issue mit Label, aber nicht vom Bot — ein
+   * Mitwirkender mit Schreibrechten —, und eines vom Bot ohne Label, etwa aus einer
+   * anderen Automatisierung, die Titel aus fremder Eingabe übernimmt.
+   */
+  it('zählt ein Issue mit Label, aber nicht vom Bot, nicht', () => {
+    lockvogel(5, `<!-- stand:${STAND_PROXY_ADDR} -->`, {
+      autor: 'mitwirkender',
+      labels: ['sicherheit'],
+    });
+
+    melde(EIN_BEFUND, 1);
+
+    expect(issues()).toHaveLength(2);
+    expect(issues().find((issue) => issue.nummer === 5)?.kommentare).toBe('');
+  });
+
+  it('zählt ein Issue vom Bot ohne Label nicht', () => {
+    lockvogel(6, `<!-- stand:${STAND_PROXY_ADDR} -->`, { autor: 'app/github-actions' });
+
+    melde(EIN_BEFUND, 1);
+
+    expect(issues()).toHaveLength(2);
+    expect(issues().find((issue) => issue.nummer === 6)?.kommentare).toBe('');
   });
 });
 
