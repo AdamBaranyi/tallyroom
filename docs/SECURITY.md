@@ -302,7 +302,7 @@ Nächste Prüfung dieser Ausnahmen: mit dem nächsten Meilenstein, spätestens a
 | Werkzeug    | `bun audit` aus Bun 1.3.14, gegen die Advisory-Datenbank der npm-Registry                                                                                                                                    |
 | Umfang      | alle Pakete aus `bun.lock`, auch reine Entwicklungswerkzeuge                                                                                                                                                 |
 | Blockierend | im Push-Lauf ab „hoch" (`bash scripts/audit.sh high`); der tägliche Lauf blockiert nicht, er meldet ab „moderat" im Issue; ein weiterer Schritt schreibt alle Befunde ungefiltert in die Laufzusammenfassung |
-| Ergebnis    | 10.10.2026 nach der Behebung unten erneut geprüft: kein hoher und kein kritischer Befund, ein moderater, ausgenommen                                                                                         |
+| Ergebnis    | 22.10.2026 nach dem Update auf vite 8.3.4 erneut geprüft: kein Befund ab moderat ausser der esbuild-Ausnahme                                                                                                 |
 
 **Ausnahmen.** Jede steht mit ihrer Kennung in `scripts/audit.sh`, mit demselben «prüfen bis» wie
 hier — `scripts/sicherheit.test.mjs` hält beides zusammen. Höchstens einen Monat; danach verlängern
@@ -333,6 +333,26 @@ Die Ausnahme, einzeln bewertet:
   Die Nummer steht in `scripts/audit.sh` und gilt damit für den Push-Lauf und den täglichen Lauf
   gleich. Sichtbar bleibt der Befund trotzdem: Der Schritt „Alle Befunde zur Ansicht" zeigt ihn
   ungefiltert in der Laufzusammenfassung.
+
+Behoben am 22.10.2026, gemeldet vom täglichen Lauf im Issue #37:
+
+- **GHSA-587h-7wmj-h5pm (hoch), GHSA-698v-4r3x-3vcv und GHSA-r825-w8mm-5pxw (moderat),
+  launch-editor bis 2.14.1, in Vite gebündelt.** Die Prüfung, ob eine Datei existiert, lässt sich
+  unter Windows umgehen; Argumente an den Editor werden unvollständig maskiert. Betrifft die
+  Funktion «im Editor öffnen» des Entwicklungsservers.
+- **GHSA-rq7h-c2jc-7f22 und GHSA-vfpm-58rq-9qcg (moderat), Vite 8.3.0 bis 8.3.2.** Der
+  Entwicklungsserver liefert unter bestimmten Pfaden Dateien ausserhalb von `server.fs.allow`
+  aus, beziehungsweise deren erste vier Bytes über `?vite-wasm-instance`.
+
+Alle fünf betreffen nur den Entwicklungsserver von Vite. Er lauscht ohne `server.host` nur auf
+`localhost` (`apps/web/vite.config.ts`) und liegt in keinem Image: Das Web-Image enthält nur die
+statischen Dateien des Builds. **Praktisch nicht ausnutzbar, trotzdem behoben**, weil es einen Fix
+gibt und der Push-Lauf ab „hoch" blockiert; seit der Meldung vom 20.10.2026 scheiterten daran #36
+und #38. Im Lockfile steht jetzt vite 8.3.4 vom 08.10.2026, die Fassung aus dem Dependabot-PR #35
+(behoben ist es ab 8.3.3). Mit ihr kommen postcss 8.5.30 vom 12.10. und nanoid 3.3.20 vom 05.10.,
+weil vite 8.3.4 postcss ab 8.5.29 verlangt. Alle drei sind älter als die sieben Tage Wartezeit.
+Geändert sind nur diese drei Einträge; alles Übrige bleibt bei #35. `bun install --frozen-lockfile`
+nimmt den Stand ohne Änderung an, `bash scripts/audit.sh moderate` endet mit 0.
 
 Behoben am 10.10.2026, in der Sicherheitsrunde nach der neuen Regel:
 
@@ -405,6 +425,7 @@ Ehrlich benannt, weil sie zu späteren Meilensteinen gehören:
 | 30.09.2026 | Täglicher Lauf rot: drei neue Meldungen zu brace-expansion (ESLint-Kette)              | behoben, oben  |
 | 10.10.2026 | proxy-addr (kritisch, Laufzeit, hier nicht ausnutzbar), source-map-js (hoch, Werkzeug) | behoben, oben  |
 | 10.10.2026 | Täglicher Lauf meldet per Issue statt rot; Skripte im Ablauf geprüft                   | 13 Tests grün  |
+| 22.10.2026 | vite 8.3.4: launch-editor (hoch) und vier moderate, alle nur im Entwicklungsserver     | behoben, oben  |
 
 Drei Befunde aus Meilenstein 4, alle behoben:
 

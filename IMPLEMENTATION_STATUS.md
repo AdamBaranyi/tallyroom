@@ -620,6 +620,8 @@ den neuen täglichen Lauf; Einzelheiten in `docs/SECURITY.md`.
   2.0.8, pg 8.23.1 und pino 10.4.0, die Startseite liefert React 19.3.0 aus. Die Produktionsprüfung
   gegen den Server lief 3 von 3: Sicherheitsheader, Impressum, Demo-Durchgang ohne CSP-Verstoss und
   ohne Konsolenfehler.
+- **Nachtrag 22.10.2026:** vite 8.3.4 gegen fünf Meldungen zum Entwicklungsserver, eine davon hoch,
+  gemeldet im Issue #37; Einzelheiten in `docs/SECURITY.md`.
 
 ## Erledigt — Dashboard nennt die ältesten offenen Anfragen (15.10.2026)
 
