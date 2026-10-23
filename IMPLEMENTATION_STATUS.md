@@ -672,10 +672,10 @@ während der Prüfung `disabled` und verlor damit den Fokus an `body`, in allen 
 - **Nachweise (22.10.2026):** 293 Unit- und Integrationstests, 453 End-to-End-Prüfungen über sechs
   Breiten (93 mit Absicht übersprungen), `bun run verify` ohne Befund, längste Datei 383 Zeilen.
 
-| Offen                                           | Warum                                                                                    |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| 28 weitere Knöpfe werden `disabled`             | Dieselbe Fokuslücke in 22 Dateien; je Knopf `pending` statt `disabled` und ein Test dazu |
-| NVDA mit Firefox 157 auf dem korrigierten Stand | Zeigt erst der NVDA-Job von #35, sobald der PR auf diesem Stand läuft                    |
+| Offen                                           | Warum                                                                                                                                                              |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 28 weitere Knöpfe werden `disabled`             | Dieselbe Fokuslücke in 22 Dateien; je Knopf `pending` statt `disabled` und ein Test dazu                                                                           |
+| NVDA mit Firefox 157 auf dem korrigierten Stand | Auf `main` am 23.10.2026 noch rot: Der Test wartete ausserhalb von `capture()` auf die Meldung (DIAGNOSTICS Nummer 34); korrigiert, Ergebnis im NVDA-Job dieses PR |
 
 ## Offen — Erstlast nach React 19.3 (10.10.2026)
 

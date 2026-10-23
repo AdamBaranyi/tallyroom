@@ -6,7 +6,7 @@ war, was gemessen wurde, woran es lag, was es jetzt hält.
 Der Sinn ist nicht Vollständigkeit, sondern Nachvollziehbarkeit. Ein Fehler, der einmal still
 zugeschlagen hat, schlägt wieder zu — und beim zweiten Mal soll die Suche kurz sein.
 
-Vier Einträge sind **Fehldiagnosen**: dort war die erste Erklärung falsch. Die stehen hier
+Fünf Einträge sind **Fehldiagnosen**: dort war die erste Erklärung falsch, bei Nummer 34 zur Hälfte. Die stehen hier
 ausdrücklich mit drin, weil eine falsche Fährte teurer ist als der Fehler selbst.
 
 ---
@@ -829,15 +829,15 @@ ungeprüft.
 
 ---
 
-## 34 · Der Anmeldeknopf warf den Fokus hinaus
+## 34 · Fehldiagnose zur Hälfte: Fokus weg, Meldung ungehört
 
 **Symptom.** Der Dependabot-PR #35 hob unter anderem Playwright auf 1.64 und damit Firefox von 155
 auf 157. Danach war im NVDA-Job eine von sieben Prüfungen rot: «sagt falsche Zugangsdaten an, ohne
 dass der Fokus springt». VoiceOver und die übrigen sechs NVDA-Prüfungen blieben grün.
 
-**Messung.** Mit Firefox 157 scheiterte die Prüfung in 8 von 9 Versuchen, in drei Läufen vom 19. und
-21.10.2026 mit je zwei Wiederholungen. Mit Firefox 155 auf `main` bestand sie am 21.10.2026 im
-ersten Versuch. Angesagt wurde jedes Mal dasselbe, die Meldung nie:
+**Messung.** Mit Firefox 157 bestand die Prüfung in 2 von 11 Versuchen, vom 19. bis 23.10.2026 in
+#35 und seinem Nachfolger #41. Mit Firefox 155 auf `main` bestand sie am 21.10.2026 im ersten
+Versuch. Angesagt wurde jedes Mal dasselbe, die Meldung nie:
 
 ```text
 Wird geprüft ..., button. Tallyroom Kundenübersicht und Kundenportal für kleine Agenturen, document
@@ -846,27 +846,35 @@ Wird geprüft ..., button. Tallyroom Kundenübersicht und Kundenportal für klei
 Lokal nachgestellt am 22.10.2026: Ein fokussierter Knopf, der `disabled` wird, verliert den Fokus
 an `body`, in Chromium 153, Firefox 155 und WebKit 26.6 gleich.
 
-**Ursache.** Zwei Stellen in `LoginPage.tsx`. Der Absendeknopf war während der Prüfung `disabled`;
-der Browser nahm ihm den Fokus, und NVDA sagte das Dokument an. Und die Meldung stand in einem
-`role="alert"`, der erst mit ihr ins Dokument kam, die Falle aus Nummer 29. Mit Firefox 155 kam sie
-trotzdem an, mit 157 fast nie. Warum, ist nicht untersucht; gemessen ist nur der Unterschied. Der
-Test hiess seit dem 22.09.2026 «ohne dass der Fokus springt», prüfte den Fokus aber nicht.
+**Erste Erklärung, halb richtig.** Der Absendeknopf war während der Prüfung `disabled`; der Browser
+nahm ihm den Fokus, und NVDA sagte das Dokument an. Das stimmte und ist behoben, siehe unten. Die
+fehlende Meldung erklärte es nicht: Mit dem Fix sagte NVDA am 23.10.2026 auf `main` nur noch
+«Wird geprüft ..., button. unavailable». Der Fokus blieb, die Meldung fehlte weiter, 3 von 3.
 
-**Korrektur.** `Button` kennt `pending`: Der Knopf meldet sich mit `aria-disabled` als nicht
-verfügbar, verwirft Klicks und behält den Fokus. Enter in einem Feld kommt ebenfalls als Klick am
-Absendeknopf an; ohne die Sperre sendete es in allen drei Engines zweimal. Der Alarmbereich steht
-leer im Dokument, bevor eine Meldung kommt. Zwei Tests in `e2e/focus.spec.ts`, über sechs Breiten
-und in Firefox und WebKit grün, gegen den alten Stand in allen drei Engines rot. Vier Sabotagen,
-alle rot: Klicksperre weg, `disabled` statt `pending`, `aria-disabled` weg, Alarmbereich erst mit
-der Meldung. Ob NVDA unter Firefox 157 die Meldung wieder ansagt, zeigt der NVDA-Job von #35 auf
-diesem Stand.
+**Ursache der roten Prüfung.** Die Messung. `capture()` von Guidepup hört nach der Handlung nur zu,
+bis eine Sekunde lang nichts gesprochen wird (`SPEAK_DEBOUNCE_TIMEOUT` in `NVDAClient.js`), danach
+zeichnet es nichts mehr auf. Der Test klickte in `capture()` und wartete ausserhalb auf die Meldung,
+die erst mit der Antwort des Servers kommt. Die lange Ansage des Dokuments hatte das Fenster bisher
+verlängert; mit Firefox 157 reichte das selten, mit dem kurzen «unavailable» nie. Der Test der
+Kettenprüfung wartet seit Nummer 29 in `capture()` und war nie betroffen. Der Testname versprach
+seit dem 22.09.2026 «ohne dass der Fokus springt», prüfte den Fokus aber nicht.
+
+**Korrektur.** In der Anwendung: `Button` kennt `pending`. Der Knopf meldet sich mit
+`aria-disabled` als nicht verfügbar, verwirft Klicks und behält den Fokus. Enter in einem Feld kommt
+ebenfalls als Klick am Absendeknopf an; ohne die Sperre sendete es in allen drei Engines zweimal.
+Der Alarmbereich steht leer im Dokument, bevor eine Meldung kommt. Zwei Tests in
+`e2e/focus.spec.ts`, über sechs Breiten und in Firefox und WebKit grün, gegen den alten Stand in
+allen drei Engines rot; vier Sabotagen, alle rot. Im Screenreader-Test steht das Warten auf die
+Meldung jetzt in `capture()`, wie bei der Kettenprüfung. Ob NVDA unter Firefox 157 die Meldung
+damit hört, zeigt der NVDA-Job des PR mit dieser Korrektur.
 
 **Offen.** 28 weitere Knöpfe in 22 Dateien werden während ihrer Handlung `disabled` und verlieren
 damit ebenso den Fokus. Geprüft ist bisher nur die Anmeldung.
 
 **Regel.** Ein Knopf, der gerade arbeitet, behält den Fokus: `aria-disabled` und eine Sperre im
-Klick, nicht `disabled`. Und ein Testname ist keine Zusicherung; was er verspricht, muss eine Zeile
-prüfen.
+Klick, nicht `disabled`. Ein Testname ist keine Zusicherung; was er verspricht, muss eine Zeile
+prüfen. Und die Regel aus Nummer 30 gilt auch fürs Warten: Kommt eine Ansage erst nach einer
+Antwort des Servers, gehört das Warten darauf in `capture()`.
 
 ---
 
