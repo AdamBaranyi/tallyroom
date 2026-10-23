@@ -247,7 +247,7 @@ VoiceOver mal sofort, mal erst auf Nachfrage; geprüft wird deshalb die Verknüp
 die Ansage «ungültig». Dass eine Meldung ankommt, prüft die Anmeldung mit falschen Daten. Die Rollen sagen beide Screenreader in ihrer eigenen Sprache an, auf den
 Rechnern von GitHub englisch; der Test vergleicht deshalb ohne Rücksicht auf Satzzeichen und
 Reihenfolge. Und Guidepup hört nur während seiner eigenen Befehle zu — eine Handlung, deren Ansage
-geprüft wird, gehört in `capture()`.
+geprüft wird, gehört in `capture()`, samt dem Warten auf eine Antwort des Servers (DIAGNOSTICS Nummer 34).
 
 **Rechner ohne AppleScript.** Einzelne macOS-Rechner von GitHub verweigern die Steuerung per
 AppleScript. Vom 22. bis 28.09.2026 scheiterte daran die Einrichtung in drei von zwölf Läufen,

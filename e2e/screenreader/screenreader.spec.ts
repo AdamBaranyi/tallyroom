@@ -83,17 +83,21 @@ test.describe('Anmeldung', () => {
 
     await page.getByLabel('E-Mail').fill('niemand@tallyroom.test');
     await page.getByLabel('Passwort').fill('falsches-passwort-2026');
-    await screenReader.capture(() => page.getByRole('button', { name: 'Anmelden' }).click(), {
-      capture: true,
-    });
 
     /*
-     * Dass der Fokus auf dem Knopf bleibt, prüft e2e/focus.spec.ts in allen drei
-     * Engines; hier zählt die Ansage. War der Knopf während der Prüfung
-     * `disabled`, sagte NVDA unter Firefox 157 statt der Meldung das Dokument an
-     * (DIAGNOSTICS Nummer 34).
+     * Gewartet wird in capture(), wie bei der Kettenprüfung: Guidepup hört nur zu,
+     * bis nach dem letzten Wort eine Sekunde Ruhe ist. Die Meldung kommt erst mit
+     * der Antwort des Servers. Stand das Warten draussen, fiel sie in die Lücke
+     * (DIAGNOSTICS Nummer 34). Dass der Fokus auf dem Knopf bleibt, prüft
+     * e2e/focus.spec.ts in allen drei Engines.
      */
-    await expect(page.getByRole('alert')).toHaveText('E-Mail oder Passwort ist falsch.');
+    await screenReader.capture(
+      async () => {
+        await page.getByRole('button', { name: 'Anmelden' }).click();
+        await expect(page.getByRole('alert')).toHaveText('E-Mail oder Passwort ist falsch.');
+      },
+      { capture: true },
+    );
     await expectEventuallySays(screenReader, ['E-Mail oder Passwort ist falsch']);
   });
 });
