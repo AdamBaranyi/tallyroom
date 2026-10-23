@@ -1,6 +1,6 @@
 # Umsetzungsstand
 
-Stand: 22.10.2026 · Meilensteine 1–7 abgeschlossen, Meilenstein 7 seit dem 19.09.2026 live unter
+Stand: 23.10.2026 · Meilensteine 1–7 abgeschlossen, Meilenstein 7 seit dem 19.09.2026 live unter
 <https://tallyroom.adambaranyi.xyz>
 
 293 Unit- und Integrationstests · 453 End-to-End-Prüfungen über sechs Breiten · am 22.09.2026 430
@@ -622,6 +622,10 @@ den neuen täglichen Lauf; Einzelheiten in `docs/SECURITY.md`.
   ohne Konsolenfehler.
 - **Nachtrag 22.10.2026:** vite 8.3.4 gegen fünf Meldungen zum Entwicklungsserver, eine davon hoch,
   gemeldet im Issue #37; Einzelheiten in `docs/SECURITY.md`.
+- **Nachtrag 23.10.2026:** #38 (nur das eigene Issue zählt) gemergt; ein Lauf des täglichen
+  Ablaufs von Hand schloss #37 danach selbst. #41 mit 22 Updates gemergt (ersetzte #35), darunter
+  Playwright 1.64.1, express 5.3.0, React 19.3.1, axe 4.14 und Guidepup 0.36.3; VoiceOver blieb
+  grün.
 
 ## Erledigt — Dashboard nennt die ältesten offenen Anfragen (15.10.2026)
 
@@ -660,8 +664,10 @@ Anfragen gab, und hing an keiner Bedingung (DIAGNOSTICS Nummer 33).
 ## Erledigt — Anmeldung behält den Fokus (22.10.2026)
 
 Befund aus dem Dependabot-PR #35: Mit Firefox 157 sagte NVDA bei falschen Zugangsdaten nicht die
-Meldung an, sondern das Dokument (8 von 9 Versuchen, DIAGNOSTICS Nummer 34). Der Absendeknopf war
-während der Prüfung `disabled` und verlor damit den Fokus an `body`, in allen drei Engines.
+Meldung an, sondern das Dokument (9 von 11 Versuchen, DIAGNOSTICS Nummer 34). Der Absendeknopf war
+während der Prüfung `disabled` und verlor damit den Fokus an `body`, in allen drei Engines. Das war
+echt; die fehlende Ansage lag aber an der Messung: Der Screenreader-Test wartete ausserhalb von
+`capture()` auf die Meldung.
 
 - **`Button` mit `pending`:** `aria-disabled`, Klicks werden verworfen, der Fokus bleibt. Die
   Anmeldung nutzt es; Enter im Feld sendet während der Prüfung nicht ein zweites Mal.
@@ -671,11 +677,18 @@ während der Prüfung `disabled` und verlor damit den Fokus an `body`, in allen 
   WebKit grün; gegen den alten Stand in allen drei Engines rot. Vier Sabotagen rot.
 - **Nachweise (22.10.2026):** 293 Unit- und Integrationstests, 453 End-to-End-Prüfungen über sechs
   Breiten (93 mit Absicht übersprungen), `bun run verify` ohne Befund, längste Datei 383 Zeilen.
+- **Screenreader-Test (PR #42):** wartet in `capture()` auf die Meldung. Seither unter Firefox 157
+  NVDA 7 von 7 im ersten Versuch und VoiceOver 7 von 7 (23.10.2026).
+- **Live seit 23.10.2026** (`52c833b`, Deploy und Image-Erneuerung durch Adam; Sicherungen
+  `vor-deploy-20261023-112432-52c833b.sql.gz` und `vor-images-20261023-112451.sql.gz`): Im
+  API-Container liegen express 5.3.0, drizzle-orm 0.45.4, argon2 2.2.2 und zod 4.6.7, die Startseite
+  liefert React 19.3.1, die Produktionsprüfung von aussen lief 3 von 3. Auf der Anmeldeseite steht
+  der leere Meldebereich, und der Knopf trägt die neue Sperre statt `disabled`.
 
-| Offen                                           | Warum                                                                                                                                                              |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 28 weitere Knöpfe werden `disabled`             | Dieselbe Fokuslücke in 22 Dateien; je Knopf `pending` statt `disabled` und ein Test dazu                                                                           |
-| NVDA mit Firefox 157 auf dem korrigierten Stand | Auf `main` am 23.10.2026 noch rot: Der Test wartete ausserhalb von `capture()` auf die Meldung (DIAGNOSTICS Nummer 34); korrigiert, Ergebnis im NVDA-Job dieses PR |
+| Offen                                         | Warum                                                                                                                                                                                                   |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 28 weitere Knöpfe werden `disabled`           | Dieselbe Fokuslücke in 22 Dateien; je Knopf `pending` statt `disabled` und ein Test dazu                                                                                                                |
+| `images-erneuern.sh` nennt die Images `local` | Ihm fehlt `TALLYROOM_VERSION` aus `deploy.sh`: derselbe Code, nur `docker ps` zeigt nicht mehr, welcher Stand läuft. Der nächste Deploy setzt die Marke wieder; Korrektur mit einem Test für das Skript |
 
 ## Offen — Erstlast nach React 19.3 (10.10.2026)
 

@@ -865,8 +865,8 @@ ebenfalls als Klick am Absendeknopf an; ohne die Sperre sendete es in allen drei
 Der Alarmbereich steht leer im Dokument, bevor eine Meldung kommt. Zwei Tests in
 `e2e/focus.spec.ts`, über sechs Breiten und in Firefox und WebKit grün, gegen den alten Stand in
 allen drei Engines rot; vier Sabotagen, alle rot. Im Screenreader-Test steht das Warten auf die
-Meldung jetzt in `capture()`, wie bei der Kettenprüfung. Ob NVDA unter Firefox 157 die Meldung
-damit hört, zeigt der NVDA-Job des PR mit dieser Korrektur.
+Meldung jetzt in `capture()`, wie bei der Kettenprüfung. Seither besteht die Prüfung unter Firefox
+157 im ersten Versuch, 7 von 7 (#42, 23.10.2026).
 
 **Offen.** 28 weitere Knöpfe in 22 Dateien werden während ihrer Handlung `disabled` und verlieren
 damit ebenso den Fokus. Geprüft ist bisher nur die Anmeldung.
