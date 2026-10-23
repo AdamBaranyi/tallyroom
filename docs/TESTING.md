@@ -238,6 +238,10 @@ geprüft.
 Wiederholung. Bis dahin sieben Läufe, in denen drei Fehler der Anwendung, zwei der Messung und
 einer der Testumgebung ans Licht kamen — der Weg steht in DIAGNOSTICS Nummer 29 bis 31.
 
+**Ergebnis vom 23.10.2026** mit Firefox 157 und Guidepup 0.36.3: NVDA 7 von 7 in 2,1 Minuten,
+VoiceOver 7 von 7 in 4,2 Minuten, ohne Wiederholung (#42). Davor war die Anmeldung unter NVDA neun
+von elf Mal rot, weil der Test nach dem Klick zu kurz zuhörte (DIAGNOSTICS Nummer 34).
+
 **Grenzen.** Automatisch geprüft ist nicht dasselbe wie von Menschen geprüft, die täglich mit
 einem Screenreader arbeiten; das steht auch auf der Barrierefreiheitsseite. VoiceOver läuft auf
 macOS, nicht auf iOS. In der Kommandopalette sagt VoiceOver nur, wie viele Treffer es gibt; welcher

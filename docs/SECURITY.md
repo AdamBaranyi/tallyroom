@@ -251,7 +251,7 @@ mit Datum. Werkzeuge für Build, Lint und Test warten auf den regulären Update-
 Fassung im erlaubten Bereich, genügt der Eintrag im Lockfile; sonst ein `overrides` auf genau diese
 Fassung.
 
-**Security-Updates von Dependabot gibt es hier nur für GitHub Actions.** Für Bun und für Docker
+**Brauchbare Security-Updates von Dependabot gibt es hier nur für GitHub Actions.** Für Bun und für Docker
 kennt Dependabot nur Version-Updates (GitHub-Dokumentation, geprüft am 30.09.2026), auch wenn im
 Repository automatische Security-Updates eingeschaltet sind. Dazu liest GitHubs Abhängigkeitsgraph
 nur die `package.json`-Dateien, nicht `bun.lock`: 59 Pakete im Graphen, kein einziges aus zweiter
@@ -259,6 +259,12 @@ Hand, `bun.lock` nicht unter den erkannten Manifesten. Eine Meldung zu einem Pak
 anderes hereinkommt, erzeugt deshalb weder einen Alarm noch einen Pull Request. Solche Meldungen
 fängt allein der tägliche Lauf mit `bun audit`, der das Lockfile liest — so geschehen am
 30.09.2026, siehe [Abhängigkeitsscan](#abhängigkeitsscan).
+
+Für ein direktes Paket kommen doch Alarme und ein Security-PR, beobachtet am 21.10.2026 bei vite in
+`apps/web/package.json`: drei Dependabot-Alarme und #36 über das Ökosystem `npm_and_yarn`. Der PR
+änderte nur die `package.json`, nicht `bun.lock`, und jede Stufe scheiterte an
+`bun install --frozen-lockfile`. Behoben wurde es von Hand samt Lockfile (#39); #36 wurde beim
+Merge geschlossen.
 
 Nicht erfasst: die Images in `infra/compose.prod.yml` (postgres, garage). Sie gehören in die
 monatliche Routine von Hand auf dem Server.
@@ -440,6 +446,7 @@ Ehrlich benannt, weil sie zu späteren Meilensteinen gehören:
 | 10.10.2026 | Täglicher Lauf meldet per Issue statt rot; Skripte im Ablauf geprüft                       | 13 Tests grün          |
 | 21.10.2026 | Lockvogel-Issue konnte den täglichen Alarm stumm schalten (Prüfung nach security-guidance) | behoben, 18 Tests grün |
 | 22.10.2026 | vite 8.3.4: launch-editor (hoch) und vier moderate, alle nur im Entwicklungsserver         | behoben, oben          |
+| 23.10.2026 | Tageslauf nach #38 von Hand: schliesst das eigene Issue #37 selbst                         | bestanden              |
 
 Drei Befunde aus Meilenstein 4, alle behoben:
 
