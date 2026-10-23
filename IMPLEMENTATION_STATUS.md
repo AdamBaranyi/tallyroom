@@ -1,9 +1,9 @@
 # Umsetzungsstand
 
-Stand: 15.10.2026 · Meilensteine 1–7 abgeschlossen, Meilenstein 7 seit dem 19.09.2026 live unter
+Stand: 22.10.2026 · Meilensteine 1–7 abgeschlossen, Meilenstein 7 seit dem 19.09.2026 live unter
 <https://tallyroom.adambaranyi.xyz>
 
-293 Unit- und Integrationstests · 441 End-to-End-Prüfungen über sechs Breiten · am 22.09.2026 430
+293 Unit- und Integrationstests · 453 End-to-End-Prüfungen über sechs Breiten · am 22.09.2026 430
 in WebKit und Firefox · 7 Abläufe mit echtem VoiceOver und echtem NVDA · Lint ohne Fehler und ohne
 Warnungen · Typecheck in allen vier Paketen sauber · keine Anfrage an Dritte.
 
@@ -656,6 +656,26 @@ Anfragen gab, und hing an keiner Bedingung (DIAGNOSTICS Nummer 33).
 | Offen                       | Warum                                                                                                      |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `bun run measure` bricht ab | `scripts/measure-performance.ts` übergibt keine S3-Angaben («S3_ENDPOINT muss eine vollständige URL sein») |
+
+## Erledigt — Anmeldung behält den Fokus (22.10.2026)
+
+Befund aus dem Dependabot-PR #35: Mit Firefox 157 sagte NVDA bei falschen Zugangsdaten nicht die
+Meldung an, sondern das Dokument (8 von 9 Versuchen, DIAGNOSTICS Nummer 34). Der Absendeknopf war
+während der Prüfung `disabled` und verlor damit den Fokus an `body`, in allen drei Engines.
+
+- **`Button` mit `pending`:** `aria-disabled`, Klicks werden verworfen, der Fokus bleibt. Die
+  Anmeldung nutzt es; Enter im Feld sendet während der Prüfung nicht ein zweites Mal.
+- **Alarmbereich vorab:** Die Meldung der Anmeldung steht in einem `role="alert"`, der schon leer im
+  Dokument steht (Regel aus DIAGNOSTICS Nummer 29).
+- **Tests:** zwei Playwright-Tests in `e2e/focus.spec.ts` über sechs Breiten, dazu in Firefox und
+  WebKit grün; gegen den alten Stand in allen drei Engines rot. Vier Sabotagen rot.
+- **Nachweise (22.10.2026):** 293 Unit- und Integrationstests, 453 End-to-End-Prüfungen über sechs
+  Breiten (93 mit Absicht übersprungen), `bun run verify` ohne Befund, längste Datei 383 Zeilen.
+
+| Offen                                           | Warum                                                                                    |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| 28 weitere Knöpfe werden `disabled`             | Dieselbe Fokuslücke in 22 Dateien; je Knopf `pending` statt `disabled` und ein Test dazu |
+| NVDA mit Firefox 157 auf dem korrigierten Stand | Zeigt erst der NVDA-Job von #35, sobald der PR auf diesem Stand läuft                    |
 
 ## Offen — Erstlast nach React 19.3 (10.10.2026)
 

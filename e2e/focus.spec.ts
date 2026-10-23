@@ -161,3 +161,68 @@ test.describe('Fokus und Tastatur', () => {
     expect(ring.width).toBeGreaterThanOrEqual(2);
   });
 });
+
+test.describe('Anmeldung', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  /*
+   * Ein Knopf, der beim Absenden `disabled` wird, verliert den Fokus: Chromium,
+   * Firefox und WebKit schieben ihn dann auf `body` (nachgemessen 22.10.2026).
+   * Wer mit Tastatur oder Screenreader arbeitet, steht danach nirgends, und NVDA
+   * sagte unter Firefox 157 das Dokument statt der Fehlermeldung an. Der
+   * Screenreader-Test hiess schon «ohne dass der Fokus springt», prüfte es aber
+   * nicht. Hier wird es geprüft: während der Prüfung und danach.
+   */
+  test('der Fokus bleibt beim Absenden auf dem Knopf, und ein zweites Enter sendet nichts', async ({
+    page,
+  }) => {
+    let anfragen = 0;
+    let freigeben: () => void = () => {};
+    const gehalten = new Promise<void>((weiter) => (freigeben = weiter));
+    await page.route('**/auth/login', async (route) => {
+      anfragen += 1;
+      await gehalten;
+      await route.continue();
+    });
+
+    await page.goto('/login');
+    await warteAufSchriften(page);
+    await page.getByLabel('E-Mail').fill('niemand@tallyroom.test');
+    await page.getByLabel('Passwort').fill('falsches-passwort-2026');
+
+    const knopf = page.locator('form button[type="submit"]');
+    await knopf.focus();
+    await page.keyboard.press('Enter');
+
+    // Gesperrt heisst hier `aria-disabled`, nicht `disabled`: Beides meldet der
+    // Knopf als nicht verfügbar, aber nur `disabled` wirft den Fokus hinaus.
+    await expect(knopf).toHaveText('Wird geprüft …');
+    await expect(knopf).toBeDisabled();
+    await expect(knopf).toBeFocused();
+
+    await page.keyboard.press('Enter');
+    freigeben();
+
+    // Sechs Breiten sind sechs Versuche. Das Anmelde-Limit lässt fünf je
+    // Viertelstunde und Adresse zu; seine Meldung kommt im selben Bereich.
+    await expect(page.getByRole('alert')).toHaveText(
+      /^(E-Mail oder Passwort ist falsch\.|Zu viele Versuche\. Bitte später erneut probieren\.)$/,
+    );
+    await expect(knopf).toHaveText('Anmelden');
+    await expect(knopf).toBeFocused();
+    expect(anfragen, 'das zweite Enter während der Prüfung darf nichts senden').toBe(1);
+  });
+
+  /*
+   * Eine Meldung, die mit ihrem Behälter erscheint, sagt ein Screenreader nicht
+   * zuverlässig an (DIAGNOSTICS 29). Der Alarmbereich steht darum schon vor der
+   * ersten Meldung leer im Dokument.
+   */
+  test('der Alarmbereich steht schon vor der ersten Meldung', async ({ page }) => {
+    await page.goto('/login');
+    await warteAufSchriften(page);
+
+    await expect(page.getByRole('alert')).toHaveCount(1);
+    await expect(page.getByRole('alert')).toHaveText('');
+  });
+});

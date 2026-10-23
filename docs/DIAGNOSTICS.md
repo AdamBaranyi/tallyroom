@@ -829,13 +829,54 @@ ungeprüft.
 
 ---
 
+## 34 · Der Anmeldeknopf warf den Fokus hinaus
+
+**Symptom.** Der Dependabot-PR #35 hob unter anderem Playwright auf 1.64 und damit Firefox von 155
+auf 157. Danach war im NVDA-Job eine von sieben Prüfungen rot: «sagt falsche Zugangsdaten an, ohne
+dass der Fokus springt». VoiceOver und die übrigen sechs NVDA-Prüfungen blieben grün.
+
+**Messung.** Mit Firefox 157 scheiterte die Prüfung in 8 von 9 Versuchen, in drei Läufen vom 19. und
+21.10.2026 mit je zwei Wiederholungen. Mit Firefox 155 auf `main` bestand sie am 21.10.2026 im
+ersten Versuch. Angesagt wurde jedes Mal dasselbe, die Meldung nie:
+
+```text
+Wird geprüft ..., button. Tallyroom Kundenübersicht und Kundenportal für kleine Agenturen, document
+```
+
+Lokal nachgestellt am 22.10.2026: Ein fokussierter Knopf, der `disabled` wird, verliert den Fokus
+an `body`, in Chromium 153, Firefox 155 und WebKit 26.6 gleich.
+
+**Ursache.** Zwei Stellen in `LoginPage.tsx`. Der Absendeknopf war während der Prüfung `disabled`;
+der Browser nahm ihm den Fokus, und NVDA sagte das Dokument an. Und die Meldung stand in einem
+`role="alert"`, der erst mit ihr ins Dokument kam, die Falle aus Nummer 29. Mit Firefox 155 kam sie
+trotzdem an, mit 157 fast nie. Warum, ist nicht untersucht; gemessen ist nur der Unterschied. Der
+Test hiess seit dem 22.09.2026 «ohne dass der Fokus springt», prüfte den Fokus aber nicht.
+
+**Korrektur.** `Button` kennt `pending`: Der Knopf meldet sich mit `aria-disabled` als nicht
+verfügbar, verwirft Klicks und behält den Fokus. Enter in einem Feld kommt ebenfalls als Klick am
+Absendeknopf an; ohne die Sperre sendete es in allen drei Engines zweimal. Der Alarmbereich steht
+leer im Dokument, bevor eine Meldung kommt. Zwei Tests in `e2e/focus.spec.ts`, über sechs Breiten
+und in Firefox und WebKit grün, gegen den alten Stand in allen drei Engines rot. Vier Sabotagen,
+alle rot: Klicksperre weg, `disabled` statt `pending`, `aria-disabled` weg, Alarmbereich erst mit
+der Meldung. Ob NVDA unter Firefox 157 die Meldung wieder ansagt, zeigt der NVDA-Job von #35 auf
+diesem Stand.
+
+**Offen.** 28 weitere Knöpfe in 22 Dateien werden während ihrer Handlung `disabled` und verlieren
+damit ebenso den Fokus. Geprüft ist bisher nur die Anmeldung.
+
+**Regel.** Ein Knopf, der gerade arbeitet, behält den Fokus: `aria-disabled` und eine Sperre im
+Klick, nicht `disabled`. Und ein Testname ist keine Zusicherung; was er verspricht, muss eine Zeile
+prüfen.
+
+---
+
 ## Was daraus als Werkzeug geblieben ist
 
 | Werkzeug                       | Hält fest                                                            |
 | ------------------------------ | -------------------------------------------------------------------- |
 | `bun run verify`               | Format, Dateilänge, Lint samt `jsx-a11y`, Typen                      |
 | `bun run test`                 | 293 Unit- und Integrationstests                                      |
-| `bun run test:e2e`             | 441 Prüfungen über sechs Breiten, samt axe und vier Sprachen         |
+| `bun run test:e2e`             | 453 Prüfungen über sechs Breiten, samt axe und vier Sprachen         |
 | `screenreader.yml`             | VoiceOver und NVDA: Statusmeldungen, Fokus, Dialognamen              |
 | `screenreader-wiederholen.yml` | Ein Rechner ohne AppleScript wird einmal ersetzt, ein Testfehler nie |
 | `bun run check:font-floor`     | Keine Schrift unter 16 px, im Quelltext                              |

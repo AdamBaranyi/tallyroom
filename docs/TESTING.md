@@ -30,7 +30,7 @@ bun run verify   # Format, Dateilänge, Schriftgrösse, Lint, Typen
 bun run test     # Unit- und Integrationstests
 ```
 
-Ergebnis vom 15.10.2026: **293 Tests grün**, Lint ohne Fehler und ohne Warnungen, Typecheck in
+Ergebnis vom 22.10.2026: **293 Tests grün**, Lint ohne Fehler und ohne Warnungen, Typecheck in
 allen vier Paketen sauber, alle Code-Dateien unter der 400-Zeilen-Grenze (längste: 383 Zeilen).
 
 Die Integrationstests brauchen die Testdatenbank und die Umgebungsdatei:
@@ -50,7 +50,8 @@ bun run test:e2e        # alle sechs Breiten
 bun run test:e2e:ui     # zum Nachsehen, wenn etwas rot ist
 ```
 
-**441 Prüfungen im Lauf, gut drei Minuten** (15.10.2026). Dazu kommen 93 übersprungene,
+**453 Prüfungen im Lauf, 4,3 Minuten** auf einem ausgelasteten Rechner (22.10.2026; am
+15.10.2026 waren es 441 in gut drei Minuten). Dazu kommen 93 übersprungene,
 alle mit Absicht: Die drei Messungen gegen Lastdaten, die sechs Sprachprüfungen und die drei
 Sprachen der Liste «Am längsten offen» laufen nur bei 1440 Pixeln, die drei Breitenprüfungen der Übersetzungen nur bei 320, und die Navigation hinter
 dem Hamburger nur unter 1024. Sechsmal dieselbe Zahl wäre keine zusätzliche Erkenntnis.
@@ -69,7 +70,9 @@ der Fliesstext bei 16 Pixeln bleibt.
 
 Dazu Fokus und Tastatur: der Dialog sperrt den Hintergrund aus, gibt den Fokus an seinen Auslöser
 zurück, die Kommandopalette ebenso, die Sprungmarke führt zum Inhalt, und jedes Bedienelement zeigt
-einen mindestens zwei Pixel breiten Fokusring.
+einen mindestens zwei Pixel breiten Fokusring. Die Anmeldung behält den Fokus auf dem Knopf,
+während sie prüft und danach; ein zweites Enter sendet nichts, und der Alarmbereich steht schon vor
+der ersten Meldung da (DIAGNOSTICS Nummer 34).
 
 **Wie die Fokusfalle gemessen wird:** nicht durch zwanzigmal Tab. Der Headless-Shell hat keine
 Browserleiste, an die der Fokus hinter dem letzten Element wandern könnte, und
