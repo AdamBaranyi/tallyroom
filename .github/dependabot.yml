@@ -11,9 +11,9 @@
 #    CI-Lauf aus (Format, Dateilänge, Lint, Typen, Tests, Build, Secret-Scan,
 #    Playwright, Produktionsaufbau). Gemergt wird nur, was grün ist.
 #
-# Meldung: `assignees` macht den Pull Request zu einer zugewiesenen Aufgabe —
-# das ergibt eine E-Mail und einen Push in GitHub Mobile. `reviewers` gibt es
-# seit dem 08.08.2025 nicht mehr.
+# Keine Zuweisung: Ein zugewiesener Pull Request mailt und meldet sich in GitHub
+# Mobile – jede Woche, bei jedem Repo. Die Pull Requests stehen im Reiter
+# «Pull requests»; echte Funde meldet allein das Issue «Sicherheitsmeldungen».
 
 version: 2
 
@@ -37,8 +37,6 @@ updates:
     cooldown:
       default-days: 7
     open-pull-requests-limit: 5
-    assignees:
-      - AdamBaranyi
     commit-message:
       prefix: chore
       include: scope
@@ -78,8 +76,6 @@ updates:
     cooldown:
       default-days: 7
     open-pull-requests-limit: 3
-    assignees:
-      - AdamBaranyi
     commit-message:
       prefix: ci
 
@@ -99,7 +95,5 @@ updates:
     cooldown:
       default-days: 7
     open-pull-requests-limit: 3
-    assignees:
-      - AdamBaranyi
     commit-message:
       prefix: build

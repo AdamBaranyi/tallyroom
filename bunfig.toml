@@ -14,3 +14,9 @@ exact = true
 # Dringender Sicherheitsfix, der nicht warten kann: das betroffene Paket
 # vorübergehend in minimumReleaseAgeExcludes eintragen.
 minimumReleaseAge = 604800
+
+# Ausnahme seit 25.10.2026: body-parser 2.4.0 (22.10.2026) schliesst GHSA-27r3-jxmh-p828
+# (high) im Laufzeitpfad der API (express › body-parser). Eintrag entfernen, sobald die
+# Fassung sieben Tage alt ist (ab 29.10.2026); das Override in package.json bleibt, bis
+# Express selbst body-parser ab 2.4.0 verlangt. Dokumentiert in docs/SECURITY.md.
+minimumReleaseAgeExcludes = ["body-parser"]

@@ -184,8 +184,9 @@ in sieben eigenen Repositories gleichzeitig rot. Ein roter geplanter Lauf schick
 E-Mail und hängt ein rotes Kreuz an den letzten Commit auf `main` — wer das Repository ansieht,
 sieht das Kreuz, nicht den Grund. Seither sammelt er die Befunde ab „moderat" und meldet sie über
 `scripts/sicherheits-meldung.sh` in einem Issue: angelegt beim ersten Fund, ergänzt nur, wenn sich
-die Liste der Kennungen ändert, von selbst geschlossen, sobald alles sauber ist. Eine E-Mail je
-Änderung statt einer je Tag.
+die Liste der Kennungen ändert; bei sauberem Stand bleibt es offen und sagt «keine Befunde» (seit
+25.10.2026: Schliessen und Neuanlegen hiess jedes Mal zuweisen und mailen). Eine E-Mail je Änderung
+statt einer je Tag.
 
 «Sauber» heisst dabei Exit-Code 0 von `bun audit`, nicht «keine Kennung im Bericht»: Ohne Netz endet
 `bun audit` mit 1 und einem Text ohne Kennung (geprüft am 10.10.2026 mit einer unerreichbaren
@@ -250,6 +251,14 @@ ist (API, ausgelieferte Oberfläche): dann sofort, befristet in `minimumReleaseA
 mit Datum. Werkzeuge für Build, Lint und Test warten auf den regulären Update-PR. Liegt die behobene
 Fassung im erlaubten Bereich, genügt der Eintrag im Lockfile; sonst ein `overrides` auf genau diese
 Fassung.
+
+Stand 25.10.2026, zwei Overrides in `package.json`: `body-parser` 2.4.0 schliesst GHSA-27r3-jxmh-p828
+(high, Laufzeit: express › body-parser in der API); die Fassung war drei Tage alt, darum steht
+`body-parser` befristet in `minimumReleaseAgeExcludes` (raus ab 29.10.2026), das Override bleibt,
+bis Express body-parser ab 2.4.0 verlangt. `undici` 8.12.2 schliesst GHSA-xjj6-f33q-929c (high) und
+zwei moderate Meldungen im Werkzeug `@guidepup/setup`; eigentlich würde das Werkzeug auf den
+Update-PR warten, aber Dependabot hebt für Bun keine Pakete aus zweiter Hand, und die CI blockiert
+ab high. Weg, sobald `@guidepup/setup` undici ab 8.12.2 verlangt.
 
 **Brauchbare Security-Updates von Dependabot gibt es hier nur für GitHub Actions.** Für Bun und für Docker
 kennt Dependabot nur Version-Updates (GitHub-Dokumentation, geprüft am 30.09.2026), auch wenn im
