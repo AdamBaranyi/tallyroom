@@ -184,8 +184,9 @@ in sieben eigenen Repositories gleichzeitig rot. Ein roter geplanter Lauf schick
 E-Mail und hängt ein rotes Kreuz an den letzten Commit auf `main` — wer das Repository ansieht,
 sieht das Kreuz, nicht den Grund. Seither sammelt er die Befunde ab „moderat" und meldet sie über
 `scripts/sicherheits-meldung.sh` in einem Issue: angelegt beim ersten Fund, ergänzt nur, wenn sich
-die Liste der Kennungen ändert, von selbst geschlossen, sobald alles sauber ist. Eine E-Mail je
-Änderung statt einer je Tag.
+die Liste der Kennungen ändert; bei sauberem Stand bleibt es offen und sagt «keine Befunde» (seit
+25.10.2026: Schliessen und Neuanlegen hiess jedes Mal zuweisen und mailen). Eine E-Mail je Änderung
+statt einer je Tag.
 
 «Sauber» heisst dabei Exit-Code 0 von `bun audit`, nicht «keine Kennung im Bericht»: Ohne Netz endet
 `bun audit` mit 1 und einem Text ohne Kennung (geprüft am 10.10.2026 mit einer unerreichbaren
