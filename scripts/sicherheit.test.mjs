@@ -178,13 +178,18 @@ describe('sicherheits-meldung.sh', () => {
     expect(issue?.kommentare).toContain('GHSA-68fv-2mgg-jv7q');
   });
 
-  it('schliesst das Issue, sobald der Lauf sauber ist', () => {
+  it('lässt das Issue bei einem sauberen Lauf offen und schreibt «keine Befunde» hinein', () => {
     melde(EIN_BEFUND, 1);
     const ergebnis = melde(SAUBER, 0);
 
     expect(ergebnis.status, ergebnis.stderr).toBe(0);
-    expect(issues()[0]?.zustand).toBe('closed');
-    expect(issues()[0]?.kommentare).toContain('keine Befunde mehr');
+    expect(issues()[0]?.zustand).toBe('open');
+    expect(issues()[0]?.text).toContain('keine Befunde');
+    expect(issues()[0]?.kommentare).toBe('');
+    // Ein zweiter sauberer Tag liest nur, schreibt nichts.
+    const vorher = aufrufe().length;
+    melde(SAUBER, 0);
+    expect(aufrufe().slice(vorher)).toEqual(['issue list', 'issue view']);
   });
 
   it('fasst bei einem sauberen Lauf ohne offenes Issue nichts an', () => {
@@ -195,13 +200,15 @@ describe('sicherheits-meldung.sh', () => {
     expect(aufrufe()).toEqual(['issue list']);
   });
 
-  it('legt nach dem Schliessen beim nächsten Fund ein neues Issue an', () => {
+  it('ergänzt nach einem sauberen Tag beim nächsten Fund dasselbe Issue', () => {
     melde(EIN_BEFUND, 1);
     melde(SAUBER, 0);
     const ergebnis = melde(EIN_BEFUND, 1);
 
     expect(ergebnis.status, ergebnis.stderr).toBe(0);
-    expect(issues().map((issue) => issue.zustand)).toEqual(['closed', 'open']);
+    expect(issues()).toHaveLength(1);
+    expect(issues()[0]?.zustand).toBe('open');
+    expect(issues()[0]?.kommentare).toContain('Geänderte Befunde');
   });
 
   it('endet rot und lässt das Issue stehen, wenn die Prüfung nicht stattfand', () => {

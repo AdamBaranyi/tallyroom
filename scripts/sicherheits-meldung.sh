@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Hält genau ein Issue «Sicherheitsmeldungen» aus dem Bericht des täglichen Laufs:
-# anlegen beim ersten Fund, ergänzen nur bei geänderter Kennungsliste, schliessen,
-# sobald die Prüfung sauber ist. Eine E-Mail je Änderung, keine je Tag.
+# anlegen beim ersten Fund, ergänzen nur bei geänderter Kennungsliste; bei sauberer
+# Prüfung bleibt es offen und sagt «keine Befunde». Eine E-Mail je Änderung, keine je Tag.
 #
 # Aufruf: bash scripts/sicherheits-meldung.sh <bericht> <exit-code von audit.sh>
 # Braucht GH_TOKEN (issues: write) und GH_REPO.
@@ -46,8 +46,15 @@ nummer=$(gh issue list --state open --limit 200 --json number,title,author,label
   --jq "[.[] | select(.title == \"$titel\" and .author.login == \"app/github-actions\" and any(.labels[]; .name == \"$label\"))][0].number // empty")
 
 if [ "$status" = 0 ]; then
+  # Sauber: Das Issue bleibt offen und sagt «keine Befunde». Schliessen und beim
+  # nächsten Fund neu anlegen hiess jedes Mal zuweisen und mailen (Oktober 2026).
   if [ -n "$nummer" ]; then
-    gh issue close "$nummer" --comment "Der tägliche Lauf vom $heute findet keine Befunde mehr."
+    sauber=$(printf '<!-- stand:sauber -->\nStand %s: keine Befunde. Prüfung ab moderat mit den Ausnahmen aus scripts/audit.sh.\n\nDas Issue bleibt offen und zeigt den letzten Stand; der tägliche Lauf schreibt nur bei Änderungen. Bitte nicht schliessen.' "$heute")
+    bisher=$(gh issue view "$nummer" --json body --jq .body)
+    case "$bisher" in
+      *"stand:sauber"*) echo "Weiterhin keine Befunde, keine Änderung." ;;
+      *) gh issue edit "$nummer" --body "$sauber" ;;
+    esac
   fi
   exit 0
 fi
