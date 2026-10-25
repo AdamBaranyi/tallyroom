@@ -251,6 +251,14 @@ mit Datum. Werkzeuge für Build, Lint und Test warten auf den regulären Update-
 Fassung im erlaubten Bereich, genügt der Eintrag im Lockfile; sonst ein `overrides` auf genau diese
 Fassung.
 
+Stand 25.10.2026, zwei Overrides in `package.json`: `body-parser` 2.4.0 schliesst GHSA-27r3-jxmh-p828
+(high, Laufzeit: express › body-parser in der API); die Fassung war drei Tage alt, darum steht
+`body-parser` befristet in `minimumReleaseAgeExcludes` (raus ab 29.10.2026), das Override bleibt,
+bis Express body-parser ab 2.4.0 verlangt. `undici` 8.12.2 schliesst GHSA-xjj6-f33q-929c (high) und
+zwei moderate Meldungen im Werkzeug `@guidepup/setup`; eigentlich würde das Werkzeug auf den
+Update-PR warten, aber Dependabot hebt für Bun keine Pakete aus zweiter Hand, und die CI blockiert
+ab high. Weg, sobald `@guidepup/setup` undici ab 8.12.2 verlangt.
+
 **Brauchbare Security-Updates von Dependabot gibt es hier nur für GitHub Actions.** Für Bun und für Docker
 kennt Dependabot nur Version-Updates (GitHub-Dokumentation, geprüft am 30.09.2026), auch wenn im
 Repository automatische Security-Updates eingeschaltet sind. Dazu liest GitHubs Abhängigkeitsgraph
