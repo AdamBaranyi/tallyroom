@@ -123,3 +123,36 @@
 		}
 	}
 }
+
+# Die Grosshandel-Attrappe der Apotheken-Werkbank: ein SOAP-Dienst nach MSV3
+# ohne Oberfläche, eigenes Projekt mit eigenem Compose (Vorlage dort in
+# infra/caddy/werkbank-grosshandel.caddy). Anmeldung, Fehlversuche, Grösse und
+# Kopfzeilen prüft sie selbst; sie hängt als `werkbank-grosshandel` in diesem
+# Netz. Hier kommen TLS, HSTS, eine zweite Grössenschranke und das Protokoll
+# dazu. Ohne gesetzte Adresse gilt ein lokaler Name.
+{$WERKBANK_GROSSHANDEL_SITE_ADDRESS:werkbank-grosshandel.localhost} {
+	encode zstd gzip
+
+	# MSV3 erlaubt höchstens 200 000 Byte je Anfrage; die Attrappe prüft das selbst.
+	request_body {
+		max_size 256KB
+	}
+
+	reverse_proxy werkbank-grosshandel:3501
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+		-Via
+		defer
+	}
+
+	# Nach Zeit löschen wie bei den anderen Anwendungen: 14 Tage.
+	log {
+		output file /var/log/caddy/werkbank-grosshandel.log {
+			roll_size 10MiB
+			roll_keep 5
+			roll_keep_for 336h
+		}
+	}
+}

@@ -9,15 +9,18 @@ laufenden Stand. Geheimnisse liegen nur dort, in `infra/.env.production`, lesbar
 ## Weitere Anwendungen auf demselben Server
 
 Caddy besitzt hier die Ports 80 und 443 und bedient darum auch
-`evidarium.adambaranyi.xyz` und `ki-inventar.adambaranyi.xyz` (je eigenes
-Projekt mit eigenem Compose). Die Adressblöcke stehen in `infra/Caddyfile`, die
-Adressen selbst in `EVIDARIUM_SITE_ADDRESS` und `KI_INVENTAR_SITE_ADDRESS` in
+`evidarium.adambaranyi.xyz`, `ki-inventar.adambaranyi.xyz` und
+`grosshandel.adambaranyi.xyz` (Grosshandel-Attrappe der Apotheken-Werkbank; je
+eigenes Projekt mit eigenem Compose). Die Adressblöcke stehen in
+`infra/Caddyfile`, die Adressen selbst in `EVIDARIUM_SITE_ADDRESS`,
+`KI_INVENTAR_SITE_ADDRESS` und `WERKBANK_GROSSHANDEL_SITE_ADDRESS` in
 `infra/.env.production`; ohne Wert bedient Caddy nur Tallyroom.
 
-Erreichbar sind die anderen Anwendungen, weil **ihr** Webdienst zusätzlich in
-diesem Compose-Netz hängt und dort `evidarium-web` beziehungsweise
-`ki-inventar-web` heisst. Umgekehrt hängt hier nichts an ihnen: Fällt eine aus,
-antwortet ihre Adresse mit 502, Tallyroom bleibt unberührt.
+Erreichbar sind die anderen Anwendungen, weil **ihr** Dienst zusätzlich in
+diesem Compose-Netz hängt und dort `evidarium-web`, `ki-inventar-web`
+beziehungsweise `werkbank-grosshandel` heisst. Umgekehrt hängt hier nichts an
+ihnen: Fällt eine aus, antwortet ihre Adresse mit 502, Tallyroom bleibt
+unberührt.
 
 ## Sicherung
 
