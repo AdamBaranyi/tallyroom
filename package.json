@@ -37,13 +37,13 @@
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
     "@eslint/js": "10.0.1",
-    "@guidepup/guidepup": "0.36.4",
-    "@guidepup/playwright": "0.20.0",
+    "@guidepup/guidepup": "0.38.0",
+    "@guidepup/playwright": "0.21.0",
     "@guidepup/setup": "0.29.3",
     "@playwright/test": "1.64.1",
     "@tallyroom/contracts": "workspace:*",
     "@tallyroom/db": "workspace:*",
-    "@types/bun": "1.4.3",
+    "@types/bun": "1.4.4",
     "@types/node": "26.6.5",
     "drizzle-orm": "0.45.4",
     "eslint": "10.13.0",
@@ -54,7 +54,7 @@
     "playwright": "1.64.1",
     "prettier": "3.9.10",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.71.2",
+    "typescript-eslint": "8.72.0",
     "vitest": "5.0.5"
   },
   "overrides": {
