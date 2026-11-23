@@ -252,13 +252,15 @@ mit Datum. Werkzeuge für Build, Lint und Test warten auf den regulären Update-
 Fassung im erlaubten Bereich, genügt der Eintrag im Lockfile; sonst ein `overrides` auf genau diese
 Fassung.
 
-Stand 25.10.2026, zwei Overrides in `package.json`: `body-parser` 2.4.0 schliesst GHSA-27r3-jxmh-p828
-(high, Laufzeit: express › body-parser in der API); die Fassung war drei Tage alt, darum steht
-`body-parser` befristet in `minimumReleaseAgeExcludes` (raus ab 29.10.2026), das Override bleibt,
-bis Express body-parser ab 2.4.0 verlangt. `undici` 8.12.2 schliesst GHSA-xjj6-f33q-929c (high) und
-zwei moderate Meldungen im Werkzeug `@guidepup/setup`; eigentlich würde das Werkzeug auf den
-Update-PR warten, aber Dependabot hebt für Bun keine Pakete aus zweiter Hand, und die CI blockiert
-ab high. Weg, sobald `@guidepup/setup` undici ab 8.12.2 verlangt.
+Stand 23.11.2026, zwei Overrides in `package.json`. `body-parser` 2.4.0 schliesst
+GHSA-27r3-jxmh-p828 (high, Laufzeit: express › body-parser in der API). Die befristete Ausnahme von
+der Wartezeit ist am 23.11.2026 aus `bunfig.toml` entfernt worden; die Fassung vom 22.10.2026 hat
+die sieben Tage hinter sich. Das Override bleibt, bis Express body-parser ab 2.4.0 verlangt: Die
+neuste Fassung 5.3.0 verlangt `^2.3.0` und liesse damit eine verwundbare Fassung zu. `undici` 8.12.2
+schliesst GHSA-xjj6-f33q-929c (high) und zwei moderate Meldungen im Werkzeug `@guidepup/setup`;
+eigentlich würde das Werkzeug auf den Update-PR warten, aber Dependabot hebt für Bun keine Pakete
+aus zweiter Hand, und die CI blockiert ab high. Das Override bleibt, bis `@guidepup/setup` undici ab
+8.12.2 verlangt: Die neuste Fassung 0.29.3 verlangt `^8.7.0`.
 
 **Brauchbare Security-Updates von Dependabot gibt es hier nur für GitHub Actions.** Für Bun und für Docker
 kennt Dependabot nur Version-Updates (GitHub-Dokumentation, geprüft am 30.09.2026), auch wenn im
@@ -330,7 +332,7 @@ Nächste Prüfung dieser Ausnahmen: mit dem nächsten Meilenstein, spätestens a
 | Werkzeug    | `bun audit` aus Bun 1.3.14, gegen die Advisory-Datenbank der npm-Registry                                                                                                                                    |
 | Umfang      | alle Pakete aus `bun.lock`, auch reine Entwicklungswerkzeuge                                                                                                                                                 |
 | Blockierend | im Push-Lauf ab „hoch" (`bash scripts/audit.sh high`); der tägliche Lauf blockiert nicht, er meldet ab „moderat" im Issue; ein weiterer Schritt schreibt alle Befunde ungefiltert in die Laufzusammenfassung |
-| Ergebnis    | 22.10.2026 nach dem Update auf vite 8.3.4 erneut geprüft: kein Befund ab moderat ausser der esbuild-Ausnahme                                                                                                 |
+| Ergebnis    | 23.11.2026 nach den Updates aus #54 erneut geprüft: ab moderat offen nur minimatch 10.2.6 im Lint-Werkzeug (siehe unten), daneben die esbuild-Ausnahme                                                       |
 
 **Ausnahmen.** Jede steht mit ihrer Kennung in `scripts/audit.sh`, mit demselben «prüfen bis» wie
 hier — `scripts/sicherheit.test.mjs` hält beides zusammen. Höchstens einen Monat; danach verlängern
@@ -338,7 +340,7 @@ nur mit neuem Grund, sonst entfernen. Die monatliche Erinnerung fragt danach.
 
 | Kennung               | Paket                             | Stufe   | Art                           | Grund                                                                | seit       | prüfen bis |
 | --------------------- | --------------------------------- | ------- | ----------------------------- | -------------------------------------------------------------------- | ---------- | ---------- |
-| `GHSA-67mh-4wv8-2f99` | esbuild ≤ 0.24.2 über drizzle-kit | moderat | Werkzeug, nur für Migrationen | kein Update; betrifft `serve`, das hier nie startet; in keinem Image | 12.09.2026 | 10.11.2026 |
+| `GHSA-67mh-4wv8-2f99` | esbuild ≤ 0.24.2 über drizzle-kit | moderat | Werkzeug, nur für Migrationen | kein Update; betrifft `serve`, das hier nie startet; in keinem Image | 12.09.2026 | 23.12.2026 |
 
 Die Ausnahme, einzeln bewertet:
 
@@ -356,11 +358,35 @@ Die Ausnahme, einzeln bewertet:
   0.31.11 vom 21.09., und sie hängt weiterhin an `@esbuild-kit/esm-loader`. Eine Überschreibung
   würde ein totes Paket auf ein sieben Hauptversionen neueres esbuild zwingen, ohne dass hier je
   ein `serve` startet. Der Befund fällt von selbst weg, sobald `drizzle-kit` das Paket loswird; bis
-  dahin Neubewertung mit jedem `drizzle-kit`-Update, spätestens am 10.11.2026.
+  dahin Neubewertung mit jedem `drizzle-kit`-Update, spätestens am 23.12.2026.
+
+  Verlängert am 23.11.2026, nachdem die Frist vom 10.11.2026 abgelaufen war. Neu geprüft:
+  `drizzle-kit` 0.31.11 ist weiterhin die neuste Fassung und hängt weiterhin an
+  `@esbuild-kit/esm-loader`. Eine frische Installation mit der Zeile aus dem Dockerfile
+  (`bun install --frozen-lockfile --production --filter '@tallyroom/api'`) enthält weder esbuild
+  noch drizzle-kit.
 
   Die Nummer steht in `scripts/audit.sh` und gilt damit für den Push-Lauf und den täglichen Lauf
   gleich. Sichtbar bleibt der Befund trotzdem: Der Schritt „Alle Befunde zur Ansicht" zeigt ihn
   ungefiltert in der Laufzusammenfassung.
+
+Behoben am 23.11.2026, gemeldet vom täglichen Lauf im Issue #44:
+
+- **GHSA-6pq8-jhm2-2vcw (moderat), qs 6.7.0 bis 6.16.0.** `qs.stringify` mit `arrayFormat: 'comma'`
+  wirft bei Elementen ohne aufrufbares `toString` einen unbehandelten Fehler. Das Paket liegt über
+  Express im API-Image, aber Express und body-parser rufen nur `qs.parse` auf, und die API nutzt es
+  nicht selbst. **Nicht erreichbar, trotzdem behoben**, weil der Fix im erlaubten Bereich liegt: Im
+  Lockfile steht jetzt eine Kopie 6.16.1 vom 14.10.2026 statt zwei, ohne Override. Das ist die
+  Fassung, die body-parser 2.4.0 ohnehin verlangt.
+
+Offen, sichtbar im Issue #44 und bewusst ohne Ausnahme:
+
+- **GHSA-g3hv-75wg-m249 (moderat), minimatch 7 bis 11.0.0.** Verwundbar ist nur die Kopie 10.2.6
+  unter `@typescript-eslint/typescript-estree`. Sie gehört zum Lint-Werkzeug und liegt in keinem
+  ausgelieferten Image. Der Bereich `^10.2.2` schliesst die behobene Fassung 11.0.1 aus, und ein
+  Override könnte das Werkzeug brechen. `typescript-eslint` 8.73.0 verlangt `^11.0.1`, erreicht die
+  sieben Tage Wartezeit aber erst am 23.11.2026 um 17:07 UTC. Erwartet wird der Fix darum mit dem
+  Dependabot-Lauf vom 30.11.2026.
 
 Behoben am 22.10.2026, gemeldet vom täglichen Lauf im Issue #37:
 

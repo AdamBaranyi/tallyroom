@@ -11,7 +11,7 @@
 set -euo pipefail
 stufe="${1:-high}"
 ausnahmen=(
-  --ignore GHSA-67mh-4wv8-2f99 # esbuild über drizzle-kit, nur Entwicklungsserver, kein Update – prüfen bis 10.11.2026
+  --ignore GHSA-67mh-4wv8-2f99 # esbuild über drizzle-kit, nur Entwicklungsserver, kein Update – prüfen bis 23.12.2026
 )
 # Die Form mit «+» hält auch eine leere Liste aus: Bash vor 4.4 bricht sonst mit
 # «unbound variable» ab, und ein Repo ohne Ausnahmen übernimmt diese Datei wörtlich.
