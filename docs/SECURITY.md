@@ -338,7 +338,7 @@ nur mit neuem Grund, sonst entfernen. Die monatliche Erinnerung fragt danach.
 
 | Kennung               | Paket                             | Stufe   | Art                           | Grund                                                                | seit       | prüfen bis |
 | --------------------- | --------------------------------- | ------- | ----------------------------- | -------------------------------------------------------------------- | ---------- | ---------- |
-| `GHSA-67mh-4wv8-2f99` | esbuild ≤ 0.24.2 über drizzle-kit | moderat | Werkzeug, nur für Migrationen | kein Update; betrifft `serve`, das hier nie startet; in keinem Image | 12.09.2026 | 10.11.2026 |
+| `GHSA-67mh-4wv8-2f99` | esbuild ≤ 0.24.2 über drizzle-kit | moderat | Werkzeug, nur für Migrationen | kein Update; betrifft `serve`, das hier nie startet; in keinem Image | 12.09.2026 | 23.12.2026 |
 
 Die Ausnahme, einzeln bewertet:
 
@@ -356,7 +356,13 @@ Die Ausnahme, einzeln bewertet:
   0.31.11 vom 21.09., und sie hängt weiterhin an `@esbuild-kit/esm-loader`. Eine Überschreibung
   würde ein totes Paket auf ein sieben Hauptversionen neueres esbuild zwingen, ohne dass hier je
   ein `serve` startet. Der Befund fällt von selbst weg, sobald `drizzle-kit` das Paket loswird; bis
-  dahin Neubewertung mit jedem `drizzle-kit`-Update, spätestens am 10.11.2026.
+  dahin Neubewertung mit jedem `drizzle-kit`-Update, spätestens am 23.12.2026.
+
+  Verlängert am 23.11.2026, nachdem die Frist vom 10.11.2026 abgelaufen war. Neu geprüft:
+  `drizzle-kit` 0.31.11 ist weiterhin die neuste Fassung und hängt weiterhin an
+  `@esbuild-kit/esm-loader`. Eine frische Installation mit der Zeile aus dem Dockerfile
+  (`bun install --frozen-lockfile --production --filter '@tallyroom/api'`) enthält weder esbuild
+  noch drizzle-kit.
 
   Die Nummer steht in `scripts/audit.sh` und gilt damit für den Push-Lauf und den täglichen Lauf
   gleich. Sichtbar bleibt der Befund trotzdem: Der Schritt „Alle Befunde zur Ansicht" zeigt ihn
